@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Maryam Sharifova's personal portfolio.">
+    <title>Home | Maryam Sharifova</title>
+    <!-- One stylesheet and script are shared across every page. -->
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js"></script>
+  </head>
+  <body>
+    <!-- Shared site header keeps navigation and theme controls in one place. -->
+    <header class="site-header">
+      <a class="site-name gradient-text" href="index.html">Maryam Sharifova</a>
+      <!-- aria-current marks Home as the page currently being viewed. -->
+      <nav class="site-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="resume.html">Resume</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+          <svg class="sun-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
+          </svg>
+          <svg class="moon-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+            <path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Sticky stage for the scroll-driven laptop introduction. -->
+      <section class="laptop-intro" aria-label="Laptop introduction">
+        <div class="laptop-stage">
+          <!-- Intro copy fades away before the lid opens. -->
+          <div class="intro-copy">
+            <p class="intro-label">PORTFOLIO <span aria-hidden="true">·</span> 2026</p>
+            <h1 class="intro-title">Hi, I'm <span class="gradient-text">Maryam.</span></h1>
+            <p
+              class="typed-line"
+              aria-label="I secure enterprise data, build local AI tools, teach machines Azerbaijani, and turn logs into answers."
+            >
+              <span aria-hidden="true">I </span><span class="typed-phrase" aria-hidden="true"></span><span class="typed-caret" aria-hidden="true"></span>
+            </p>
+          </div>
+
+          <!-- Desktop-only labels frame the laptop and introduce its themes. -->
+          <aside class="intro-detail intro-detail-left" aria-hidden="true">
+            <span class="detail-title">AI</span>
+            <span class="detail-caption">LOCAL LLMS · RAG · SPEECH</span>
+          </aside>
+
+          <aside class="intro-detail intro-detail-right" aria-hidden="true">
+            <span class="detail-title">SEC</span>
+            <span class="detail-caption">DLP · SIEM · INSIDER RISK</span>
+          </aside>
+
+          <!-- Scroll hint stays below the laptop during the intro. -->
+          <p class="scroll-cue" aria-hidden="true">
+            <span>SCROLL TO OPEN</span>
+            <span class="scroll-cue-line"></span>
+          </p>
+
+          <!-- Soft desk shading and screen glow sit behind the laptop. -->
+          <div class="desk-surface" aria-hidden="true"></div>
+
+          <!-- CSS-only laptop: hinged lid above a separate flat deck. -->
+          <div class="laptop" aria-hidden="true">
+            <div class="lid">
+              <!-- The lit screen faces forward when the lid is open. -->
+              <div class="lid-face screen-face">
+                <div class="screen-display">
+                  <span class="screen-notch"></span>
+                </div>
+              </div>
+              <!-- The silver outer face and logo show when the laptop is closed. -->
+              <div class="lid-face back-face">
+                <span class="lid-logo">MS</span>
+              </div>
+            </div>
+            <!-- The keyboard and trackpad are attached to the horizontal base. -->
+            <div class="deck">
+              <!-- Key rows are separate elements so the keyboard has visible gaps. -->
+              <div class="keyboard">
+                <div class="key-row key-row-function">
+                  <span class="key key-escape">esc</span>
+                  <span class="key">F1</span>
+                  <span class="key">F2</span>
+                  <span class="key">F3</span>
+                  <span class="key">F4</span>
+                  <span class="key">F5</span>
+                  <span class="key">F6</span>
+                  <span class="key">F7</span>
+                  <span class="key">F8</span>
+                  <span class="key">F9</span>
+                  <span class="key">F10</span>
+                  <span class="key">F11</span>
+                  <span class="key">F12</span>
+                </div>
+                <div class="key-row">
+                  <span class="key">~</span>
+                  <span class="key">1</span>
+                  <span class="key">2</span>
+                  <span class="key">3</span>
+                  <span class="key">4</span>
+                  <span class="key">5</span>
+                  <span class="key">6</span>
+                  <span class="key">7</span>
+                  <span class="key">8</span>
+                  <span class="key">9</span>
+                  <span class="key">0</span>
+                  <span class="key">-</span>
+                  <span class="key key-wide">delete</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-wide">tab</span>
+                  <span class="key">Q</span>
+                  <span class="key">W</span>
+                  <span class="key">E</span>
+                  <span class="key">R</span>
+                  <span class="key">T</span>
+                  <span class="key">Y</span>
+                  <span class="key">U</span>
+                  <span class="key">I</span>
+                  <span class="key">O</span>
+                  <span class="key">P</span>
+                  <span class="key">[</span>
+                  <span class="key key-enter">return</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-shift">caps</span>
+                  <span class="key">A</span>
+                  <span class="key">S</span>
+                  <span class="key">D</span>
+                  <span class="key">F</span>
+                  <span class="key">G</span>
+                  <span class="key">H</span>
+                  <span class="key">J</span>
+                  <span class="key">K</span>
+                  <span class="key">L</span>
+                  <span class="key">;</span>
+                  <span class="key key-shift">shift</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-shift">shift</span>
+                  <span class="key">Z</span>
+                  <span class="key">X</span>
+                  <span class="key">C</span>
+                  <span class="key">V</span>
+                  <span class="key">B</span>
+                  <span class="key">N</span>
+                  <span class="key">M</span>
+                  <span class="key">,</span>
+                  <span class="key">.</span>
+                  <span class="key key-shift">shift</span>
+                </div>
+                <div class="key-row key-row-bottom">
+                  <span class="key key-modifier">fn</span>
+                  <span class="key key-modifier">ctrl</span>
+                  <span class="key key-modifier">opt</span>
+                  <span class="key key-space"></span>
+                  <span class="key key-modifier">opt</span>
+                  <span class="key key-modifier">cmd</span>
+                  <span class="key key-arrow">←</span>
+                  <span class="key key-arrow">↓</span>
+                  <span class="key key-arrow">↑</span>
+                  <span class="key key-arrow">→</span>
+                </div>
+              </div>
+              <div class="trackpad"></div>
+              <span class="deck-wall deck-wall-front"></span>
+              <span class="deck-wall deck-wall-left"></span>
+              <span class="deck-wall deck-wall-right"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Shared footer links back to the public source repository. -->
+    <footer class="site-footer">
+      <p>&copy; Maryam Sharifova</p>
+      <a
+        class="github-link"
+        href="https://github.com/maryamsharifova/maryamsharifova.github.io"
+        aria-label="Visit the portfolio repository on GitHub"
+        title="Portfolio repository on GitHub"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.61 1.21 3.25.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.77 1.15 2.99 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/>
+        </svg>
+      </a>
+    </footer>
+  </body>
+</html>
