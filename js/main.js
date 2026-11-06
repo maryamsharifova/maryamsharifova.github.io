@@ -391,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const projectSlugs = ["speech-to-text", "local-llm-chatbot", "plant-health-agrohub", "logic-gates", "hour-of-ai", "lego-ev3-robot"];
       const highlights = [
         ["Benchmarked five Hugging Face models on a real Azerbaijani phone call.", "Compared WAV and MP4 audio inputs.", "SeamlessM4T v2 produced the most accurate transcript.", "Built a Python REST endpoint with FFmpeg conversion.", "Traced output differences to missing decoding parameters."],
-        ["Ran a Llama model locally with LM Studio.", "Connected the assistant to Telegram and WhatsApp.", "Added MCP tools for connected workflows.", "Embedded the chatbot into a website Maryam built."],
+        ["Ran a Llama model locally with LM Studio.", "Connected the assistant to Telegram and WhatsApp.", "Added MCP tools for connected workflows.", "Embedded the chatbot into a website I built."],
         ["Compared more than ten plant-health APIs.", "Reviewed Kindwise, Plantix, and Agrio.", "Tested crops grown in Azerbaijan.", "Recommended Kindwise for crop and disease identification.", "Returned confidence scores and treatment advice as JSON."],
         ["Built AND, OR, and NOT gates with a team.", "Used transistors and resistors on a breadboard.", "Read inputs with push buttons.", "Displayed each gate output with an LED."],
         ["Taught a one-hour AI and coding lesson as a team.", "Used Microsoft MakeCode block programming.", "Helped children build and run their own program.", "Each participant earned a certificate."],

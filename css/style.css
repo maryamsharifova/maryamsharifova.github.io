@@ -1669,6 +1669,25 @@ a {
 
 .site-footer p {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.85rem;
+  letter-spacing: 0.06em;
+}
+
+/* Profile link sits beside the copyright line; the icon still opens the repository. */
+.footer-profile {
+  color: var(--color-text);
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.footer-profile:hover {
+  color: var(--color-blue);
 }
 
 .github-link {
