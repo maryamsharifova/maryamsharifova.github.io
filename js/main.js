@@ -700,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const lockTime = laptopIntro.querySelector(".lock-time");
   // These phrases appear one at a time in the intro's typing line.
   const phrases = [
-    "secure enterprise data",
+    "secure company data",
     "build local AI tools",
     "teach machines Azerbaijani",
     "turn logs into answers",
