@@ -1894,6 +1894,24 @@ a {
     border-color: rgb(28 159 208 / 85%);
     background: rgb(28 159 208 / 8%);
   }
+
+  /* The dialog is in the top layer, so the custom dot cannot be seen there. */
+  body.project-dialog-open.has-custom-cursor,
+  body.project-dialog-open.has-custom-cursor .project-dialog,
+  body.project-dialog-open.has-custom-cursor .project-dialog * {
+    cursor: auto;
+  }
+
+  body.project-dialog-open.has-custom-cursor .project-dialog button,
+  body.project-dialog-open.has-custom-cursor .project-dialog a,
+  body.project-dialog-open.has-custom-cursor .project-dialog select {
+    cursor: pointer;
+  }
+
+  body.project-dialog-open .custom-cursor-dot,
+  body.project-dialog-open .custom-cursor-ring {
+    opacity: 0;
+  }
 }
 
 /* Home effects use theme variables while keeping the blue accent consistent. */
@@ -3627,18 +3645,36 @@ a.contact-value:hover,
 
 .project-dialog-close {
   position: relative;
-  background: #ff5f57;
+  /* A 24px hit target with negative margin, so the red dot stays the same size. */
+  width: 24px;
+  height: 24px;
+  margin: -6px;
+  background: transparent;
   cursor: pointer;
+}
+
+.project-dialog-close::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: #ff5f57;
+  content: "";
+  transform: translate(-50%, -50%);
 }
 
 .project-dialog-close:hover::after {
   position: absolute;
-  inset: -0.15rem 0 0;
+  inset: 0;
+  display: grid;
+  place-items: center;
   color: #5a1715;
   content: "×";
   font-size: 0.72rem;
   font-weight: 700;
-  line-height: 0.95rem;
+  line-height: 1;
 }
 
 .window-dot-yellow { background: #febc2e; }

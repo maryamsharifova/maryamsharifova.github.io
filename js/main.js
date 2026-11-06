@@ -441,6 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         dialogVisual.replaceChildren(visualCopy);
         dialog.showModal();
+        // Hide the custom cursor while the window is open; the system pointer takes over.
         document.body.classList.add("project-dialog-open");
         const windowBounds = dialog.getBoundingClientRect();
         const originX = Number.isFinite(pointerX) ? pointerX : cardBounds.left + cardBounds.width / 2;
@@ -481,9 +482,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       dialog.querySelector(".project-dialog-close").addEventListener("click", () => dialog.close());
       dialog.addEventListener("close", () => document.body.classList.remove("project-dialog-open"));
+      // A click on the dimmed page, outside the window, closes it.
       dialog.addEventListener("click", (event) => {
-        if (event.target === dialog) dialog.close();
+        const bounds = dialog.getBoundingClientRect();
+        const insideWindow = event.clientX >= bounds.left && event.clientX <= bounds.right
+          && event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+        if (!insideWindow) dialog.close();
       });
+      // Escape closes the window even if the browser's built-in dialog shortcut is cancelled.
       dialog.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && dialog.open) {
           event.preventDefault();
