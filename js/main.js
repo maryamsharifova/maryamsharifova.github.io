@@ -381,6 +381,131 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Run a small fixed command set; terminal input is displayed, never executed.
+  const initializeAboutTerminal = () => {
+    const terminal = document.querySelector(".terminal-card");
+    if (!terminal) return;
+
+    const output = terminal.querySelector(".terminal-output");
+    const form = terminal.querySelector(".terminal-form");
+    const input = terminal.querySelector("#terminal-input");
+    const history = [];
+    let historyIndex = 0;
+    const projectNames = [
+      "Speech-to-text API for Azerbaijani",
+      "Local LLM chatbot",
+      "Plant-health vision for Agrohub",
+      "Logic gates",
+      "Hour of AI",
+      "Line-following robot with LEGO EV3",
+    ];
+    const whoAmI = "Maryam Sharifova | Computer Engineering student at ADA University and AI & Cybersecurity intern at RAM Holding, Baku.";
+
+    const writeLine = (text, className = "terminal-system-line") => {
+      const line = document.createElement("p");
+      line.className = className;
+      line.textContent = text;
+      output.append(line);
+      output.scrollTop = output.scrollHeight;
+    };
+
+    const writeLink = (label, href, newTab = false) => {
+      const line = document.createElement("p");
+      const link = document.createElement("a");
+      link.href = href;
+      link.textContent = label;
+      if (newTab) {
+        link.target = "_blank";
+        link.rel = "noopener";
+      }
+      line.append(link);
+      output.append(line);
+      output.scrollTop = output.scrollHeight;
+    };
+
+    const runCommand = (rawCommand) => {
+      const commandText = rawCommand.trim();
+      if (!commandText) return;
+
+      writeLine(`maryam@portfolio:~$ ${commandText}`, "terminal-command-line");
+      history.push(commandText);
+      historyIndex = history.length;
+      input.value = "";
+
+      const command = commandText.toLowerCase();
+      if (command === "clear") {
+        output.replaceChildren();
+        return;
+      }
+      if (command === "help") {
+        writeLine("Commands: help, whoami, skills, projects, open 1-6, experience, education, languages, contact, resume, ls, cat about.txt, date, clear");
+      } else if (command === "whoami" || command === "cat about.txt") {
+        writeLine(whoAmI);
+      } else if (command === "skills") {
+        writeLine("SECURITY\n  SIEM log analysis, DLP monitoring, insider-risk awareness, network monitoring\nAI\n  Local LLM deployment, RAG, MCP, speech-to-text, computer vision\nCODE\n  Python, REST APIs, HTML & CSS, Flutter, SQL\nTOOLS\n  Hugging Face, FFmpeg, FortiAnalyzer, Palo Alto, LibreNMS, Git, Linux");
+      } else if (command === "projects") {
+        projectNames.forEach((name, index) => {
+          writeLink(`${index + 1}. ${name} · open ${index + 1}`, `projects.html#p${index + 1}`);
+        });
+      } else if (/^open\s+\d+$/i.test(commandText)) {
+        const projectNumber = Number.parseInt(commandText.split(/\s+/)[1], 10);
+        if (projectNumber >= 1 && projectNumber <= projectNames.length) {
+          window.location.href = `projects.html#p${projectNumber}`;
+        } else {
+          writeLine("Usage: open 1 through open 6");
+        }
+      } else if (command === "experience") {
+        writeLine("AI and Cybersecurity Intern · RAM Holding · Baku · July 2026–Present\nTriage DLP alerts, investigate insider-risk cases, pivot SIEM events into FortiAnalyzer and Palo Alto logs, and monitor network health in LibreNMS.");
+      } else if (command === "education") {
+        writeLine("BSc Computer Engineering · ADA University · Baku, Azerbaijan · Expected 2030");
+      } else if (command === "languages") {
+        writeLine("Azerbaijani — Native\nEnglish — Fluent\nTurkish — Fluent\nRussian — Upper-Intermediate\nIELTS 7.5 · SAT 1510");
+      } else if (command === "contact") {
+        writeLine("Email: msharifova417@gmail.com");
+        writeLink("LinkedIn: linkedin.com/in/maryam-sharifova", "https://www.linkedin.com/in/maryam-sharifova/");
+        writeLink("GitHub: github.com/maryamsharifova", "https://github.com/maryamsharifova");
+      } else if (command === "resume") {
+        writeLink("Open Maryam Sharifova's CV (PDF)", "resume.pdf", true);
+      } else if (command === "ls") {
+        writeLine("about.txt projects/ resume.pdf contact.md");
+      } else if (command === "date") {
+        writeLine(new Date().toLocaleString());
+      } else if (command === "sudo" || command.startsWith("sudo ")) {
+        writeLine("Permission denied. This attempt has been logged by the SOC. Nice try.");
+      } else {
+        writeLine(`command not found: ${commandText} · type help`);
+      }
+    };
+
+    // Buttons run the same commands as the keyboard input.
+    terminal.querySelectorAll(".terminal-command").forEach((button) => {
+      button.addEventListener("click", () => {
+        runCommand(button.dataset.command);
+        input.focus();
+      });
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      runCommand(input.value);
+    });
+
+    // Up and Down move through commands the visitor already entered.
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowUp" && history.length > 0) {
+        event.preventDefault();
+        historyIndex = Math.max(0, historyIndex - 1);
+        input.value = history[historyIndex];
+      } else if (event.key === "ArrowDown" && history.length > 0) {
+        event.preventDefault();
+        historyIndex = Math.min(history.length, historyIndex + 1);
+        input.value = history[historyIndex] || "";
+      }
+    });
+  };
+
+  initializeAboutTerminal();
+
   const laptopIntro = document.querySelector(".laptop-intro");
   if (!laptopIntro) {
     return;

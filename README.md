@@ -12,6 +12,7 @@ It is designed for GitHub Pages and does not require build tools or packages.
 ├── projects.html    # Projects
 ├── resume.html      # Resume
 ├── contact.html     # Contact
+├── resume.pdf       # Public CV
 ├── css/
 │   └── style.css    # Shared layout, themes, and responsive styles
 ├── js/
@@ -40,6 +41,8 @@ the branch you want to publish and its `/ (root)` folder.
 - The Home hero includes a theme-aware canvas particle network and a cursor-reactive
   portrait orbit. Shared page motion adds scroll reveals, desktop pointer effects,
   right-edge page links, and accessible confirmation toasts.
+- The About page includes a browser-only portfolio terminal with a fixed set of
+  safe commands; it never runs shell input.
 - Opening the laptop powers on a container-sized lock screen, with a live local
   clock, animated security details, and a keyboard light and name-typing effect.
 - Unlocking the screen reveals the responsive homepage hero; the measured screen

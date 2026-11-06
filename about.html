@@ -34,10 +34,70 @@
       </nav>
     </header>
 
-    <!-- Main About page hero; replace the heading with your own content. -->
-    <main class="page-content">
-      <p class="eyebrow">02 / About</p>
-      <h1 class="page-title gradient-text">About</h1>
+    <!-- Main About page content. -->
+    <main class="page-content about-page">
+      <!-- Intro heading sets the theme for the biography below. -->
+      <section class="page-intro about-intro" aria-labelledby="about-title">
+        <p class="eyebrow" data-reveal>01 · ABOUT</p>
+        <h1 class="page-title gradient-text" id="about-title" data-reveal>Student, intern, builder.</h1>
+        <p class="page-subtitle" data-reveal>Learning by doing.</p>
+      </section>
+
+      <!-- Bio and skill chips sit beside a square portrait. -->
+      <section class="about-overview" aria-label="About Maryam">
+        <div class="about-copy" data-reveal>
+          <p>I study Computer Engineering at ADA University, and I'm not there just to pass courses. I use every class, team project and lab session to build skills I can actually use, from wiring circuits to programming robots.</p>
+          <p>Most of my days are spent inside an enterprise security operation at RAM Holding: data-loss alerts, insider-risk cases and log investigations.</p>
+          <h2 class="about-section-title">Skills I use</h2>
+          <ul class="skill-list" aria-label="Skills">
+            <li>Python</li>
+            <li>REST APIs</li>
+            <li>LLM deployment</li>
+            <li>RAG</li>
+            <li>MCP</li>
+            <li>Hugging Face</li>
+            <li>FFmpeg</li>
+            <li>SIEM</li>
+            <li>DLP</li>
+            <li>HTML &amp; CSS</li>
+            <li>Flutter</li>
+            <li>SQL</li>
+            <li>Git</li>
+            <li>Linux</li>
+          </ul>
+        </div>
+        <figure class="about-photo-card spotlight-card" data-reveal>
+          <img src="images/profile.jpg" alt="Maryam Sharifova">
+        </figure>
+      </section>
+
+      <!-- The terminal safely simulates portfolio commands in the browser. -->
+      <section class="terminal-card" aria-labelledby="terminal-title" data-reveal>
+        <div class="terminal-header">
+          <div class="terminal-window-dots" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <h2 id="terminal-title">maryam@portfolio: ~</h2>
+          <span class="terminal-hint">try a command</span>
+        </div>
+        <div class="terminal-shortcuts" role="group" aria-label="Example terminal commands">
+          <button class="terminal-command" type="button" data-command="help">help</button>
+          <button class="terminal-command" type="button" data-command="whoami">whoami</button>
+          <button class="terminal-command" type="button" data-command="skills">skills</button>
+          <button class="terminal-command" type="button" data-command="projects">projects</button>
+          <button class="terminal-command" type="button" data-command="experience">experience</button>
+          <button class="terminal-command" type="button" data-command="contact">contact</button>
+          <button class="terminal-command" type="button" data-command="clear">clear</button>
+        </div>
+        <div class="terminal-output" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
+          <p class="terminal-welcome">Welcome to Maryam's portfolio terminal. Type <strong>help</strong> to explore.</p>
+        </div>
+        <form class="terminal-form" autocomplete="off">
+          <label class="sr-only" for="terminal-input">Enter a portfolio command</label>
+          <span aria-hidden="true">maryam@portfolio:~$</span>
+          <input id="terminal-input" name="command" type="text" spellcheck="false" autocapitalize="off" autocomplete="off">
+        </form>
+      </section>
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->
