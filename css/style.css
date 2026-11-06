@@ -111,9 +111,11 @@
   --screen-frame: #17181a;
   --screen-shadow: rgb(255 255 255 / 12%);
   --screen-black: #08090b;
-  --thanks-screen: #0f1012;
-  --thanks-glow: rgb(8 137 176 / 14%);
-  --thanks-text: #f5f5f7;
+  --thanks-screen: #0b0f14;
+  --thanks-blob-a: rgb(8 137 176 / 55%);
+  --thanks-blob-b: rgb(28 159 208 / 35%);
+  --thanks-text-glow: rgb(28 159 208 / 45%);
+  --thanks-text-gradient: linear-gradient(110deg, #eef6fa, #6fd0ea, #1c9fd0);
   --font-heading: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-label: "JetBrains Mono", monospace;
@@ -145,9 +147,11 @@
   --desk-surface-center: #d9dcdf;
   --desk-surface-edge: #f7f8fa;
   --desk-shadow: rgb(70 78 84 / 14%);
-  --thanks-screen: #f7f8fa;
-  --thanks-glow: rgb(8 137 176 / 10%);
-  --thanks-text: #1d1d1f;
+  --thanks-screen: #f3f7fa;
+  --thanks-blob-a: rgb(8 137 176 / 28%);
+  --thanks-blob-b: rgb(28 159 208 / 22%);
+  --thanks-text-glow: rgb(28 159 208 / 30%);
+  --thanks-text-gradient: linear-gradient(110deg, #0b4f73, #0889b0, #1c9fd0);
 }
 
 /* ===== Base styles ===== */
@@ -3059,26 +3063,66 @@ a.contact-value:hover,
 }
 
 .thanks-screen {
+  position: relative;
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
-  background:
-    radial-gradient(ellipse at center, var(--thanks-glow), transparent 58%),
-    var(--thanks-screen);
+  overflow: hidden;
+  background: var(--thanks-screen);
   opacity: var(--screen-power, 1);
+  isolation: isolate;
+}
+
+/* Two soft lights drift behind the sentence. Their size follows the screen. */
+.thanks-screen::before,
+.thanks-screen::after {
+  position: absolute;
+  width: 78cqi;
+  height: 78cqi;
+  border-radius: 50%;
+  content: "";
+  filter: blur(16cqi);
+  pointer-events: none;
+}
+
+.thanks-screen::before {
+  top: -18cqi;
+  left: -14cqi;
+  background: var(--thanks-blob-a);
+  animation: thanks-drift 9s ease-in-out infinite alternate;
+}
+
+.thanks-screen::after {
+  right: -16cqi;
+  bottom: -22cqi;
+  background: var(--thanks-blob-b);
+  animation: thanks-drift 11s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes thanks-drift {
+  to {
+    transform: translate3d(14cqi, 9cqi, 0);
+  }
 }
 
 /* Sized in cqi so the sentence stays one line at about two thirds of the screen. */
 .thanks-sentence {
+  position: relative;
+  z-index: 1;
   margin: 0;
-  color: var(--thanks-text);
+  background: var(--thanks-text-gradient);
+  background-clip: text;
+  color: transparent;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Segoe UI", sans-serif;
   font-size: 6.15cqi;
   font-weight: 500;
   letter-spacing: -0.035em;
   line-height: 1.05;
   white-space: nowrap;
+  filter: drop-shadow(0 0 1.8cqi var(--thanks-text-glow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -3130,6 +3174,11 @@ a.contact-value:hover,
   .talk-link.gradient-text,
   .contact-link > span {
     transition: none;
+  }
+
+  .thanks-screen::before,
+  .thanks-screen::after {
+    animation: none;
   }
 }
 
