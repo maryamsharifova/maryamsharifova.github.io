@@ -38,6 +38,34 @@
   }
 }
 
+/* Scrolling back reverses the same distances: the old page drops, the new one comes from above. */
+html[data-travel="back"]::view-transition-old(root) {
+  animation-name: page-leave-back;
+}
+
+html[data-travel="back"]::view-transition-new(root) {
+  animation-name: page-enter-back;
+}
+
+@keyframes page-leave-back {
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes page-enter-back {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Hold the floating nav in place while the rest of the page moves. */
 ::view-transition-group(site-nav) {
   animation: none;

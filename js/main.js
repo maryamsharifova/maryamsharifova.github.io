@@ -8,32 +8,80 @@ try {
   console.warn("Could not read the saved theme preference.", error);
 }
 
-// Open each new page at the top, including after a cross-document transition.
+// Remember whether this visit came from scrolling forward or back, then clear it.
+let portfolioEnter = "start";
+try {
+  portfolioEnter = sessionStorage.getItem("portfolio-enter") || "start";
+  if (sessionStorage.getItem("portfolio-travel") === "back") {
+    document.documentElement.dataset.travel = "back";
+  }
+  sessionStorage.removeItem("portfolio-enter");
+  sessionStorage.removeItem("portfolio-travel");
+} catch (error) {
+  console.warn("Could not read the saved page direction.", error);
+}
+
+// The browser must not restore an old scroll position over the one chosen below.
 if ("scrollRestoration" in history) {
   history.scrollRestoration = "manual";
 }
-if (!window.location.hash) {
+
+const openedAtEnd = portfolioEnter === "end" && !window.location.hash;
+// The project track reads this while it is measuring, before the scroll listeners exist.
+window.portfolioEnter = openedAtEnd ? "end" : "start";
+
+// Forward visits start at the top. Back visits wait until the body has a height.
+if (!openedAtEnd && !window.location.hash) {
   window.scrollTo(0, 0);
 }
 
-// Warm the following page so a scroll at the bottom can switch without a blank wait.
+// Put a back-visit on the previous ending before the transition captures the page.
+const placePageEntry = () => {
+  if (!openedAtEnd) {
+    if (!window.location.hash) window.scrollTo(0, 0);
+    return;
+  }
+
+  // Projects lands on the last card once that track has been measured.
+  if (document.querySelector(".projects-page")) return;
+
+  const hero = document.querySelector(".portfolio-hero-section");
+  if (hero) {
+    window.scrollTo(0, hero.offsetTop);
+    return;
+  }
+
+  window.scrollTo(0, document.documentElement.scrollHeight);
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", placePageEntry);
+} else {
+  placePageEntry();
+}
+window.addEventListener("pagereveal", placePageEntry);
+
+// Warm the neighbouring pages so a scroll at either edge can switch without a blank wait.
 const portfolioPages = ["index.html", "about.html", "projects.html", "resume.html", "contact.html"];
 const portfolioFile = window.location.pathname.split("/").pop();
 const currentPortfolioPage = portfolioFile && portfolioFile.endsWith(".html") ? portfolioFile : "index.html";
-const nextPortfolioPage = portfolioPages[portfolioPages.indexOf(currentPortfolioPage) + 1];
+const portfolioIndex = portfolioPages.indexOf(currentPortfolioPage);
+const warmPortfolioPages = [portfolioPages[portfolioIndex - 1], portfolioPages[portfolioIndex + 1]].filter(Boolean);
 
-if (nextPortfolioPage && document.head) {
-  const prefetch = document.createElement("link");
-  prefetch.rel = "prefetch";
-  prefetch.href = nextPortfolioPage;
-  document.head.append(prefetch);
+if (warmPortfolioPages.length > 0 && document.head) {
+  warmPortfolioPages.forEach((page) => {
+    const prefetch = document.createElement("link");
+    prefetch.rel = "prefetch";
+    prefetch.href = page;
+    document.head.append(prefetch);
+  });
 
-  // Chromium can prerender from these rules. Other browsers keep the link above.
+  // Chromium can prerender from these rules. Other browsers keep the links above.
   const speculation = document.createElement("script");
   speculation.type = "speculationrules";
   speculation.textContent = JSON.stringify({
-    prerender: [{ urls: [nextPortfolioPage], eagerness: "immediate" }],
-    prefetch: [{ urls: [nextPortfolioPage], eagerness: "immediate" }],
+    prerender: [{ urls: warmPortfolioPages, eagerness: "immediate" }],
+    prefetch: [{ urls: warmPortfolioPages, eagerness: "immediate" }],
   });
   document.head.append(speculation);
 }
@@ -284,6 +332,10 @@ document.addEventListener("DOMContentLoaded", () => {
         targetProgress = 0;
         // A stacked list has no sideways track, so the next page can arm at the footer.
         projectPage.dataset.trackDone = "1";
+        if (window.portfolioEnter === "end") {
+          window.portfolioEnter = "start";
+          window.scrollTo(0, document.documentElement.scrollHeight);
+        }
         return;
       }
 
@@ -292,6 +344,13 @@ document.addEventListener("DOMContentLoaded", () => {
       trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
       targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
       displayedProgress = targetProgress;
+      // A back-visit opens on the last card instead of sliding there from the first.
+      if (window.portfolioEnter === "end") {
+        window.portfolioEnter = "start";
+        window.scrollTo(0, trackStart + trackDistance);
+        targetProgress = 1;
+        displayedProgress = 1;
+      }
       renderHorizontalTrack();
     };
 
@@ -1014,14 +1073,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeThanksLaptop();
 
-  // After a short rest at the bottom, a little extra scroll opens the next page.
+  // After a short rest at either edge, a little extra scroll opens the neighbour page.
   const initializePageFlow = () => {
-    const pages = ["index.html", "about.html", "projects.html", "resume.html", "contact.html"];
-    const fileName = window.location.pathname.split("/").pop();
-    const currentPage = fileName && fileName.endsWith(".html") ? fileName : "index.html";
-    const nextPage = pages[pages.indexOf(currentPage) + 1];
-    // Contact is the last page, and unknown files have nothing to open.
-    if (!nextPage) return;
+    const nextPage = portfolioPages[portfolioIndex + 1];
+    const previousPage = portfolioPages[portfolioIndex - 1];
+    if (!nextPage && !previousPage) return;
 
     const restDelay = 300;
     const wheelWindow = 1000;
@@ -1032,76 +1088,108 @@ document.addEventListener("DOMContentLoaded", () => {
     let touchGesture = null;
     let navigating = false;
 
+    const atTop = () => window.scrollY <= 4;
+
     const atBottom = () => {
       const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       return window.scrollY >= maxScroll - 4;
     };
 
-    // Home waits for the hero, Projects waits for the last card, and open UI blocks the jump.
-    const pageReady = () => {
-      if (document.body.classList.contains("project-dialog-open")) return false;
-      if (document.activeElement && document.activeElement.closest(".terminal-card")) return false;
+    // An open project window or the About prompt must keep the current page.
+    const blocked = () => {
+      if (document.body.classList.contains("project-dialog-open")) return true;
+      return Boolean(document.activeElement && document.activeElement.closest(".terminal-card"));
+    };
+
+    // Home waits for the hero. Projects waits until the last sideways card.
+    const forwardReady = () => {
+      if (!nextPage || blocked()) return false;
       const hero = document.querySelector(".portfolio-hero-section");
       if (hero && !hero.classList.contains("is-current")) return false;
       const projects = document.querySelector(".projects-page");
       if (projects && projects.dataset.trackDone !== "1") return false;
-      return true;
+      return atBottom();
     };
 
-    // The scroll that arrives at the bottom, including trackpad momentum, does not count yet.
-    const restingAtBottom = () => {
-      return atBottom() && pageReady() && performance.now() - lastScrollAt >= restDelay;
-    };
+    const backReady = () => !blocked() && Boolean(previousPage) && atTop();
 
-    const openNextPage = () => {
-      if (navigating || !restingAtBottom()) return;
+    const resting = () => performance.now() - lastScrollAt >= restDelay;
+
+    const openPage = (url, direction) => {
+      if (navigating) return;
       // One gesture can fire several events. Leave only after the first one.
       navigating = true;
       wheelSamples = [];
       touchGesture = null;
+      try {
+        sessionStorage.setItem("portfolio-travel", direction);
+        sessionStorage.setItem("portfolio-enter", direction === "back" ? "end" : "start");
+      } catch (error) {
+        console.warn("Could not remember the page direction.", error);
+      }
+      if (direction === "back") document.documentElement.dataset.travel = "back";
       // Reduced motion still changes pages; the stylesheet turns the fade off.
-      window.location.assign(nextPage);
+      window.location.assign(url);
     };
 
     window.addEventListener("scroll", () => {
       lastScrollAt = performance.now();
-      if (!atBottom()) wheelSamples = [];
+      if (!atTop() && !atBottom()) wheelSamples = [];
     }, { passive: true });
 
+    // These listeners stay passive, so the page can always scroll while it still has room.
     window.addEventListener("wheel", (event) => {
       const pixels = event.deltaMode === 1
         ? event.deltaY * 16
         : event.deltaMode === 2
           ? event.deltaY * window.innerHeight
           : event.deltaY;
+      const goingForward = pixels > 0 && forwardReady();
+      const goingBack = pixels < 0 && backReady();
 
-      // Keep waiting while momentum is still arriving. Only later wheels can add up.
-      if (pixels <= 0 || !restingAtBottom()) {
-        if (pixels > 0 && atBottom() && pageReady()) lastScrollAt = performance.now();
-        if (!atBottom()) wheelSamples = [];
+      // Momentum that merely arrives at the edge does not count as the extra scroll.
+      if (!resting() || (!goingForward && !goingBack)) {
+        if (goingForward || goingBack) lastScrollAt = performance.now();
+        if (!atTop() && !atBottom()) wheelSamples = [];
         return;
       }
 
       const now = performance.now();
+      // A change of direction starts the distance again.
+      if (wheelSamples.some((sample) => Math.sign(sample.pixels) !== Math.sign(pixels))) {
+        wheelSamples = [];
+      }
       wheelSamples.push({ time: now, pixels });
       wheelSamples = wheelSamples.filter((sample) => now - sample.time <= wheelWindow);
       const traveled = wheelSamples.reduce((total, sample) => total + sample.pixels, 0);
-      if (traveled >= wheelDistance) openNextPage();
+      if (traveled >= wheelDistance && nextPage) openPage(nextPage, "forward");
+      if (traveled <= -wheelDistance && previousPage) openPage(previousPage, "back");
     }, { passive: true });
 
-    // A finger moving up scrolls down. Only a new swipe after the rest can leave the page.
     window.addEventListener("touchstart", (event) => {
       const touch = event.touches[0];
-      touchGesture = touch
-        ? { startY: touch.clientY, armed: restingAtBottom() }
-        : null;
+      if (!touch || !resting()) {
+        touchGesture = null;
+        return;
+      }
+      // Arm only the edge the finger starts on. A later move cannot change pages mid-scroll.
+      let direction = null;
+      if (forwardReady()) direction = "forward";
+      else if (backReady()) direction = "back";
+      touchGesture = direction ? { startY: touch.clientY, direction } : null;
     }, { passive: true });
 
     window.addEventListener("touchmove", (event) => {
-      if (!touchGesture || !touchGesture.armed) return;
+      if (!touchGesture || navigating) return;
       const touch = event.touches[0];
       if (!touch) return;
-      if (touchGesture.startY - touch.clientY >= swipeDistance) openNextPage();
+      const rise = touchGesture.startY - touch.clientY;
+      // Finger up continues downward. Finger down goes back to the previous page.
+      if (touchGesture.direction === "forward" && rise >= swipeDistance && nextPage) {
+        openPage(nextPage, "forward");
+      } else if (touchGesture.direction === "back" && rise <= -swipeDistance && previousPage) {
+        openPage(previousPage, "back");
+      }
     }, { passive: true });
 
     window.addEventListener("touchend", () => {
