@@ -2478,28 +2478,6 @@ a {
   font-size: 0.64rem;
 }
 
-.project-photo-note {
-  position: absolute;
-  z-index: 3;
-  right: 0.65rem;
-  bottom: 0.6rem;
-  left: 0.65rem;
-  overflow: hidden;
-  padding: 0.32rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-  font-family: var(--font-label);
-  font-size: 0.56rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.project-photo-note code {
-  color: var(--color-text);
-}
-
 /* ===== Animated speech waveform ===== */
 .visual-waveform {
   display: flex;
@@ -2541,56 +2519,11 @@ a {
   font-size: 0.62rem;
 }
 
-/* ===== Chatbot screenshot and missing-image fallback ===== */
+/* ===== Chatbot screenshot panel ===== */
 .project-screenshot {
   display: grid;
   place-items: center;
   background: #101214;
-}
-
-.project-screenshot img {
-  display: none;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.project-screenshot.has-image img {
-  display: block;
-}
-
-.project-screenshot.has-image .project-image-placeholder {
-  display: none;
-}
-
-.project-image-placeholder {
-  width: calc(100% - 2rem);
-  min-height: 10rem;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  border: 1px dashed #41616a;
-  border-radius: 0.75rem;
-  color: #b4c7cc;
-  text-align: center;
-}
-
-.project-image-placeholder > span {
-  color: #6fd0ea;
-  font-size: 2rem;
-}
-
-.project-image-placeholder strong {
-  font-family: var(--font-heading);
-  font-size: 0.9rem;
-}
-
-.project-image-placeholder code {
-  color: #6fd0ea;
-  font-family: var(--font-label);
-  font-size: 0.7rem;
 }
 
 /* ===== Plant-health scan panel ===== */
@@ -3360,4 +3293,438 @@ a.contact-value:hover,
   .contact-card-note > span {
     transition: none;
   }
+}
+
+/* ===== Pinned project track ===== */
+.projects-page {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.projects-track {
+  position: relative;
+  width: 100%;
+}
+
+.projects-pin {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(1rem, 3vh, 2rem);
+  padding: 6rem clamp(1.5rem, 5vw, 5rem) 2rem;
+}
+
+.projects-page.has-horizontal-scroll .projects-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 0;
+  overflow: clip;
+}
+
+.projects-track-heading {
+  width: min(100%, 90rem);
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-inline: auto;
+}
+
+.projects-track-heading .eyebrow {
+  margin-bottom: 0.45rem;
+  color: var(--color-teal);
+}
+
+.projects-track-heading .page-title {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  line-height: 1;
+}
+
+.project-progress {
+  width: min(12rem, 26vw);
+  display: grid;
+  gap: 0.45rem;
+  padding-bottom: 0.25rem;
+}
+
+.project-progress-count {
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.project-progress-bar {
+  height: 2px;
+  overflow: hidden;
+  background: var(--color-border);
+}
+
+.project-progress-bar > span {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, var(--color-teal), var(--color-blue));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.project-list {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2vw, 2rem);
+  padding-inline: max(1.5rem, calc((100vw - 90rem) / 2));
+  will-change: transform;
+}
+
+.project-card {
+  position: relative;
+  width: min(980px, 80vw);
+  height: min(600px, calc(100vh - 15rem));
+  min-height: 0;
+  flex: 0 0 min(980px, 80vw);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  padding: clamp(1rem, 2.2vw, 2rem);
+  cursor: pointer;
+  transform: perspective(1100px) rotateX(var(--card-tilt-x, 0deg)) rotateY(var(--card-tilt-y, 0deg));
+  transition: transform 220ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.project-card:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 4px;
+}
+
+.project-copy {
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-teal) transparent;
+}
+
+.project-copy h2 {
+  font-size: clamp(1.3rem, 2.4vw, 2rem);
+}
+
+.project-copy > p:not(.project-label) {
+  margin-top: clamp(0.55rem, 1.2vh, 0.9rem);
+  font-size: clamp(0.76rem, 1.1vw, 0.9rem);
+  line-height: 1.6;
+}
+
+.project-tags {
+  gap: 0.35rem;
+  margin-top: clamp(0.6rem, 1.3vh, 1rem);
+}
+
+.project-tags li {
+  padding: 0.25rem 0.48rem;
+  font-size: clamp(0.58rem, 0.8vw, 0.68rem);
+}
+
+.project-open-button {
+  margin-top: clamp(0.65rem, 1.5vh, 1.1rem);
+}
+
+.project-visual {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.project-photo {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.project-visual .project-photo {
+  display: block;
+}
+
+.project-screenshot::before {
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgb(111 208 234 / 22%);
+  border-radius: 0.6rem;
+  background:
+    linear-gradient(90deg, transparent 0 15%, rgb(111 208 234 / 12%) 15% 16%, transparent 16%),
+    linear-gradient(180deg, rgb(255 255 255 / 5%) 0 14%, transparent 14% 24%, rgb(111 208 234 / 12%) 24% 26%, transparent 26% 57%, rgb(255 255 255 / 6%) 57% 59%, transparent 59%),
+    linear-gradient(135deg, #171d21, #101214);
+  box-shadow: inset 0 0 2rem rgb(8 137 176 / 12%);
+  content: "";
+}
+
+.projects-page:not(.has-horizontal-scroll) .projects-pin {
+  min-height: auto;
+}
+
+/* ===== macOS-style project window ===== */
+.project-dialog {
+  width: min(72rem, calc(100% - 2rem));
+  max-width: 72rem;
+  max-height: min(84vh, 52rem);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 2rem 7rem rgb(0 0 0 / 48%);
+  transform-origin: var(--dialog-origin, 50% 50%);
+}
+
+.project-dialog[open] {
+  animation: project-window-open 240ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+@keyframes project-window-open {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.project-dialog::backdrop {
+  background: rgb(4 7 9 / 74%);
+  backdrop-filter: blur(7px);
+}
+
+.project-window {
+  display: flex;
+  flex-direction: column;
+  max-height: min(84vh, 52rem);
+}
+
+.project-window-titlebar {
+  min-height: 3rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-inline: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-page);
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.project-dialog-close,
+.window-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+}
+
+.project-dialog-close {
+  position: relative;
+  background: #ff5f57;
+  cursor: pointer;
+}
+
+.project-dialog-close:hover::after {
+  position: absolute;
+  inset: -0.15rem 0 0;
+  color: #5a1715;
+  content: "×";
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 0.95rem;
+}
+
+.window-dot-yellow { background: #febc2e; }
+.window-dot-green { background: #28c840; }
+
+.project-window-path {
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+}
+
+.project-window-content {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(1rem, 3vw, 2rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  overflow: auto;
+}
+
+.project-window-visual {
+  min-width: 0;
+  min-height: 20rem;
+}
+
+.project-window-visual .project-visual {
+  height: 100%;
+  min-height: 20rem;
+}
+
+.project-window-details {
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.project-window-details .project-dialog-label {
+  margin: 0 0 0.45rem;
+  color: var(--color-teal);
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.project-window-details h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1.1;
+}
+
+.project-dialog-description {
+  margin: 0.8rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.project-window-details h3 {
+  margin: 1rem 0 0.35rem;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+}
+
+.project-dialog-highlights {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.project-dialog-highlights li::marker {
+  color: var(--color-teal);
+}
+
+.project-dialog-tags {
+  margin-top: 0.9rem;
+}
+
+@media (max-width: 860px), (prefers-reduced-motion: reduce) {
+  .projects-pin,
+  .projects-page.has-horizontal-scroll .projects-pin {
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 6rem 1rem 2rem;
+  }
+
+  .projects-track-heading {
+    width: min(100%, 42rem);
+    align-items: end;
+    gap: 0.8rem;
+  }
+
+  .projects-track-heading .page-title {
+    font-size: clamp(2.3rem, 10vw, 4rem);
+  }
+
+  .project-progress {
+    width: auto;
+  }
+
+  .project-list {
+    width: 100%;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding-inline: 0;
+    will-change: auto;
+  }
+
+  .project-card {
+    width: min(100%, 42rem);
+    height: auto;
+    min-height: 0;
+    flex-basis: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-inline: auto;
+    transform: none;
+  }
+
+  .project-copy {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .project-copy > p:not(.project-label) {
+    font-size: 0.88rem;
+  }
+
+  .project-visual {
+    height: 16rem;
+    min-height: 16rem;
+  }
+
+  .project-window-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .project-window-visual,
+  .project-window-visual .project-visual {
+    min-height: 15rem;
+    height: 15rem;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 861px) and (prefers-reduced-motion: no-preference) {
+  .projects-pin {
+    gap: 0.8rem;
+    padding-top: 5.2rem;
+    padding-bottom: 1rem;
+  }
+
+  .project-card {
+    height: min(600px, calc(100vh - 14rem));
+  }
+
+  .project-label {
+    margin-bottom: 0.4rem;
+  }
+
+  .project-open-button {
+    min-height: 2.2rem;
+    padding-block: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card,
+  .project-dialog[open] {
+    animation: none;
+    transition: none;
+  }
+}
+
+body.project-dialog-open {
+  overflow: hidden;
 }

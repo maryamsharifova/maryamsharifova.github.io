@@ -34,17 +34,23 @@
       </nav>
     </header>
 
-    <!-- Main Projects page with six case studies and interactive visuals. -->
-    <main class="page-content projects-page">
-      <!-- Page intro introduces the projects as practical answers to real needs. -->
-      <section class="page-intro projects-intro" aria-labelledby="projects-title">
-        <p class="eyebrow" data-reveal>02 · PROJECTS</p>
-        <h1 class="page-title gradient-text" id="projects-title" data-reveal>Things I built.</h1>
-      </section>
-
-      <!-- Each case study pairs a short project story with a custom visual. -->
-      <div class="project-list">
-        <article class="project-card" id="p1" data-reveal>
+    <!-- A pinned horizontal track turns each case study into a full-screen stop. -->
+    <main class="projects-page">
+      <section class="projects-track" aria-labelledby="projects-title">
+        <div class="projects-pin">
+          <div class="projects-track-heading">
+            <div>
+              <p class="eyebrow">02 · PROJECTS</p>
+              <h1 class="page-title gradient-text" id="projects-title">Things I built.</h1>
+            </div>
+            <div class="project-progress" aria-label="Project 1 of 6">
+              <span class="project-progress-count">01 ——— 06</span>
+              <span class="project-progress-bar"><span></span></span>
+            </div>
+          </div>
+          <!-- The JavaScript track translates this row as the page scrolls. -->
+          <div class="project-list">
+        <article class="project-card" id="p1" tabindex="0" aria-label="Open details for Speech-to-text API for Azerbaijani">
           <div class="project-copy">
             <p class="project-label">01 / SPEECH</p>
             <h2>Speech-to-text API for Azerbaijani</h2>
@@ -58,11 +64,10 @@
             <div class="visual-topline"><span>CALL TRANSCRIPT</span><code>{"lang":"az","status":"ok"}</code></div>
             <div class="waveform-bars" aria-hidden="true"></div>
             <div class="waveform-time"><span>00:18.4</span><span>00:42.0</span></div>
-            <figcaption class="project-photo-note">Photo not added · <code>images/projects/speech-api.jpg</code></figcaption>
           </figure>
         </article>
 
-        <article class="project-card" id="p2" data-reveal>
+        <article class="project-card" id="p2" tabindex="0" aria-label="Open details for Local LLM chatbot">
           <div class="project-copy">
             <p class="project-label">02 / LOCAL AI</p>
             <h2>Local LLM chatbot</h2>
@@ -73,17 +78,10 @@
             <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
           </div>
           <figure class="project-visual project-screenshot">
-            <img src="images/projects/chatbot.png" alt="Screenshot of Maryam's local LLM chatbot">
-            <div class="project-image-placeholder">
-              <span aria-hidden="true">▧</span>
-              <strong>Screenshot not added yet</strong>
-              <code>images/projects/chatbot.png</code>
-            </div>
-            <figcaption class="sr-only">Local chatbot screenshot, when supplied.</figcaption>
           </figure>
         </article>
 
-        <article class="project-card" id="p3" data-reveal>
+        <article class="project-card" id="p3" tabindex="0" aria-label="Open details for Plant-health vision for Agrohub">
           <div class="project-copy">
             <p class="project-label">03 / VISION</p>
             <h2>Plant-health vision for Agrohub</h2>
@@ -113,11 +111,10 @@
             </svg>
             <span class="detection-tag">leaf spot · 0.91</span>
             <span class="plant-scan-line" aria-hidden="true"></span>
-            <figcaption class="project-photo-note">Photo not added · <code>images/projects/agrohub-leaf.jpg</code></figcaption>
           </figure>
         </article>
 
-        <article class="project-card" id="p4" data-reveal>
+        <article class="project-card" id="p4" tabindex="0" aria-label="Open details for Logic gates">
           <div class="project-copy">
             <p class="project-label">04 / PROJECT 1</p>
             <h2>Logic gates</h2>
@@ -146,11 +143,10 @@
                 <tbody></tbody>
               </table>
             </div>
-            <figcaption class="project-photo-note">Photo not added · <code>images/projects/logic-gates.jpg</code></figcaption>
           </figure>
         </article>
 
-        <article class="project-card" id="p5" data-reveal>
+        <article class="project-card" id="p5" tabindex="0" aria-label="Open details for Hour of AI">
           <div class="project-copy">
             <p class="project-label">05 / PROJECT 2</p>
             <h2>Hour of AI</h2>
@@ -167,11 +163,10 @@
             <div class="code-block block-icon">show icon <b>★</b></div>
             <div class="code-block block-say">say "Hello, AI!"</div>
             <div class="certificate-chip">✓ Certificate earned</div>
-            <figcaption class="project-photo-note">Photo not added · <code>images/projects/hour-of-ai.jpg</code></figcaption>
           </figure>
         </article>
 
-        <article class="project-card" id="p6" data-reveal>
+        <article class="project-card" id="p6" tabindex="0" aria-label="Open details for Line-following robot with LEGO EV3">
           <div class="project-copy">
             <p class="project-label">06 / PROJECT 3</p>
             <h2>Line-following robot with LEGO EV3</h2>
@@ -205,10 +200,11 @@
                 </animateMotion>
               </g>
             </svg>
-            <figcaption class="project-photo-note">Photo not added · <code>images/projects/ev3-robot.jpg</code></figcaption>
           </figure>
         </article>
-      </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->
@@ -220,15 +216,30 @@
         </svg>
       </a>
     </footer>
-    <!-- Native dialog gives each Open window button an accessible detail view. -->
+    <!-- macOS-style project window presents the visual and project highlights. -->
     <dialog class="project-dialog" aria-labelledby="project-dialog-title">
-      <form method="dialog" class="project-dialog-top">
-        <span class="project-dialog-label"></span>
-        <button class="project-dialog-close" type="submit" aria-label="Close project details">×</button>
-      </form>
-      <h2 id="project-dialog-title"></h2>
-      <p class="project-dialog-description"></p>
-      <ul class="project-dialog-tags" aria-label="Project technologies"></ul>
+      <div class="project-window">
+        <div class="project-window-titlebar">
+          <div class="window-controls">
+            <button class="project-dialog-close" type="button" aria-label="Close project details"></button>
+            <span class="window-dot window-dot-yellow" aria-hidden="true"></span>
+            <span class="window-dot window-dot-green" aria-hidden="true"></span>
+          </div>
+          <code class="project-window-path"></code>
+          <span class="window-titlebar-spacer" aria-hidden="true"></span>
+        </div>
+        <div class="project-window-content">
+          <div class="project-window-visual"></div>
+          <div class="project-window-details">
+            <p class="project-dialog-label"></p>
+            <h2 id="project-dialog-title"></h2>
+            <p class="project-dialog-description"></p>
+            <h3>Highlights</h3>
+            <ul class="project-dialog-highlights"></ul>
+            <ul class="project-dialog-tags" aria-label="Project technologies"></ul>
+          </div>
+        </div>
+      </div>
     </dialog>
   </body>
 </html>

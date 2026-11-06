@@ -224,6 +224,70 @@ document.addEventListener("DOMContentLoaded", () => {
     const projectPage = document.querySelector(".projects-page");
     if (!projectPage) return;
 
+    const trackSection = projectPage.querySelector(".projects-track");
+    const stickyTrack = projectPage.querySelector(".projects-pin");
+    const projectList = projectPage.querySelector(".project-list");
+    const cards = [...projectPage.querySelectorAll(".project-card")];
+    const progressCount = projectPage.querySelector(".project-progress-count");
+    const progressBar = projectPage.querySelector(".project-progress-bar > span");
+    let horizontalTrackEnabled = false;
+    let trackDistance = 0;
+    let trackStart = 0;
+    let targetProgress = 0;
+    let displayedProgress = 0;
+    let trackAnimationFrame = 0;
+
+    // Pin the project list only on wide screens when motion is allowed.
+    const updateHorizontalTrack = () => {
+      horizontalTrackEnabled = window.matchMedia("(min-width: 861px)").matches && !reducedMotion.matches;
+      projectPage.classList.toggle("has-horizontal-scroll", horizontalTrackEnabled);
+      if (!horizontalTrackEnabled) {
+        trackSection.style.height = "";
+        projectList.style.transform = "";
+        displayedProgress = 0;
+        targetProgress = 0;
+        return;
+      }
+
+      trackDistance = Math.max(0, projectList.scrollWidth - stickyTrack.clientWidth);
+      trackSection.style.height = `${window.innerHeight + trackDistance}px`;
+      trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
+      targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
+      displayedProgress = targetProgress;
+      renderHorizontalTrack();
+    };
+
+    // Ease toward the actual scroll position instead of snapping between cards.
+    const renderHorizontalTrack = () => {
+      projectList.style.transform = `translate3d(${-trackDistance * displayedProgress}px, 0, 0)`;
+      const currentCard = Math.min(cards.length, Math.max(1, Math.round(displayedProgress * (cards.length - 1)) + 1));
+      progressCount.textContent = `${String(currentCard).padStart(2, "0")} ——— ${String(cards.length).padStart(2, "0")}`;
+      progressCount.parentElement.setAttribute("aria-label", `Project ${currentCard} of ${cards.length}`);
+      progressBar.style.transform = `scaleX(${displayedProgress})`;
+    };
+
+    const animateHorizontalTrack = () => {
+      trackAnimationFrame = 0;
+      if (!horizontalTrackEnabled) return;
+      displayedProgress += (targetProgress - displayedProgress) * 0.1;
+      if (Math.abs(targetProgress - displayedProgress) < 0.001) displayedProgress = targetProgress;
+      renderHorizontalTrack();
+      if (displayedProgress !== targetProgress) {
+        trackAnimationFrame = window.requestAnimationFrame(animateHorizontalTrack);
+      }
+    };
+
+    const updateTrackTarget = () => {
+      if (!horizontalTrackEnabled) return;
+      targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
+      if (!trackAnimationFrame) trackAnimationFrame = window.requestAnimationFrame(animateHorizontalTrack);
+    };
+
+    updateHorizontalTrack();
+    window.addEventListener("scroll", updateTrackTarget, { passive: true });
+    window.addEventListener("resize", updateHorizontalTrack);
+    reducedMotion.addEventListener?.("change", updateHorizontalTrack);
+
     // Generate a varied waveform without relying on an external image or library.
     projectPage.querySelectorAll(".waveform-bars").forEach((waveform) => {
       for (let index = 0; index < 38; index += 1) {
@@ -235,18 +299,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Keep an explicit filename placeholder visible until a supplied image loads.
-    projectPage.querySelectorAll(".project-screenshot img").forEach((image) => {
-      const showScreenshot = () => {
-        if (image.naturalWidth > 0) {
-          image.closest(".project-screenshot").classList.add("has-image");
-        }
-      };
-      if (image.complete) {
-        showScreenshot();
-      } else {
-        image.addEventListener("load", showScreenshot, { once: true });
-      }
+    // Add a real project photo only when its file exists; the custom visual remains otherwise.
+    const photoFiles = ["speech-api.jpg", "chatbot.png", "agrohub-leaf.jpg", "logic-gates.jpg", "hour-of-ai.jpg", "ev3-robot.jpg"];
+    cards.forEach((card, index) => {
+      card.classList.add("is-revealed");
+      const photoPath = `images/projects/${photoFiles[index]}`;
+      fetch(photoPath, { method: "HEAD" }).then((response) => {
+        if (!response.ok) return;
+        const image = document.createElement("img");
+        image.className = "project-photo";
+        image.src = photoPath;
+        image.alt = `${card.querySelector("h2").textContent} project photo`;
+        card.querySelector(".project-visual").append(image);
+      }).catch((error) => {
+        console.warn(`Could not check for project photo ${photoPath}.`, error);
+      });
     });
 
     // Rebuild the truth table and LED output for the selected inputs and gate.
@@ -311,37 +378,138 @@ document.addEventListener("DOMContentLoaded", () => {
       updateCircuit();
     }
 
-    // Each button opens a native dialog populated from its own project card.
+    // The titlebar path keeps each project window grounded in a familiar file layout.
     const dialog = document.querySelector(".project-dialog");
     if (dialog) {
       const dialogLabel = dialog.querySelector(".project-dialog-label");
       const dialogTitle = dialog.querySelector("#project-dialog-title");
       const dialogDescription = dialog.querySelector(".project-dialog-description");
       const dialogTags = dialog.querySelector(".project-dialog-tags");
+      const dialogPath = dialog.querySelector(".project-window-path");
+      const dialogVisual = dialog.querySelector(".project-window-visual");
+      const dialogHighlights = dialog.querySelector(".project-dialog-highlights");
+      const projectSlugs = ["speech-to-text", "local-llm-chatbot", "plant-health-agrohub", "logic-gates", "hour-of-ai", "lego-ev3-robot"];
+      const highlights = [
+        ["Benchmarked five Hugging Face models on a real Azerbaijani phone call.", "Compared WAV and MP4 audio inputs.", "SeamlessM4T v2 produced the most accurate transcript.", "Built a Python REST endpoint with FFmpeg conversion.", "Traced output differences to missing decoding parameters."],
+        ["Ran a Llama model locally with LM Studio.", "Connected the assistant to Telegram and WhatsApp.", "Added MCP tools for connected workflows.", "Embedded the chatbot into a website Maryam built."],
+        ["Compared more than ten plant-health APIs.", "Reviewed Kindwise, Plantix, and Agrio.", "Tested crops grown in Azerbaijan.", "Recommended Kindwise for crop and disease identification.", "Returned confidence scores and treatment advice as JSON."],
+        ["Built AND, OR, and NOT gates with a team.", "Used transistors and resistors on a breadboard.", "Read inputs with push buttons.", "Displayed each gate output with an LED."],
+        ["Taught a one-hour AI and coding lesson as a team.", "Used Microsoft MakeCode block programming.", "Helped children build and run their own program.", "Each participant earned a certificate."],
+        ["Built a LEGO Mindstorms EV3 robot in ADA's MakerSpace.", "Programmed the robot with MakeCode blocks and JavaScript.", "Followed a predefined track autonomously.", "Used the gyro sensor for accurate turns."],
+      ];
+
+      const openProjectWindow = (card, pointerX, pointerY) => {
+        const projectIndex = cards.indexOf(card);
+        const cardBounds = card.getBoundingClientRect();
+        dialogLabel.textContent = card.querySelector(".project-label").textContent;
+        dialogTitle.textContent = card.querySelector("h2").textContent;
+        dialogDescription.textContent = card.querySelector(".project-copy > p:not(.project-label)").textContent;
+        dialogPath.textContent = `~/projects/${projectSlugs[projectIndex]}`;
+        dialogTags.replaceChildren();
+        card.querySelectorAll(".project-tags li").forEach((tag) => {
+          const item = document.createElement("li");
+          item.textContent = tag.textContent;
+          dialogTags.append(item);
+        });
+        dialogHighlights.replaceChildren();
+        highlights[projectIndex].forEach((text) => {
+          const item = document.createElement("li");
+          item.textContent = text;
+          dialogHighlights.append(item);
+        });
+
+        const visualCopy = card.querySelector(".project-visual").cloneNode(true);
+        const ids = new Map();
+        visualCopy.querySelectorAll("[id]").forEach((element) => {
+          const oldId = element.id;
+          const newId = `${oldId}-window`;
+          ids.set(oldId, newId);
+          element.id = newId;
+        });
+        [visualCopy, ...visualCopy.querySelectorAll("*")].forEach((element) => {
+          [...element.attributes].forEach((attribute) => {
+            let value = attribute.value.replace(/url\(#([^)]+)\)/g, (match, id) => `url(#${ids.get(id) || id})`);
+            if (value.startsWith("#") && ids.has(value.slice(1))) value = `#${ids.get(value.slice(1))}`;
+            element.setAttribute(attribute.name, value);
+          });
+        });
+        dialogVisual.replaceChildren(visualCopy);
+        dialog.showModal();
+        document.body.classList.add("project-dialog-open");
+        const windowBounds = dialog.getBoundingClientRect();
+        const originX = Number.isFinite(pointerX) ? pointerX : cardBounds.left + cardBounds.width / 2;
+        const originY = Number.isFinite(pointerY) ? pointerY : cardBounds.top + cardBounds.height / 2;
+        dialog.style.setProperty("--dialog-origin", `${originX - windowBounds.left}px ${originY - windowBounds.top}px`);
+      };
 
       projectPage.querySelectorAll(".project-open-button").forEach((button) => {
         button.dataset.magnetic = "";
-        button.addEventListener("click", () => {
-          const card = button.closest(".project-card");
-          dialogLabel.textContent = card.querySelector(".project-label").textContent;
-          dialogTitle.textContent = card.querySelector("h2").textContent;
-          dialogDescription.textContent = card.querySelector(".project-copy > p:not(.project-label)").textContent;
-          dialogTags.replaceChildren();
-          card.querySelectorAll(".project-tags li").forEach((tag) => {
-            const item = document.createElement("li");
-            item.textContent = tag.textContent;
-            dialogTags.append(item);
-          });
-          dialog.showModal();
+        button.addEventListener("click", (event) => {
+          openProjectWindow(button.closest(".project-card"), event.clientX, event.clientY);
         });
       });
 
+      cards.forEach((card) => {
+        card.addEventListener("click", (event) => {
+          if (event.target.closest("button, a, input, select, textarea")) return;
+          openProjectWindow(card, event.clientX, event.clientY);
+        });
+        card.addEventListener("keydown", (event) => {
+          if (event.target === card && event.key === "Enter") {
+            event.preventDefault();
+            openProjectWindow(card);
+          }
+        });
+        card.addEventListener("pointermove", (event) => {
+          const bounds = card.getBoundingClientRect();
+          const tiltX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -6;
+          const tiltY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 6;
+          card.style.setProperty("--card-tilt-x", `${tiltX}deg`);
+          card.style.setProperty("--card-tilt-y", `${tiltY}deg`);
+        });
+        card.addEventListener("pointerleave", () => {
+          card.style.setProperty("--card-tilt-x", "0deg");
+          card.style.setProperty("--card-tilt-y", "0deg");
+        });
+      });
+
+      dialog.querySelector(".project-dialog-close").addEventListener("click", () => dialog.close());
+      dialog.addEventListener("close", () => document.body.classList.remove("project-dialog-open"));
       dialog.addEventListener("click", (event) => {
         if (event.target === dialog) dialog.close();
       });
       dialog.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && dialog.open) dialog.close();
+        if (event.key === "Escape" && dialog.open) {
+          event.preventDefault();
+          dialog.close();
+        }
       });
+
+      // Direct project links scroll to the requested stop and open its window.
+      const requestedProject = document.getElementById(window.location.hash.slice(1));
+      if (requestedProject?.matches(".project-card")) {
+        window.setTimeout(() => {
+          let requestedScrollY = 0;
+          if (horizontalTrackEnabled) {
+            const requestedDistance = Math.min(trackDistance, requestedProject.offsetLeft - projectList.offsetLeft);
+            requestedScrollY = trackStart + requestedDistance;
+            targetProgress = requestedDistance / Math.max(1, trackDistance);
+            displayedProgress = targetProgress;
+            renderHorizontalTrack();
+          } else {
+            requestedProject.scrollIntoView({ block: "start" });
+          }
+          openProjectWindow(requestedProject);
+          if (horizontalTrackEnabled) {
+            window.setTimeout(() => {
+              window.scrollTo(0, requestedScrollY);
+              targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
+              displayedProgress = targetProgress;
+              renderHorizontalTrack();
+            }, 120);
+          }
+        }, 120);
+      }
     }
   };
 
