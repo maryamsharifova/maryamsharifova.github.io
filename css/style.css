@@ -115,31 +115,7 @@ a {
   color: inherit;
 }
 
-/* ===== Shared navigation and theme control ===== */
-.site-header {
-  width: min(100% - 3rem, 72rem);
-  min-height: 5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-inline: auto;
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* The fixed pill replaces the scrolling header on every page. */
-.site-header {
-  display: none;
-}
-
-.site-name {
-  flex-shrink: 0;
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
+/* ===== Shared theme control ===== */
 .gradient-text {
   /* Clip the gradient to the text instead of filling the whole element. */
   background: linear-gradient(110deg, var(--color-navy), var(--color-ocean), var(--color-teal), var(--color-blue));
@@ -150,42 +126,6 @@ a {
 :root:not([data-theme="light"]) .gradient-text {
   /* Use a light first color so headings stay readable in dark mode. */
   background-image: linear-gradient(110deg, var(--color-gradient-start) 4%, var(--color-ocean) 42%, var(--color-teal) 70%, var(--color-blue));
-}
-
-.site-nav {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.nav-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.nav-list a {
-  display: block;
-  padding: 0.5rem 0.65rem;
-  border-radius: 0.4rem;
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-  text-decoration: none;
-  transition: background-color 150ms ease, color 150ms ease;
-}
-
-.nav-list a:hover,
-.nav-list a:focus-visible {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.nav-list a[aria-current="page"] {
-  background: var(--color-surface);
-  color: var(--color-text);
 }
 
 .theme-toggle {
@@ -1083,10 +1023,6 @@ a {
 }
 
 /* ===== Homepage hero: full-screen canvas and laptop-screen window ===== */
-.home-intro-page .site-header {
-  display: none;
-}
-
 .portfolio-hero-section {
   position: relative;
   min-height: 100vh;
@@ -1717,28 +1653,6 @@ a {
 
 /* ===== Responsive layout ===== */
 @media (max-width: 44rem) {
-  .site-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding-block: 1rem;
-  }
-
-  .site-nav {
-    width: 100%;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .nav-list {
-    gap: 0.15rem;
-  }
-
-  .nav-list a {
-    padding-inline: 0.45rem;
-    font-size: 0.82rem;
-  }
-
   .intro-detail {
     display: none;
   }
@@ -2132,29 +2046,6 @@ a {
   transform: translateY(-3px);
 }
 
-.about-photo-card {
-  width: 100%;
-  max-width: 380px;
-  aspect-ratio: 1;
-  margin: 0;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  background: var(--color-surface);
-}
-
-.about-photo-card img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 350ms ease;
-}
-
-.about-photo-card:hover img {
-  transform: scale(1.025);
-}
-
 /* ===== Part 3: dark interactive portfolio terminal ===== */
 .terminal-card {
   margin-top: clamp(3rem, 8vw, 6rem);
@@ -2307,17 +2198,14 @@ a {
 @media (max-width: 760px) {
   .about-page {
     width: min(100% - 2rem, 42rem);
-    padding-block: 3rem;
+    /* Clear the floating navigation pill on a phone. */
+    padding-top: 5.5rem;
+    padding-bottom: 3rem;
   }
 
   .about-overview {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
-  }
-
-  .about-photo-card {
-    width: min(100%, 22rem);
-    justify-self: center;
   }
 
   .terminal-header {
@@ -2348,26 +2236,12 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   .skill-list li,
-  .about-photo-card img,
   .terminal-command {
     transition: none;
   }
 }
 
 /* ===== Part 4: project cards and custom project visuals ===== */
-.projects-page {
-  width: min(100% - 3rem, 80rem);
-  padding-block: clamp(4rem, 10vh, 7rem);
-}
-
-.projects-intro .eyebrow {
-  color: var(--color-teal);
-}
-
-.projects-intro .page-title {
-  font-size: clamp(3rem, 8vw, 6rem);
-}
-
 .project-list {
   display: grid;
   gap: clamp(1.25rem, 3vw, 2rem);
@@ -2799,60 +2673,6 @@ a {
   to { stroke-dashoffset: -34; }
 }
 
-/* ===== Project detail dialog ===== */
-.project-dialog {
-  width: min(34rem, calc(100% - 2rem));
-  max-height: min(80vh, 44rem);
-  padding: clamp(1.25rem, 4vw, 2rem);
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: 0 2rem 6rem rgb(0 0 0 / 40%);
-}
-
-.project-dialog::backdrop {
-  background: rgb(4 7 9 / 72%);
-  backdrop-filter: blur(5px);
-}
-
-.project-dialog-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.project-dialog-label {
-  color: var(--color-teal);
-  font-family: var(--font-label);
-  font-size: 0.72rem;
-}
-
-.project-dialog-close {
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  cursor: pointer;
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.project-dialog h2 {
-  margin: 1rem 0 0;
-  font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 5vw, 2.1rem);
-  line-height: 1.15;
-}
-
-.project-dialog-description {
-  color: var(--color-text-muted);
-  line-height: 1.75;
-}
-
 @media (max-width: 760px) {
   .projects-page {
     width: min(100% - 2rem, 42rem);
@@ -2928,42 +2748,25 @@ a {
 }
 
 /* Solid resume button with a small document icon. */
-.resume-open,
-.contact-action-primary,
-.contact-copy-button {
+.resume-open {
   min-height: 2.8rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
+  margin-top: 1.4rem;
   padding: 0.7rem 1.15rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-radius: 0.55rem;
+  background: var(--hero-primary-button);
+  color: var(--hero-primary-text);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
 }
 
-.resume-open,
-.contact-action-primary {
-  border-color: transparent;
-  background: var(--hero-primary-button);
-  color: var(--hero-primary-text);
-}
-
-.resume-open {
-  margin-top: 1.4rem;
-}
-
-.contact-copy-button {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.resume-open:hover,
-.contact-action-primary:hover,
-.contact-copy-button:hover {
+.resume-open:hover {
   border-color: var(--color-teal);
 }
 
@@ -2977,14 +2780,12 @@ a {
   stroke-linecap: round;
 }
 
-.resume-open > span,
-.contact-action-primary > span {
+.resume-open > span {
   display: inline-block;
   transition: transform 160ms ease;
 }
 
-.resume-open:hover > span,
-.contact-action-primary:hover > span {
+.resume-open:hover > span {
   transform: translate(2px, -2px);
 }
 
@@ -3320,7 +3121,7 @@ a {
   letter-spacing: 0.05em;
 }
 
-/* Contact links stay readable while providing a clear copy-email action. */
+/* Contact cards stay readable in both themes. */
 .contact-intro {
   max-width: 56rem;
 }
@@ -3397,22 +3198,141 @@ a.contact-value:hover,
   transform: translate(2px, -2px);
 }
 
-.contact-actions {
+.contact-intro .page-title {
+  font-size: clamp(4.2rem, 13vw, 8.5rem);
+  line-height: 0.92;
+}
+
+.talk-link {
+  text-decoration: none;
+}
+
+/* A wider gradient so the colors slide across the heading on hover. */
+.talk-link.gradient-text,
+:root[data-theme="light"] .talk-link.gradient-text,
+:root:not([data-theme="light"]) .talk-link.gradient-text {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-gradient-start) 0%,
+    var(--color-ocean) 22%,
+    var(--color-teal) 40%,
+    var(--color-blue) 58%,
+    var(--color-gradient-start) 80%,
+    var(--color-ocean) 100%
+  );
+  background-size: 220% 100%;
+  background-position: 0% center;
+  transition: background-position 0.7s ease;
+}
+
+.talk-link.gradient-text:hover,
+:root[data-theme="light"] .talk-link.gradient-text:hover,
+:root:not([data-theme="light"]) .talk-link.gradient-text:hover {
+  background-position: 100% center;
+}
+
+.contact-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 1.6rem;
 }
 
-.contact-actions .contact-action-primary,
-.contact-actions .contact-copy-button {
-  min-height: 2.5rem;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.76rem;
+.contact-link {
+  min-height: 2.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
 }
 
-.contact-card-email {
-  min-height: 17rem;
+.contact-link-primary {
+  border-color: transparent;
+  background: var(--hero-primary-button);
+  color: var(--hero-primary-text);
+}
+
+.contact-link:hover {
+  border-color: var(--color-teal);
+}
+
+.contact-link > span {
+  display: inline-block;
+  transition: transform 160ms ease;
+}
+
+.contact-link:hover > span {
+  transform: translate(2px, -2px);
+}
+
+/* Sticky room so the lid can close across the last part of the page. */
+.thanks-scroll {
+  height: 175vh;
+  margin-top: clamp(2rem, 6vw, 4rem);
+}
+
+.thanks-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: clip;
+  perspective: 1100px;
+  perspective-origin: 50% 42%;
+  /* Open pose. Scroll script eases these toward a closed lid. */
+  --camera-angle: -28deg;
+  --laptop-yaw: 0deg;
+  --laptop-scale: 1;
+  --lid-lift: 0px;
+  --lid-angle: 8deg;
+  --screen-power: 1;
+  --keyboard-reveal: 1;
+  --logo-opacity: 0;
+  --logo-shimmer: -20%;
+}
+
+.thanks-stage .laptop {
+  width: min(32rem, 86vw);
+}
+
+.thanks-screen {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1.2cqi;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgb(43 181 216 / 32%), transparent 58%),
+    #08090b;
+  opacity: var(--screen-power, 1);
+  text-align: center;
+}
+
+.thanks-mark {
+  margin: 0;
+  color: #f4f7f8;
+  font-family: var(--font-heading);
+  font-size: 16cqi;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.thanks-line {
+  margin: 0;
+  color: #9fd4e6;
+  font-family: var(--font-label);
+  font-size: 3.4cqi;
+  letter-spacing: 0.16em;
 }
 
 @media (max-width: 760px) {
@@ -3436,18 +3356,34 @@ a.contact-value:hover,
     height: 4.6rem;
   }
 
-  .contact-card,
-  .contact-card-email {
+  .contact-intro .page-title {
+    font-size: clamp(3.4rem, 16vw, 4.6rem);
+  }
+
+  .thanks-scroll {
+    height: 150vh;
+  }
+
+  .thanks-stage {
+    height: 100svh;
+  }
+
+  .thanks-stage .laptop {
+    width: min(20rem, 88vw);
+  }
+
+  .contact-card {
     min-height: 13rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .resume-open > span,
-  .contact-action-primary > span,
   .contact-card-note > span,
   .toolkit li,
-  .quest {
+  .quest,
+  .talk-link.gradient-text,
+  .contact-link > span {
     transition: none;
   }
 }

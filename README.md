@@ -1,60 +1,45 @@
 # Maryam Sharifova — Portfolio
 
-A minimal, multi-page personal portfolio built with HTML, CSS, and JavaScript.
-It is designed for GitHub Pages and does not require build tools or packages.
+A personal portfolio for a university course. It is a static site in plain HTML, CSS, and JavaScript, with no frameworks or build step, and it is published with GitHub Pages.
 
-## Project structure
+Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io)
+
+Design ideas and prompts were planned with Claude; the code was built with GitHub Copilot in VS Code and Cursor.
+
+## Pages
+
+- **Home** (`index.html`) — scroll-driven laptop introduction. The lid opens, the lock screen powers on, and the view glides into the portfolio hero.
+- **About** (`about.html`) — short biography, skills, and a browser-only terminal with a fixed set of commands.
+- **Projects** (`projects.html`) — six case studies. On a wide screen the cards pin and slide sideways. Each one opens in a macOS-style window.
+- **Resume** (`resume.html`) — a game-style player card, a mission timeline, certifications, and languages. The PDF resume is in `assets/`.
+- **Contact** (`contact.html`) — LinkedIn, GitHub, location, and the resume. A small laptop at the bottom closes as the page ends.
+
+Every page has dark and light mode, a floating navigation pill, and a layout that works on phones. The theme choice is saved in the browser.
+
+## Folder structure
 
 ```text
 .
-├── index.html       # Home
-├── about.html       # About
-├── projects.html    # Projects
-├── resume.html      # Resume
-├── contact.html     # Contact
-├── resume.pdf       # Public CV
+├── index.html
+├── about.html
+├── projects.html
+├── resume.html
+├── contact.html
 ├── css/
-│   └── style.css    # Shared layout, themes, and responsive styles
+│   └── style.css          # Shared layout, themes, and responsive styles
 ├── js/
-│   └── main.js      # Shared theme, animation, terminal, and page interactions
+│   └── main.js            # Theme, laptop motion, projects, terminal, and resume timeline
+├── assets/
+│   └── Maryam_Sharifova_CV.pdf
 └── images/
-    ├── profile.jpg  # Home and About portrait
-    └── projects/    # Optional project screenshots
+    ├── profile.jpg
+    └── projects/          # Optional project photos
 ```
 
-## Preview locally
+## Run it locally
 
-Open `index.html` in a web browser. To publish it with GitHub Pages, open the
-repository's **Settings → Pages**, choose **Deploy from a branch**, then select
-the branch you want to publish and its `/ (root)` folder.
+1. Open the project folder in VS Code.
+2. Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension if it is not already installed.
+3. Right-click `index.html` and choose **Open with Live Server**.
 
-## Customize
-
-- Add or replace the portrait at `images/profile.jpg`.
-- Adjust shared colors and styles in `css/style.css`.
-- Add images to `images/` and reference them from your HTML or CSS.
-- The theme button switches between dark and light mode. The selection is saved
-  in the browser's local storage.
-- The Home page's laptop intro is drawn in CSS, with shared JavaScript updating
-  its transforms from scroll position so it does not depend on CSS scroll
-  timelines. The screen lid hinges above a separate flat keyboard deck, and the
-  intro text uses a JavaScript typewriter effect that fades before the lid opens.
-- The Home hero includes a theme-aware canvas particle network and a cursor-reactive
-  portrait orbit. Shared page motion adds scroll reveals, desktop pointer effects,
-  right-edge page links, and accessible confirmation toasts.
-- The About page includes a browser-only portfolio terminal with a fixed set of
-  safe commands; it never runs shell input.
-- The Projects page contains six interactive case studies. Put a chatbot screenshot
-  at `images/projects/chatbot.png`; other missing project photos show their expected
-  filenames beside the built-in visual demos.
-- Resume details are also available as `resume.pdf`. Contact links open email,
-  LinkedIn, and GitHub directly; the email copy button shows a confirmation toast.
-- Opening the laptop powers on a container-sized lock screen, with a live local
-  clock, animated security details, and a keyboard light and name-typing effect.
-- Unlocking the screen reveals the responsive homepage hero; the measured screen
-  and laptop zoom smoothly to the browser viewport before the hero becomes
-  clickable.
-- Google Fonts are loaded from Google Fonts when the pages are online.
-
-The GitHub icon in the footer links to the portfolio repository:
-[maryamsharifova.github.io](https://github.com/maryamsharifova/maryamsharifova.github.io).
+The site also opens if you open `index.html` directly in a browser. Live Server is the better preview because project photos are checked with a request the browser may block from a `file://` address.

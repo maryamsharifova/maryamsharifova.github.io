@@ -73,6 +73,17 @@ document.addEventListener("DOMContentLoaded", () => {
       rail.append(link);
     });
 
+    // Sun and moon drawings live here so the hidden page header is no longer needed.
+    const themeIconMarkup = `
+      <svg class="sun-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
+      </svg>
+      <svg class="moon-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+        <path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
+      </svg>
+    `;
+
     const floatingNav = document.querySelector(".floating-nav") || document.createElement("nav");
     if (!floatingNav.classList.contains("floating-nav")) {
       floatingNav.className = "floating-nav";
@@ -84,15 +95,12 @@ document.addEventListener("DOMContentLoaded", () => {
         floatingNav.append(link);
       });
 
-      const sourceToggle = document.querySelector(".site-header .theme-toggle");
       const toggle = document.createElement("button");
       toggle.className = "theme-toggle floating-theme-toggle";
       toggle.type = "button";
       toggle.setAttribute("aria-label", "Switch to light mode");
       toggle.setAttribute("title", "Switch to light mode");
-      if (sourceToggle) {
-        toggle.innerHTML = sourceToggle.innerHTML;
-      }
+      toggle.innerHTML = themeIconMarkup;
       floatingNav.append(toggle);
       document.body.append(floatingNav);
     }
@@ -105,13 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Reuse the main-header icons so every theme button looks identical.
-    const sourceToggle = document.querySelector(".site-header .theme-toggle");
-    if (sourceToggle) {
-      floatingNav.querySelectorAll(".theme-toggle").forEach((toggle) => {
-        toggle.innerHTML = sourceToggle.innerHTML;
-      });
-    }
+    // Keep the floating theme button on the same sun and moon artwork as the hero.
+    floatingNav.querySelectorAll(".theme-toggle").forEach((toggle) => {
+      toggle.innerHTML = themeIconMarkup;
+    });
 
     const toastArea = document.createElement("div");
     toastArea.className = "toast-area";
@@ -168,7 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fade, unblur, and lift page content once it enters the viewport.
   const initializeScrollReveals = () => {
-    const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *"));
+    // Skip the closing laptop. A transform or blur on that section would break its sticky pin.
+    const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *:not(.thanks-scroll)"));
     document.querySelectorAll("[data-reveal], .page-content > * > [data-reveal]").forEach((item) => revealItems.add(item));
 
     const revealGroups = new Map();
@@ -910,6 +916,63 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   initializeQuestTimeline();
+
+  // Close the contact laptop with the same 10% glide as the home intro.
+  const initializeThanksLaptop = () => {
+    const section = document.querySelector(".thanks-scroll");
+    if (!section) return;
+
+    const stage = section.querySelector(".thanks-stage");
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let animationFrame = 0;
+    const clamp = (value) => Math.min(1, Math.max(0, value));
+    const progressBetween = (progress, start, end) => clamp((progress - start) / (end - start));
+    const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
+
+    // 0 while the laptop is still ahead, 1 at the very bottom of the page.
+    const readTarget = () => {
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      return clamp((window.scrollY - section.offsetTop) / Math.max(1, maxScroll - section.offsetTop));
+    };
+
+    const renderThanksLaptop = () => {
+      const opening = 1 - easeInOut(currentProgress);
+      stage.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
+      stage.style.setProperty("--screen-power", String(progressBetween(opening, 0.45, 0.82)));
+      stage.style.setProperty("--keyboard-reveal", String(progressBetween(opening, 0.22, 0.72)));
+      stage.style.setProperty("--logo-opacity", String(1 - progressBetween(opening, 0.18, 0.5)));
+    };
+
+    const animateThanksLaptop = () => {
+      animationFrame = 0;
+      currentProgress += (targetProgress - currentProgress) * (reducedMotion.matches ? 1 : 0.1);
+      if (Math.abs(targetProgress - currentProgress) < 0.001) currentProgress = targetProgress;
+      renderThanksLaptop();
+      if (currentProgress !== targetProgress) {
+        animationFrame = window.requestAnimationFrame(animateThanksLaptop);
+      }
+    };
+
+    const requestThanksUpdate = () => {
+      targetProgress = readTarget();
+      if (!animationFrame) animationFrame = window.requestAnimationFrame(animateThanksLaptop);
+    };
+
+    window.addEventListener("scroll", requestThanksUpdate, { passive: true });
+    window.addEventListener("resize", requestThanksUpdate);
+    if (typeof reducedMotion.addEventListener === "function") {
+      reducedMotion.addEventListener("change", requestThanksUpdate);
+    } else {
+      reducedMotion.addListener(requestThanksUpdate);
+    }
+
+    currentProgress = readTarget();
+    targetProgress = currentProgress;
+    renderThanksLaptop();
+  };
+
+  initializeThanksLaptop();
 
   const laptopIntro = document.querySelector(".laptop-intro");
   if (!laptopIntro) {

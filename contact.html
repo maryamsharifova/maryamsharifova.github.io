@@ -10,36 +10,18 @@
     <script src="js/main.js"></script>
   </head>
   <body>
-    <!-- Shared identity, page links, and theme control. -->
-    <header class="site-header">
-      <a class="site-name gradient-text" href="index.html">Maryam Sharifova</a>
-      <!-- aria-current identifies this page in the navigation. -->
-      <nav class="site-nav" aria-label="Main navigation">
-        <ul class="nav-list">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="projects.html">Projects</a></li>
-          <li><a href="resume.html">Resume</a></li>
-          <li><a href="contact.html" aria-current="page">Contact</a></li>
-        </ul>
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
-          <svg class="sun-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-            <circle cx="12" cy="12" r="4"></circle>
-            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
-          </svg>
-          <svg class="moon-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-            <path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
-          </svg>
-        </button>
-      </nav>
-    </header>
-
-    <!-- Main Contact page uses direct links rather than a nonfunctional form. -->
+    <!-- Main Contact page uses direct links rather than a form. -->
     <main class="page-content contact-page">
-      <!-- Intro explains the best way to get in touch. -->
+      <!-- The heading links to LinkedIn. The gradient shifts when the pointer is over it. -->
       <section class="page-intro contact-intro" aria-labelledby="contact-title">
         <p class="eyebrow" data-reveal>04 · CONTACT</p>
-        <h1 class="page-title gradient-text" id="contact-title" data-reveal>Get in touch.</h1>
+        <h1 class="page-title" id="contact-title" data-reveal>
+          <a class="talk-link gradient-text" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener">Let's talk.</a>
+        </h1>
+        <div class="contact-links" data-reveal>
+          <a class="contact-link contact-link-primary" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a>
+          <a class="contact-link" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+        </div>
       </section>
 
       <!-- Contact options are limited to public profiles, location, and the CV. -->
@@ -68,6 +50,81 @@
           <span class="contact-value">Maryam Sharifova</span>
           <span class="contact-card-note">Open the full CV <span aria-hidden="true">↗</span></span>
         </a>
+      </section>
+
+      <!-- A small laptop starts open and closes as the page reaches the bottom. -->
+      <section class="thanks-scroll" aria-label="Thanks for visiting">
+        <div class="thanks-stage">
+          <div class="laptop thanks-laptop">
+            <div class="lid">
+              <div class="lid-face screen-face">
+                <div class="screen-display">
+                  <div class="thanks-screen">
+                    <p class="thanks-mark">MS</p>
+                    <p class="thanks-line">THANKS FOR VISITING</p>
+                  </div>
+                </div>
+              </div>
+              <div class="lid-face back-face">
+                <span class="lid-logo" aria-hidden="true">MS</span>
+              </div>
+            </div>
+            <div class="deck">
+              <!-- Same dark key rows as the home laptop, scaled down with the deck. -->
+              <div class="keyboard" aria-hidden="true">
+                <div class="key-row key-row-function">
+                  <span class="key key-escape">esc</span>
+                  <span class="key">F1</span><span class="key">F2</span><span class="key">F3</span><span class="key">F4</span>
+                  <span class="key">F5</span><span class="key">F6</span><span class="key">F7</span><span class="key">F8</span>
+                  <span class="key">F9</span><span class="key">F10</span><span class="key">F11</span><span class="key">F12</span>
+                </div>
+                <div class="key-row">
+                  <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span>
+                  <span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span>
+                  <span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span>
+                  <span class="key key-wide">delete</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-wide">tab</span>
+                  <span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span>
+                  <span class="key">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span>
+                  <span class="key">O</span><span class="key">P</span><span class="key">[</span>
+                  <span class="key key-enter">return</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-shift">caps</span>
+                  <span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span>
+                  <span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span>
+                  <span class="key">L</span><span class="key">;</span>
+                  <span class="key key-shift">shift</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-shift">shift</span>
+                  <span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span>
+                  <span class="key">B</span><span class="key">N</span><span class="key">M</span>
+                  <span class="key">,</span><span class="key">.</span>
+                  <span class="key key-shift">shift</span>
+                </div>
+                <div class="key-row key-row-bottom">
+                  <span class="key key-modifier">fn</span>
+                  <span class="key key-modifier">ctrl</span>
+                  <span class="key key-modifier">opt</span>
+                  <span class="key key-space"></span>
+                  <span class="key key-modifier">opt</span>
+                  <span class="key key-modifier">cmd</span>
+                  <span class="key key-arrow">←</span>
+                  <span class="key key-arrow">↓</span>
+                  <span class="key key-arrow">↑</span>
+                  <span class="key key-arrow">→</span>
+                </div>
+              </div>
+              <div class="trackpad" aria-hidden="true"></div>
+              <span class="deck-wall deck-wall-front"></span>
+              <span class="deck-wall deck-wall-left"></span>
+              <span class="deck-wall deck-wall-right"></span>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
