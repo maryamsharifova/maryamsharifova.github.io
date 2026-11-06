@@ -10,11 +10,10 @@ try {
 
 // Remember whether this visit came from scrolling forward or back, then clear it.
 let portfolioEnter = "start";
+let portfolioTravel = "forward";
 try {
   portfolioEnter = sessionStorage.getItem("portfolio-enter") || "start";
-  if (sessionStorage.getItem("portfolio-travel") === "back") {
-    document.documentElement.dataset.travel = "back";
-  }
+  portfolioTravel = sessionStorage.getItem("portfolio-travel") === "back" ? "back" : "forward";
   sessionStorage.removeItem("portfolio-enter");
   sessionStorage.removeItem("portfolio-travel");
 } catch (error) {
@@ -30,38 +29,73 @@ const openedAtEnd = portfolioEnter === "end" && !window.location.hash;
 // The project track reads this while it is measuring, before the scroll listeners exist.
 window.portfolioEnter = openedAtEnd ? "end" : "start";
 
-// Forward visits start at the top. Back visits wait until the body has a height.
-if (!openedAtEnd && !window.location.hash) {
-  window.scrollTo(0, 0);
-}
-
-// Put a back-visit on the previous ending before the transition captures the page.
+// Put the new page at its landing spot before the transition takes its snapshot.
 const placePageEntry = () => {
+  if (window.location.hash) return;
+
   if (!openedAtEnd) {
-    if (!window.location.hash) window.scrollTo(0, 0);
+    window.scrollTo(0, 0);
     return;
   }
 
-  // Projects lands on the last card once that track has been measured.
-  if (document.querySelector(".projects-page")) return;
-
+  // Home opens on the hero, after the laptop intro has finished.
   const hero = document.querySelector(".portfolio-hero-section");
   if (hero) {
     window.scrollTo(0, hero.offsetTop);
     return;
   }
 
+  const projectPage = document.querySelector(".projects-page");
+  if (projectPage) {
+    const wideScreen = window.matchMedia("(min-width: 861px)").matches;
+    const allowMotion = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const trackSection = projectPage.querySelector(".projects-track");
+    const stickyTrack = projectPage.querySelector(".projects-pin");
+    const projectList = projectPage.querySelector(".project-list");
+    if (wideScreen && allowMotion && trackSection && stickyTrack && projectList) {
+      const distance = Math.max(0, projectList.scrollWidth - stickyTrack.clientWidth);
+      trackSection.style.height = `${window.innerHeight + distance}px`;
+      const trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, trackStart + distance);
+    } else {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    }
+    window.portfolioEnter = "start";
+    return;
+  }
+
   window.scrollTo(0, document.documentElement.scrollHeight);
 };
+
+// Filled in once the reveal targets exist. Visible ones are shown with no animation.
+let revealVisibleContent = () => {};
+
+// The old page names the direction. The new page scrolls, then names it, before the first frame.
+window.addEventListener("pageswap", (event) => {
+  if (!event.viewTransition) return;
+  let direction = "forward";
+  try {
+    direction = sessionStorage.getItem("portfolio-travel") === "back" ? "back" : "forward";
+  } catch (error) {
+    direction = "forward";
+  }
+  event.viewTransition.types.add(direction);
+});
+
+window.addEventListener("pagereveal", (event) => {
+  placePageEntry();
+  revealVisibleContent();
+  if (!event.viewTransition) return;
+  event.viewTransition.types.add(portfolioTravel);
+});
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", placePageEntry);
 } else {
   placePageEntry();
 }
-window.addEventListener("pagereveal", placePageEntry);
 
-// Warm the neighbouring pages so a scroll at either edge can switch without a blank wait.
+// Prefetch only. Prerender would run this script early and clear the direction before the visit.
 const portfolioPages = ["index.html", "about.html", "projects.html", "resume.html", "contact.html"];
 const portfolioFile = window.location.pathname.split("/").pop();
 const currentPortfolioPage = portfolioFile && portfolioFile.endsWith(".html") ? portfolioFile : "index.html";
@@ -76,12 +110,10 @@ if (warmPortfolioPages.length > 0 && document.head) {
     document.head.append(prefetch);
   });
 
-  // Chromium can prerender from these rules. Other browsers keep the links above.
   const speculation = document.createElement("script");
   speculation.type = "speculationrules";
   speculation.textContent = JSON.stringify({
-    prerender: [{ urls: warmPortfolioPages, eagerness: "immediate" }],
-    prefetch: [{ urls: warmPortfolioPages, eagerness: "immediate" }],
+    prefetch: [{ urls: warmPortfolioPages }],
   });
   document.head.append(speculation);
 }
@@ -249,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
   createSharedUi();
   initializeThemeToggles();
 
-  // Fade, unblur, and lift page content once it enters the viewport.
+  // Lift page content once it enters the viewport. Content already on screen stays visible.
   const initializeScrollReveals = () => {
     // Skip the closing laptop. A transform or blur on that section would break its sticky pin.
     const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *:not(.thanks-scroll)"));
@@ -274,6 +306,23 @@ document.addEventListener("DOMContentLoaded", () => {
       revealItems.forEach((item) => item.classList.add("is-revealed"));
       return;
     }
+
+    // Show anything already on screen before the first frame, with the transition turned off.
+    revealVisibleContent = () => {
+      revealItems.forEach((item) => {
+        if (item.classList.contains("is-revealed")) return;
+        const bounds = item.getBoundingClientRect();
+        const inView = bounds.bottom > 0 && bounds.top < window.innerHeight;
+        if (!inView) return;
+        item.style.transition = "none";
+        item.classList.add("is-revealed");
+      });
+      document.documentElement.offsetHeight;
+      revealItems.forEach((item) => {
+        if (item.style.transition === "none") item.style.transition = "";
+      });
+    };
+    revealVisibleContent();
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -1127,7 +1176,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.warn("Could not remember the page direction.", error);
       }
-      if (direction === "back") document.documentElement.dataset.travel = "back";
       // Reduced motion still changes pages; the stylesheet turns the fade off.
       window.location.assign(url);
     };

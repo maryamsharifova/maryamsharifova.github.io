@@ -10,26 +10,30 @@
   background: var(--color-page);
 }
 
-/* The old page leaves upward. The new page rises into place a little more slowly. */
+/* Both snapshots play together. The group itself stays put, so the page color does not slide. */
+::view-transition-group(root) {
+  animation: none;
+}
+
 ::view-transition-old(root) {
-  animation: 300ms ease-in both page-leave;
+  animation: 320ms cubic-bezier(0.4, 0, 1, 1) both page-leave;
 }
 
 ::view-transition-new(root) {
-  animation: 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both page-enter;
+  animation: 420ms cubic-bezier(0.22, 1, 0.36, 1) both page-enter;
 }
 
 @keyframes page-leave {
   to {
     opacity: 0;
-    transform: translateY(-24px);
+    transform: translateY(-12px);
   }
 }
 
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(16px);
   }
 
   to {
@@ -38,26 +42,26 @@
   }
 }
 
-/* Scrolling back reverses the same distances: the old page drops, the new one comes from above. */
-html[data-travel="back"]::view-transition-old(root) {
+/* The "back" type reverses the same crossfade. It is added from pageswap and pagereveal. */
+html:active-view-transition-type(back)::view-transition-old(root) {
   animation-name: page-leave-back;
 }
 
-html[data-travel="back"]::view-transition-new(root) {
+html:active-view-transition-type(back)::view-transition-new(root) {
   animation-name: page-enter-back;
 }
 
 @keyframes page-leave-back {
   to {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(12px);
   }
 }
 
 @keyframes page-enter-back {
   from {
     opacity: 0;
-    transform: translateY(-24px);
+    transform: translateY(-16px);
   }
 
   to {
@@ -1476,18 +1480,15 @@ a {
 /* ===== Part 2: shared scroll reveals, spotlights, navigation, and toasts ===== */
 .reveal-on-scroll {
   opacity: 0;
-  filter: blur(8px);
-  transform: translateY(46px);
+  transform: translateY(24px);
   transition:
     opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 1.2s cubic-bezier(0.16, 1, 0.3, 1),
     transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
 .reveal-on-scroll.is-revealed {
   opacity: 1;
-  filter: blur(0);
   transform: translateY(0);
 }
 
@@ -1738,7 +1739,6 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .reveal-on-scroll {
     opacity: 1;
-    filter: none;
     transform: none;
     transition: none;
   }
