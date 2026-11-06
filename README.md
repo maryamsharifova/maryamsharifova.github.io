@@ -16,7 +16,8 @@ It is designed for GitHub Pages and does not require build tools or packages.
 │   └── style.css    # Shared layout, themes, and responsive styles
 ├── js/
 │   └── main.js      # Shared theme toggle and Home-page animation
-└── images/          # Images used by the site
+└── images/
+    └── profile.jpg  # Home hero portrait
 ```
 
 ## Preview locally
@@ -27,7 +28,7 @@ the branch you want to publish and its `/ (root)` folder.
 
 ## Customize
 
-- Replace the placeholder heading in each HTML page with your own content.
+- Add or replace the portrait at `images/profile.jpg`.
 - Adjust shared colors and styles in `css/style.css`.
 - Add images to `images/` and reference them from your HTML or CSS.
 - The theme button switches between dark and light mode. The selection is saved
@@ -36,6 +37,11 @@ the branch you want to publish and its `/ (root)` folder.
   its transforms from scroll position so it does not depend on CSS scroll
   timelines. The screen lid hinges above a separate flat keyboard deck, and the
   intro text uses a JavaScript typewriter effect that fades before the lid opens.
+- Opening the laptop powers on a container-sized lock screen, with a live local
+  clock, animated security details, and a keyboard light and name-typing effect.
+- Unlocking the screen reveals the responsive homepage hero; the measured screen
+  and laptop zoom smoothly to the browser viewport before the hero becomes
+  clickable.
 - Google Fonts are loaded from Google Fonts when the pages are online.
 
 The GitHub icon in the footer links to the portfolio repository:
