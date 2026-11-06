@@ -127,6 +127,11 @@ a {
   border-bottom: 1px solid var(--color-border);
 }
 
+/* The fixed pill replaces the scrolling header on every page. */
+.site-header {
+  display: none;
+}
+
 .site-name {
   flex-shrink: 0;
   font-family: var(--font-heading);
@@ -319,17 +324,17 @@ a {
   min-height: 1.8em;
   margin: 0.8rem 0 0;
   color: var(--color-text-muted);
-  font-family: var(--font-label);
+  font-family: var(--font-body);
   font-size: clamp(0.75rem, 1.7vw, 1.05rem);
 }
 
 .typed-caret {
   display: inline-block;
-  width: 0.55rem;
-  height: 1.1em;
+  width: 2px;
+  height: 1em;
   margin-left: 0.15rem;
   vertical-align: -0.18em;
-  background: var(--color-teal);
+  background: #0889b0;
   animation: caret-blink 850ms steps(2, start) infinite;
 }
 
@@ -2063,9 +2068,7 @@ a {
 
 .about-overview {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.65fr);
-  align-items: start;
-  gap: clamp(2rem, 7vw, 6rem);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .about-copy {
