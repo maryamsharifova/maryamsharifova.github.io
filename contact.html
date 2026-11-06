@@ -34,10 +34,45 @@
       </nav>
     </header>
 
-    <!-- Main Contact page hero; replace the heading with your own content. -->
-    <main class="page-content">
-      <p class="eyebrow">05 / Contact</p>
-      <h1 class="page-title gradient-text">Contact</h1>
+    <!-- Main Contact page uses direct links rather than a nonfunctional form. -->
+    <main class="page-content contact-page">
+      <!-- Intro explains the best way to get in touch. -->
+      <section class="page-intro contact-intro" aria-labelledby="contact-title">
+        <p class="eyebrow" data-reveal>04 · CONTACT</p>
+        <h1 class="page-title gradient-text" id="contact-title" data-reveal>Get in touch.</h1>
+        <p class="page-subtitle" data-reveal>For conversations about AI, cybersecurity, and practical engineering.</p>
+      </section>
+
+      <!-- Contact cards keep email, professional profiles, and location easy to find. -->
+      <section class="contact-grid" aria-label="Contact details">
+        <article class="contact-card contact-card-email spotlight-card" data-reveal>
+          <span class="contact-card-icon" aria-hidden="true">@</span>
+          <p class="eyebrow">EMAIL</p>
+          <a class="contact-value" href="mailto:msharifova417@gmail.com">msharifova417@gmail.com</a>
+          <div class="contact-actions">
+            <a class="contact-action-primary" href="mailto:msharifova417@gmail.com">Write an email <span aria-hidden="true">↗</span></a>
+            <button class="contact-copy-button" type="button" data-copy-email="msharifova417@gmail.com" data-magnetic>Copy email</button>
+          </div>
+        </article>
+        <a class="contact-card spotlight-card" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener" data-reveal>
+          <span class="contact-card-icon" aria-hidden="true">in</span>
+          <p class="eyebrow">LINKEDIN</p>
+          <span class="contact-value">Maryam Sharifova</span>
+          <span class="contact-card-note">Professional profile <span aria-hidden="true">↗</span></span>
+        </a>
+        <a class="contact-card spotlight-card" href="https://github.com/maryamsharifova" target="_blank" rel="noopener" data-reveal>
+          <span class="contact-card-icon" aria-hidden="true">GH</span>
+          <p class="eyebrow">GITHUB</p>
+          <span class="contact-value">maryamsharifova</span>
+          <span class="contact-card-note">Code and experiments <span aria-hidden="true">↗</span></span>
+        </a>
+        <article class="contact-card contact-location spotlight-card" data-reveal>
+          <span class="contact-card-icon" aria-hidden="true">⌖</span>
+          <p class="eyebrow">LOCATION</p>
+          <span class="contact-value">Baku, Azerbaijan</span>
+          <span class="contact-card-note">Based in Baku · AZ</span>
+        </article>
+      </section>
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->

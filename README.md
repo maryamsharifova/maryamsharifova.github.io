@@ -16,9 +16,10 @@ It is designed for GitHub Pages and does not require build tools or packages.
 ├── css/
 │   └── style.css    # Shared layout, themes, and responsive styles
 ├── js/
-│   └── main.js      # Shared theme toggle and Home-page animation
+│   └── main.js      # Shared theme, animation, terminal, and page interactions
 └── images/
-    └── profile.jpg  # Home hero portrait
+    ├── profile.jpg  # Home and About portrait
+    └── projects/    # Optional project screenshots
 ```
 
 ## Preview locally
@@ -46,6 +47,8 @@ the branch you want to publish and its `/ (root)` folder.
 - The Projects page contains six interactive case studies. Put a chatbot screenshot
   at `images/projects/chatbot.png`; other missing project photos show their expected
   filenames beside the built-in visual demos.
+- Resume details are also available as `resume.pdf`. Contact links open email,
+  LinkedIn, and GitHub directly; the email copy button shows a confirmation toast.
 - Opening the laptop powers on a container-sized lock screen, with a live local
   clock, animated security details, and a keyboard light and name-typing effect.
 - Unlocking the screen reveals the responsive homepage hero; the measured screen

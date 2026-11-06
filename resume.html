@@ -34,10 +34,105 @@
       </nav>
     </header>
 
-    <!-- Main Resume page hero; replace the heading with your own content. -->
-    <main class="page-content">
-      <p class="eyebrow">04 / Resume</p>
-      <h1 class="page-title gradient-text">Resume</h1>
+    <!-- Main Resume page uses verified details from the public CV. -->
+    <main class="page-content resume-page">
+      <!-- Page intro and links to the complete PDF resume. -->
+      <section class="page-intro resume-intro" aria-labelledby="resume-title">
+        <p class="eyebrow" data-reveal>03 · RESUME</p>
+        <h1 class="page-title gradient-text" id="resume-title" data-reveal>Resume</h1>
+        <p class="page-subtitle" data-reveal>AI &amp; cybersecurity · Computer engineering · Baku</p>
+        <div class="resume-actions" data-reveal>
+          <a class="resume-action-primary" href="resume.pdf" target="_blank" rel="noopener" data-magnetic>Open full CV <span aria-hidden="true">↗</span></a>
+          <a class="resume-action-secondary" href="resume.pdf" download="Maryam-Sharifova-CV.pdf" data-magnetic>Download PDF <span aria-hidden="true">↓</span></a>
+        </div>
+      </section>
+
+      <!-- The short summary gives context before the detailed work history. -->
+      <section class="resume-summary spotlight-card" aria-labelledby="summary-title" data-reveal>
+        <h2 id="summary-title">Profile</h2>
+        <p>Computer Engineering student at ADA University and AI &amp; Cybersecurity Intern at RAM Holding. I combine hands-on DLP monitoring, SIEM log analysis, and network monitoring with practical AI work, including local LLM deployment, chatbot integrations, and Azerbaijani speech-to-text benchmarking.</p>
+      </section>
+
+      <!-- Work responsibilities are grouped under the current internship. -->
+      <section class="resume-section" aria-labelledby="experience-title" data-reveal>
+        <div class="resume-section-heading">
+          <p class="eyebrow">01 / EXPERIENCE</p>
+          <h2 id="experience-title">Learning in a live environment.</h2>
+        </div>
+        <article class="experience-card spotlight-card">
+          <div class="experience-heading">
+            <div>
+              <h3>AI and Cybersecurity Intern</h3>
+              <p>RAM Holding · Baku, Azerbaijan</p>
+            </div>
+            <time datetime="2026-07">July 2026 – Present</time>
+          </div>
+          <ul class="resume-bullets">
+            <li>Triage enterprise DLP alerts and analyse where, how, and by whom sensitive data is used.</li>
+            <li>Review insider-risk scenarios, including wrong recipients, open links, and excessive permissions, and propose alert-configuration improvements.</li>
+            <li>Investigate SIEM events by pivoting into FortiAnalyzer and Palo Alto logs and tracing activity through source and destination IDs.</li>
+            <li>Monitor server and network-device resources in LibreNMS and escalate alerts through Telegram and email.</li>
+            <li>Create IT and business training content, including an infographic on the path from rule-based systems to autonomous AI agents.</li>
+          </ul>
+        </article>
+      </section>
+
+      <!-- Selected work links to the full project case studies. -->
+      <section class="resume-section" aria-labelledby="selected-work-title" data-reveal>
+        <div class="resume-section-heading">
+          <p class="eyebrow">02 / SELECTED WORK</p>
+          <h2 id="selected-work-title">Built, tested, and documented.</h2>
+        </div>
+        <div class="resume-project-grid">
+          <a class="resume-project-card spotlight-card" href="projects.html#p1">
+            <span>01 / SPEECH</span>
+            <h3>Azerbaijani speech-to-text API</h3>
+            <p>Benchmarked five Hugging Face models and built a Python REST endpoint using FFmpeg.</p>
+          </a>
+          <a class="resume-project-card spotlight-card" href="projects.html#p2">
+            <span>02 / LOCAL AI</span>
+            <h3>Private local LLM chatbot</h3>
+            <p>Connected a locally hosted Llama model with Telegram, WhatsApp, MCP, and a website.</p>
+          </a>
+          <a class="resume-project-card spotlight-card" href="projects.html#p3">
+            <span>03 / VISION</span>
+            <h3>Plant-health research for Agrohub</h3>
+            <p>Compared more than ten APIs and recommended a crop-disease identification workflow.</p>
+          </a>
+        </div>
+      </section>
+
+      <!-- Education, practical skills, and language results complete the CV summary. -->
+      <div class="resume-bottom-grid">
+        <section class="resume-section resume-education spotlight-card" aria-labelledby="education-title" data-reveal>
+          <p class="eyebrow">03 / EDUCATION</p>
+          <h2 id="education-title">ADA University</h2>
+          <p>Bachelor of Science in Computer Engineering</p>
+          <p>Baku, Azerbaijan · Expected 2030</p>
+        </section>
+        <section class="resume-section resume-languages spotlight-card" aria-labelledby="languages-title" data-reveal>
+          <p class="eyebrow">04 / LANGUAGES &amp; SCORES</p>
+          <h2 id="languages-title">Communication</h2>
+          <ul>
+            <li><span>Azerbaijani</span><strong>Native</strong></li>
+            <li><span>English</span><strong>Fluent</strong></li>
+            <li><span>Turkish</span><strong>Fluent</strong></li>
+            <li><span>Russian</span><strong>Upper-Intermediate</strong></li>
+          </ul>
+          <p class="score-line">IELTS 7.5 · SAT 1510</p>
+        </section>
+      </div>
+
+      <section class="resume-section resume-skills" aria-labelledby="resume-skills-title" data-reveal>
+        <p class="eyebrow">05 / SKILLS &amp; TOOLS</p>
+        <h2 id="resume-skills-title">What I work with.</h2>
+        <div class="resume-skill-groups">
+          <div><h3>Cybersecurity</h3><p>DLP monitoring, SIEM log analysis, network monitoring and alerting, insider-risk awareness.</p></div>
+          <div><h3>Artificial intelligence</h3><p>Local LLM deployment, chatbot and MCP integrations, speech-to-text, computer vision APIs, RAG, AI agents.</p></div>
+          <div><h3>Programming</h3><p>Python, REST API development, HTML, CSS, Flutter, Dart, JavaScript, and SQL.</p></div>
+          <div><h3>Tools &amp; platforms</h3><p>FortiAnalyzer, Palo Alto, LibreNMS, LM Studio, Hugging Face, FFmpeg, Git, and Linux.</p></div>
+        </div>
+      </section>
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->

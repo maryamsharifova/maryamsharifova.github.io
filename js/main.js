@@ -117,6 +117,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const { showToast } = createSharedUi();
 
+  // Copy the public email address and confirm success in the shared toast area.
+  const initializeEmailCopy = () => {
+    document.querySelectorAll("[data-copy-email]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const email = button.dataset.copyEmail;
+        if (!email) return;
+
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(email);
+            showToast("Email copied");
+            return;
+          } catch (error) {
+            console.warn("Clipboard access was denied; trying the browser copy fallback.", error);
+          }
+        }
+
+        const temporaryInput = document.createElement("textarea");
+        temporaryInput.value = email;
+        temporaryInput.setAttribute("aria-hidden", "true");
+        temporaryInput.tabIndex = -1;
+        temporaryInput.style.position = "fixed";
+        temporaryInput.style.left = "-9999px";
+        document.body.append(temporaryInput);
+        temporaryInput.select();
+
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch (error) {
+          console.warn("The browser could not copy the contact email.", error);
+        }
+        temporaryInput.remove();
+
+        showToast(copied ? "Email copied" : "Copy failed. Select the email address to copy it.");
+      });
+    });
+  };
+
+  initializeEmailCopy();
+
   // Fade, unblur, and lift page content once it enters the viewport.
   const initializeScrollReveals = () => {
     const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *"));
