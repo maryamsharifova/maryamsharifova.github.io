@@ -16,6 +16,28 @@ if (!window.location.hash) {
   window.scrollTo(0, 0);
 }
 
+// Warm the following page so a scroll at the bottom can switch without a blank wait.
+const portfolioPages = ["index.html", "about.html", "projects.html", "resume.html", "contact.html"];
+const portfolioFile = window.location.pathname.split("/").pop();
+const currentPortfolioPage = portfolioFile && portfolioFile.endsWith(".html") ? portfolioFile : "index.html";
+const nextPortfolioPage = portfolioPages[portfolioPages.indexOf(currentPortfolioPage) + 1];
+
+if (nextPortfolioPage && document.head) {
+  const prefetch = document.createElement("link");
+  prefetch.rel = "prefetch";
+  prefetch.href = nextPortfolioPage;
+  document.head.append(prefetch);
+
+  // Chromium can prerender from these rules. Other browsers keep the link above.
+  const speculation = document.createElement("script");
+  speculation.type = "speculationrules";
+  speculation.textContent = JSON.stringify({
+    prerender: [{ urls: [nextPortfolioPage], eagerness: "immediate" }],
+    prefetch: [{ urls: [nextPortfolioPage], eagerness: "immediate" }],
+  });
+  document.head.append(speculation);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -1033,7 +1055,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const openNextPage = () => {
       if (navigating || !restingAtBottom()) return;
+      // One gesture can fire several events. Leave only after the first one.
       navigating = true;
+      wheelSamples = [];
+      touchGesture = null;
       // Reduced motion still changes pages; the stylesheet turns the fade off.
       window.location.assign(nextPage);
     };
