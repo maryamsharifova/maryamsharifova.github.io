@@ -10,10 +10,10 @@ try {
 
 document.addEventListener("DOMContentLoaded", () => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const themeToggles = document.querySelectorAll(".theme-toggle");
 
-  // Keep each navigation theme button in sync with the selected theme.
-  if (themeToggles.length > 0) {
+  // Bind theme controls after the shared floating navigation has been created.
+  const initializeThemeToggles = () => {
+    const themeToggles = document.querySelectorAll(".theme-toggle");
     const updateToggleLabels = () => {
       const label = document.documentElement.dataset.theme === "light"
         ? "Switch to dark mode"
@@ -25,10 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
-    updateToggleLabels();
-
-    // Let the header, hero, and floating navigation buttons share one theme setting.
     themeToggles.forEach((themeToggle) => {
+      updateToggleLabels();
       themeToggle.addEventListener("click", () => {
         const isLight = document.documentElement.dataset.theme !== "light";
 
@@ -47,7 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     });
-  }
+    updateToggleLabels();
+  };
 
   // Create the shared UI here so every page can use it without repeated markup.
   const createSharedUi = () => {
@@ -73,6 +72,46 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       rail.append(link);
     });
+
+    const floatingNav = document.querySelector(".floating-nav") || document.createElement("nav");
+    if (!floatingNav.classList.contains("floating-nav")) {
+      floatingNav.className = "floating-nav";
+      floatingNav.setAttribute("aria-label", "Main navigation");
+      pages.forEach(([label, href]) => {
+        const link = document.createElement("a");
+        link.href = href;
+        link.textContent = label;
+        floatingNav.append(link);
+      });
+
+      const sourceToggle = document.querySelector(".site-header .theme-toggle");
+      const toggle = document.createElement("button");
+      toggle.className = "theme-toggle floating-theme-toggle";
+      toggle.type = "button";
+      toggle.setAttribute("aria-label", "Switch to light mode");
+      toggle.setAttribute("title", "Switch to light mode");
+      if (sourceToggle) {
+        toggle.innerHTML = sourceToggle.innerHTML;
+      }
+      floatingNav.append(toggle);
+      document.body.append(floatingNav);
+    }
+
+    floatingNav.querySelectorAll("a").forEach((link) => {
+      if (link.getAttribute("href") === currentPage) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+
+    // Reuse the main-header icons so every theme button looks identical.
+    const sourceToggle = document.querySelector(".site-header .theme-toggle");
+    if (sourceToggle) {
+      floatingNav.querySelectorAll(".theme-toggle").forEach((toggle) => {
+        toggle.innerHTML = sourceToggle.innerHTML;
+      });
+    }
 
     const toastArea = document.createElement("div");
     toastArea.className = "toast-area";
@@ -108,7 +147,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const revealRail = () => rail.classList.toggle("is-visible", heroSection.classList.contains("is-current"));
       new MutationObserver(revealRail).observe(heroSection, { attributes: true, attributeFilter: ["class"] });
       revealRail();
+      // Keep the Home pill hidden until the laptop dive reaches the full hero.
+      const revealHomeNav = () => floatingNav.classList.toggle(
+        "is-visible",
+        heroSection.classList.contains("is-current")
+          && window.scrollY > heroSection.offsetTop + window.innerHeight * 0.08,
+      );
+      new MutationObserver(revealHomeNav).observe(heroSection, { attributes: true, attributeFilter: ["class"] });
+      window.addEventListener("scroll", revealHomeNav, { passive: true });
+      revealHomeNav();
     } else {
+      floatingNav.classList.add("is-visible");
       rail.classList.add("is-visible");
     }
 
@@ -116,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const { showToast } = createSharedUi();
+  initializeThemeToggles();
 
   // Copy the public email address and confirm success in the shared toast area.
   const initializeEmailCopy = () => {
