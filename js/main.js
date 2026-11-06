@@ -992,6 +992,103 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeThanksLaptop();
 
+  // After a short rest at the bottom, a little extra scroll opens the next page.
+  const initializePageFlow = () => {
+    const pages = ["index.html", "about.html", "projects.html", "resume.html", "contact.html"];
+    const fileName = window.location.pathname.split("/").pop();
+    const currentPage = fileName && fileName.endsWith(".html") ? fileName : "index.html";
+    const nextPage = pages[pages.indexOf(currentPage) + 1];
+    // Contact is the last page, and unknown files have nothing to open.
+    if (!nextPage) return;
+
+    const restDelay = 300;
+    const wheelWindow = 1000;
+    const wheelDistance = 120;
+    const swipeDistance = 60;
+    let lastScrollAt = performance.now();
+    let wheelSamples = [];
+    let touchGesture = null;
+    let navigating = false;
+
+    const atBottom = () => {
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      return window.scrollY >= maxScroll - 4;
+    };
+
+    // Home waits for the hero, Projects waits for the last card, and open UI blocks the jump.
+    const pageReady = () => {
+      if (document.body.classList.contains("project-dialog-open")) return false;
+      if (document.activeElement && document.activeElement.closest(".terminal-card")) return false;
+      const hero = document.querySelector(".portfolio-hero-section");
+      if (hero && !hero.classList.contains("is-current")) return false;
+      const projects = document.querySelector(".projects-page");
+      if (projects && projects.dataset.trackDone !== "1") return false;
+      return true;
+    };
+
+    // The scroll that arrives at the bottom, including trackpad momentum, does not count yet.
+    const restingAtBottom = () => {
+      return atBottom() && pageReady() && performance.now() - lastScrollAt >= restDelay;
+    };
+
+    const openNextPage = () => {
+      if (navigating || !restingAtBottom()) return;
+      navigating = true;
+      // Reduced motion still changes pages; the stylesheet turns the fade off.
+      window.location.assign(nextPage);
+    };
+
+    window.addEventListener("scroll", () => {
+      lastScrollAt = performance.now();
+      if (!atBottom()) wheelSamples = [];
+    }, { passive: true });
+
+    window.addEventListener("wheel", (event) => {
+      const pixels = event.deltaMode === 1
+        ? event.deltaY * 16
+        : event.deltaMode === 2
+          ? event.deltaY * window.innerHeight
+          : event.deltaY;
+
+      // Keep waiting while momentum is still arriving. Only later wheels can add up.
+      if (pixels <= 0 || !restingAtBottom()) {
+        if (pixels > 0 && atBottom() && pageReady()) lastScrollAt = performance.now();
+        if (!atBottom()) wheelSamples = [];
+        return;
+      }
+
+      const now = performance.now();
+      wheelSamples.push({ time: now, pixels });
+      wheelSamples = wheelSamples.filter((sample) => now - sample.time <= wheelWindow);
+      const traveled = wheelSamples.reduce((total, sample) => total + sample.pixels, 0);
+      if (traveled >= wheelDistance) openNextPage();
+    }, { passive: true });
+
+    // A finger moving up scrolls down. Only a new swipe after the rest can leave the page.
+    window.addEventListener("touchstart", (event) => {
+      const touch = event.touches[0];
+      touchGesture = touch
+        ? { startY: touch.clientY, armed: restingAtBottom() }
+        : null;
+    }, { passive: true });
+
+    window.addEventListener("touchmove", (event) => {
+      if (!touchGesture || !touchGesture.armed) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      if (touchGesture.startY - touch.clientY >= swipeDistance) openNextPage();
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      touchGesture = null;
+    }, { passive: true });
+    window.addEventListener("touchcancel", () => {
+      touchGesture = null;
+    }, { passive: true });
+  };
+
+  initializePageFlow();
+
   const laptopIntro = document.querySelector(".laptop-intro");
   if (!laptopIntro) {
     return;
