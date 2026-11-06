@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeScrollReveals();
 
   // Let card spotlights follow the pointer without changing each card's content.
-  document.querySelectorAll(".spotlight-card, .card, [data-spotlight]").forEach((card) => {
+  document.querySelectorAll(".spotlight-card, .card, .project-card, [data-spotlight]").forEach((card) => {
     card.classList.add("spotlight-card");
     card.addEventListener("pointermove", (event) => {
       const bounds = card.getBoundingClientRect();
@@ -169,6 +169,134 @@ document.addEventListener("DOMContentLoaded", () => {
       card.style.setProperty("--spot-y", `${event.clientY - bounds.top}px`);
     });
   });
+
+  // Build small project demos and wire the case-study detail windows.
+  const initializeProjectPage = () => {
+    const projectPage = document.querySelector(".projects-page");
+    if (!projectPage) return;
+
+    // Generate a varied waveform without relying on an external image or library.
+    projectPage.querySelectorAll(".waveform-bars").forEach((waveform) => {
+      for (let index = 0; index < 38; index += 1) {
+        const bar = document.createElement("span");
+        const height = 14 + Math.random() * 82;
+        bar.style.height = `${height}px`;
+        bar.style.setProperty("--bar-delay", `${-Math.random() * 950}ms`);
+        waveform.append(bar);
+      }
+    });
+
+    // Keep an explicit filename placeholder visible until a supplied image loads.
+    projectPage.querySelectorAll(".project-screenshot img").forEach((image) => {
+      const showScreenshot = () => {
+        if (image.naturalWidth > 0) {
+          image.closest(".project-screenshot").classList.add("has-image");
+        }
+      };
+      if (image.complete) {
+        showScreenshot();
+      } else {
+        image.addEventListener("load", showScreenshot, { once: true });
+      }
+    });
+
+    // Rebuild the truth table and LED output for the selected inputs and gate.
+    const circuit = projectPage.querySelector("[data-circuit]");
+    if (circuit) {
+      const inputValues = { a: 0, b: 0 };
+      const inputButtons = [...circuit.querySelectorAll("[data-input]")];
+      const gateSelect = circuit.querySelector(".gate-select");
+      const tableBody = circuit.querySelector(".truth-table tbody");
+      const bColumn = circuit.querySelector("[data-b-column]");
+      const led = circuit.querySelector(".circuit-led");
+      const calculateOutput = (gate, a, b) => {
+        if (gate === "NOT") return Number(!a);
+        if (gate === "OR") return Number(Boolean(a || b));
+        return Number(Boolean(a && b));
+      };
+
+      const updateCircuit = () => {
+        const gate = gateSelect.value;
+        const currentOutput = calculateOutput(gate, inputValues.a, inputValues.b);
+        const isNotGate = gate === "NOT";
+        const rows = isNotGate
+          ? [[0, null], [1, null]]
+          : [[0, 0], [0, 1], [1, 0], [1, 1]];
+
+        inputButtons.forEach((button) => {
+          const inputName = button.dataset.input;
+          button.querySelector("span").textContent = String(inputValues[inputName]);
+          button.setAttribute("aria-pressed", String(Boolean(inputValues[inputName])));
+          button.disabled = isNotGate && inputName === "b";
+        });
+        bColumn.hidden = isNotGate;
+        led.classList.toggle("is-on", currentOutput === 1);
+        led.querySelector("strong").textContent = String(currentOutput);
+        tableBody.replaceChildren();
+
+        rows.forEach(([a, b]) => {
+          const outputValue = calculateOutput(gate, a, b ?? 0);
+          const row = document.createElement("tr");
+          const isCurrentRow = isNotGate
+            ? a === inputValues.a
+            : a === inputValues.a && b === inputValues.b;
+          if (isCurrentRow) row.classList.add("is-current");
+
+          [a, ...(isNotGate ? [] : [b]), outputValue].forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = String(value);
+            row.append(cell);
+          });
+          tableBody.append(row);
+        });
+      };
+
+      inputButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const inputName = button.dataset.input;
+          inputValues[inputName] = Number(!inputValues[inputName]);
+          updateCircuit();
+        });
+      });
+      gateSelect.addEventListener("change", updateCircuit);
+      updateCircuit();
+    }
+
+    // Each button opens a native dialog populated from its own project card.
+    const dialog = document.querySelector(".project-dialog");
+    if (dialog) {
+      const dialogLabel = dialog.querySelector(".project-dialog-label");
+      const dialogTitle = dialog.querySelector("#project-dialog-title");
+      const dialogDescription = dialog.querySelector(".project-dialog-description");
+      const dialogTags = dialog.querySelector(".project-dialog-tags");
+
+      projectPage.querySelectorAll(".project-open-button").forEach((button) => {
+        button.dataset.magnetic = "";
+        button.addEventListener("click", () => {
+          const card = button.closest(".project-card");
+          dialogLabel.textContent = card.querySelector(".project-label").textContent;
+          dialogTitle.textContent = card.querySelector("h2").textContent;
+          dialogDescription.textContent = card.querySelector(".project-copy > p:not(.project-label)").textContent;
+          dialogTags.replaceChildren();
+          card.querySelectorAll(".project-tags li").forEach((tag) => {
+            const item = document.createElement("li");
+            item.textContent = tag.textContent;
+            dialogTags.append(item);
+          });
+          dialog.showModal();
+        });
+      });
+
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+      dialog.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && dialog.open) dialog.close();
+      });
+    }
+  };
+
+  initializeProjectPage();
 
   // Desktop cursor dot follows directly; its larger ring eases toward the pointer.
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");

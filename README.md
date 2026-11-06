@@ -43,6 +43,9 @@ the branch you want to publish and its `/ (root)` folder.
   right-edge page links, and accessible confirmation toasts.
 - The About page includes a browser-only portfolio terminal with a fixed set of
   safe commands; it never runs shell input.
+- The Projects page contains six interactive case studies. Put a chatbot screenshot
+  at `images/projects/chatbot.png`; other missing project photos show their expected
+  filenames beside the built-in visual demos.
 - Opening the laptop powers on a container-sized lock screen, with a live local
   clock, animated security details, and a keyboard light and name-typing effect.
 - Unlocking the screen reveals the responsive homepage hero; the measured screen

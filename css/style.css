@@ -2331,3 +2331,627 @@ a {
     transition: none;
   }
 }
+
+/* ===== Part 4: project cards and custom project visuals ===== */
+.projects-page {
+  width: min(100% - 3rem, 80rem);
+  padding-block: clamp(4rem, 10vh, 7rem);
+}
+
+.projects-intro .eyebrow {
+  color: var(--color-teal);
+}
+
+.projects-intro .page-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
+.project-list {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.project-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  padding: clamp(1.15rem, 3vw, 2.25rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1.2rem;
+  background: var(--color-surface);
+  scroll-margin-top: 2rem;
+}
+
+.project-copy {
+  min-width: 0;
+}
+
+.project-label {
+  margin: 0 0 0.8rem;
+  color: var(--color-teal);
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.project-copy h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: clamp(1.45rem, 2.6vw, 2.15rem);
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.project-copy > p:not(.project-label) {
+  margin: 1rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.93rem;
+  line-height: 1.75;
+}
+
+.project-tags,
+.project-dialog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-tags li,
+.project-dialog-tags li {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.project-open-button {
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.3rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.project-open-button:hover {
+  border-color: var(--color-teal);
+}
+
+.project-open-button span {
+  display: inline-block;
+  transition: transform 160ms ease;
+}
+
+.project-open-button:hover span {
+  transform: translate(2px, -2px);
+}
+
+.project-visual {
+  position: relative;
+  min-width: 0;
+  min-height: 20rem;
+  aspect-ratio: 1.45;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(8 137 176 / 12%), transparent 62%),
+    var(--color-page);
+}
+
+.visual-topline {
+  position: absolute;
+  z-index: 2;
+  top: 0.85rem;
+  right: 0.9rem;
+  left: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+}
+
+.visual-topline code {
+  color: #6fd0ea;
+  font-size: 0.64rem;
+}
+
+.project-photo-note {
+  position: absolute;
+  z-index: 3;
+  right: 0.65rem;
+  bottom: 0.6rem;
+  left: 0.65rem;
+  overflow: hidden;
+  padding: 0.32rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.56rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-photo-note code {
+  color: var(--color-text);
+}
+
+/* ===== Animated speech waveform ===== */
+.visual-waveform {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3.5rem 1rem 2.5rem;
+}
+
+.waveform-bars {
+  height: 7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+}
+
+.waveform-bars span {
+  width: 0.28rem;
+  min-width: 2px;
+  max-height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(#6fd0ea, #0889b0);
+  animation: waveform-breathe 950ms ease-in-out infinite alternate;
+  animation-delay: var(--bar-delay, 0ms);
+  transform-origin: center;
+}
+
+@keyframes waveform-breathe {
+  from { transform: scaleY(0.35); opacity: 0.58; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+.waveform-time {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+}
+
+/* ===== Chatbot screenshot and missing-image fallback ===== */
+.project-screenshot {
+  display: grid;
+  place-items: center;
+  background: #101214;
+}
+
+.project-screenshot img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-screenshot.has-image img {
+  display: block;
+}
+
+.project-screenshot.has-image .project-image-placeholder {
+  display: none;
+}
+
+.project-image-placeholder {
+  width: calc(100% - 2rem);
+  min-height: 10rem;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px dashed #41616a;
+  border-radius: 0.75rem;
+  color: #b4c7cc;
+  text-align: center;
+}
+
+.project-image-placeholder > span {
+  color: #6fd0ea;
+  font-size: 2rem;
+}
+
+.project-image-placeholder strong {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+}
+
+.project-image-placeholder code {
+  color: #6fd0ea;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+}
+
+/* ===== Plant-health scan panel ===== */
+.visual-plant {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 48% 55%, rgb(91 147 73 / 20%), transparent 55%),
+    var(--color-page);
+}
+
+.plant-scan {
+  width: 88%;
+  height: 76%;
+  margin-top: 0.5rem;
+}
+
+.scan-status,
+.circuit-power {
+  color: #6fd0ea;
+}
+
+.detection-tag {
+  position: absolute;
+  top: 42%;
+  left: 52%;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid #ff78ae;
+  border-radius: 0.35rem;
+  background: rgb(33 17 26 / 84%);
+  color: #ffadd0;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+}
+
+.plant-scan-line {
+  position: absolute;
+  z-index: 1;
+  top: 22%;
+  right: 5%;
+  left: 5%;
+  height: 1px;
+  background: #76e3ef;
+  box-shadow: 0 0 0.8rem #46c9de;
+  animation: plant-scan 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes plant-scan {
+  to { transform: translateY(14rem); }
+}
+
+/* ===== Clickable logic-gate circuit ===== */
+.visual-circuit {
+  padding: 3.2rem 1rem 2rem;
+}
+
+.circuit-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 2vw, 1.25rem);
+  margin: 1.5rem 0 1rem;
+}
+
+.circuit-input,
+.gate-select {
+  min-width: 3.2rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font: 600 0.82rem var(--font-label);
+}
+
+.circuit-input span {
+  margin-left: 0.25rem;
+  color: #6fd0ea;
+}
+
+.circuit-input[aria-pressed="true"] {
+  border-color: #6fd0ea;
+  box-shadow: 0 0 1rem rgb(111 208 234 / 22%);
+}
+
+.gate-select {
+  padding-inline: 0.5rem;
+  cursor: pointer;
+}
+
+.circuit-led {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0.25rem 0.4rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+}
+
+.circuit-led > span {
+  grid-row: span 2;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #313638;
+  box-shadow: inset 0 0 0.3rem #000;
+}
+
+.circuit-led.is-on > span {
+  background: #6fd0ea;
+  box-shadow: 0 0 1rem rgb(111 208 234 / 90%);
+}
+
+.circuit-led strong {
+  color: var(--color-text);
+}
+
+.truth-table-wrap {
+  width: min(100%, 20rem);
+  margin: 0 auto;
+  overflow: auto;
+}
+
+.truth-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.truth-table th,
+.truth-table td {
+  padding: 0.25rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.truth-table th {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.truth-table tr.is-current td {
+  background: rgb(8 137 176 / 16%);
+  color: #6fd0ea;
+}
+
+/* ===== MakeCode teaching loop ===== */
+.visual-code {
+  padding: 4rem 1rem 2rem 2rem;
+}
+
+.code-block {
+  position: relative;
+  width: max-content;
+  max-width: 90%;
+  min-width: 10rem;
+  margin: 0.45rem 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.45rem;
+  color: #101113;
+  font-family: var(--font-label);
+  font-size: 0.78rem;
+  opacity: 0;
+  transform: translateX(-1.5rem) scale(0.96);
+}
+
+.project-card.is-revealed .code-block {
+  animation: code-snap 6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  animation-delay: var(--block-delay, 0s);
+}
+
+.block-start { --block-delay: 0s; background: #5ec6ed; }
+.block-repeat { --block-delay: 0.75s; margin-left: 1.25rem; background: #a777ed; }
+.block-icon { --block-delay: 1.5s; margin-left: 2rem; background: #59c694; }
+.block-icon b { color: #fff178; }
+.block-say { --block-delay: 2.25s; margin-left: 2rem; background: #f0ad55; }
+
+@keyframes code-snap {
+  0%, 7% { opacity: 0; transform: translateX(-1.5rem) scale(0.96); }
+  13%, 70% { opacity: 1; transform: translateX(0) scale(1); }
+  78%, 100% { opacity: 0; transform: translateX(0.4rem) scale(0.98); }
+}
+
+.certificate-chip {
+  position: absolute;
+  right: 1rem;
+  bottom: 3rem;
+  padding: 0.42rem 0.65rem;
+  border: 1px solid rgb(111 208 234 / 40%);
+  border-radius: 999px;
+  background: rgb(8 137 176 / 12%);
+  color: #6fd0ea;
+  font-size: 0.68rem;
+  opacity: 0;
+}
+
+.project-card.is-revealed .certificate-chip {
+  animation: certificate-pop 6s ease infinite;
+  animation-delay: 3.3s;
+}
+
+@keyframes certificate-pop {
+  0%, 46% { opacity: 0; transform: translateY(0.4rem); }
+  52%, 82% { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(-0.2rem); }
+}
+
+.code-play-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #58d49c;
+  box-shadow: 0 0 0.7rem #58d49c;
+}
+
+/* ===== Moving LEGO EV3 robot and closed SVG track ===== */
+.visual-robot {
+  display: grid;
+  place-items: center;
+  padding: 2.5rem 0.7rem 2rem;
+}
+
+.robot-track {
+  width: 100%;
+  height: 100%;
+  max-height: 16rem;
+  overflow: visible;
+}
+
+.robot-track > path:first-child {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.robot-track-dash {
+  fill: none;
+  stroke: #6fd0ea;
+  stroke-width: 2;
+  stroke-dasharray: 8 9;
+  animation: track-dash 1.2s linear infinite;
+}
+
+.ev3-robot-static {
+  display: none;
+}
+
+@keyframes track-dash {
+  to { stroke-dashoffset: -34; }
+}
+
+/* ===== Project detail dialog ===== */
+.project-dialog {
+  width: min(34rem, calc(100% - 2rem));
+  max-height: min(80vh, 44rem);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 2rem 6rem rgb(0 0 0 / 40%);
+}
+
+.project-dialog::backdrop {
+  background: rgb(4 7 9 / 72%);
+  backdrop-filter: blur(5px);
+}
+
+.project-dialog-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.project-dialog-label {
+  color: var(--color-teal);
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+}
+
+.project-dialog-close {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.project-dialog h2 {
+  margin: 1rem 0 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 5vw, 2.1rem);
+  line-height: 1.15;
+}
+
+.project-dialog-description {
+  color: var(--color-text-muted);
+  line-height: 1.75;
+}
+
+@media (max-width: 760px) {
+  .projects-page {
+    width: min(100% - 2rem, 42rem);
+    padding-block: 3rem;
+  }
+
+  .project-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1rem;
+  }
+
+  .project-visual {
+    min-height: 16rem;
+  }
+
+  .visual-circuit {
+    padding-inline: 0.6rem;
+  }
+
+  .circuit-controls {
+    gap: 0.45rem;
+  }
+
+  .circuit-input,
+  .gate-select {
+    min-width: 2.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waveform-bars span,
+  .plant-scan-line,
+  .project-card.is-revealed .code-block,
+  .project-card.is-revealed .certificate-chip,
+  .robot-track-dash {
+    animation: none;
+  }
+
+  .ev3-robot {
+    display: none;
+  }
+
+  .ev3-robot-static {
+    display: initial;
+  }
+
+  .code-block,
+  .certificate-chip {
+    opacity: 1;
+    transform: none;
+  }
+
+  .project-open-button span {
+    transition: none;
+  }
+}
