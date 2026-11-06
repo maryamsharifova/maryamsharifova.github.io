@@ -850,6 +850,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeAboutTerminal();
 
+  // Grow the mission line with the same 10% glide the laptop intro uses.
+  const initializeQuestTimeline = () => {
+    const timeline = document.querySelector(".quest-timeline");
+    if (!timeline) return;
+
+    const quests = [...timeline.querySelectorAll(".quest")];
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let animationFrame = 0;
+
+    const clamp = (value) => Math.min(1, Math.max(0, value));
+
+    // Progress is how far a point in the lower viewport has traveled through the list.
+    const readTarget = () => {
+      const bounds = timeline.getBoundingClientRect();
+      const reach = window.innerHeight * 0.68;
+      return clamp((reach - bounds.top) / Math.max(1, timeline.offsetHeight));
+    };
+
+    const renderTimeline = () => {
+      timeline.style.setProperty("--line-progress", String(currentProgress));
+      // Match the painted line, which stops a little short of the list's bottom.
+      const lineEnd = currentProgress * Math.max(0, timeline.offsetHeight - 16);
+      quests.forEach((quest) => {
+        // Light a mission only once the gliding line has reached its node.
+        quest.classList.toggle("is-lit", currentProgress > 0.01 && lineEnd >= quest.offsetTop + 6);
+      });
+    };
+
+    const animateTimeline = () => {
+      animationFrame = 0;
+      // Move 10% of the remaining distance each frame so the line glides.
+      currentProgress += (targetProgress - currentProgress) * (reducedMotion.matches ? 1 : 0.1);
+      if (Math.abs(targetProgress - currentProgress) < 0.001) currentProgress = targetProgress;
+      renderTimeline();
+      if (currentProgress !== targetProgress) {
+        animationFrame = window.requestAnimationFrame(animateTimeline);
+      }
+    };
+
+    const requestTimelineUpdate = () => {
+      targetProgress = readTarget();
+      if (!animationFrame) animationFrame = window.requestAnimationFrame(animateTimeline);
+    };
+
+    window.addEventListener("scroll", requestTimelineUpdate, { passive: true });
+    window.addEventListener("resize", requestTimelineUpdate);
+    if (typeof reducedMotion.addEventListener === "function") {
+      reducedMotion.addEventListener("change", requestTimelineUpdate);
+    } else {
+      reducedMotion.addListener(requestTimelineUpdate);
+    }
+
+    // Start from the current scroll position instead of drawing the line from empty.
+    currentProgress = readTarget();
+    targetProgress = currentProgress;
+    renderTimeline();
+  };
+
+  initializeQuestTimeline();
+
   const laptopIntro = document.querySelector(".laptop-intro");
   if (!laptopIntro) {
     return;
