@@ -37,6 +37,9 @@ the branch you want to publish and its `/ (root)` folder.
   its transforms from scroll position so it does not depend on CSS scroll
   timelines. The screen lid hinges above a separate flat keyboard deck, and the
   intro text uses a JavaScript typewriter effect that fades before the lid opens.
+- The Home hero includes a theme-aware canvas particle network and a cursor-reactive
+  portrait orbit. Shared page motion adds scroll reveals, desktop pointer effects,
+  right-edge page links, and accessible confirmation toasts.
 - Opening the laptop powers on a container-sized lock screen, with a live local
   clock, animated security details, and a keyboard light and name-typing effect.
 - Unlocking the screen reveals the responsive homepage hero; the measured screen

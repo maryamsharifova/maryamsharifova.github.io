@@ -9,6 +9,7 @@ try {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const themeToggles = document.querySelectorAll(".theme-toggle");
 
   // Keep each navigation theme button in sync with the selected theme.
@@ -48,6 +49,338 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Create the shared UI here so every page can use it without repeated markup.
+  const createSharedUi = () => {
+    const rail = document.createElement("nav");
+    rail.className = "page-rail";
+    rail.setAttribute("aria-label", "Page shortcuts");
+    const pages = [
+      ["Home", "index.html"],
+      ["About", "about.html"],
+      ["Projects", "projects.html"],
+      ["Resume", "resume.html"],
+      ["Contact", "contact.html"],
+    ];
+    const currentPage = window.location.pathname.split("/").pop() || "index.html";
+
+    pages.forEach(([label, href]) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.setAttribute("aria-label", label);
+      link.title = label;
+      if (currentPage === href) {
+        link.setAttribute("aria-current", "page");
+      }
+      rail.append(link);
+    });
+
+    const toastArea = document.createElement("div");
+    toastArea.className = "toast-area";
+    toastArea.setAttribute("aria-live", "polite");
+    toastArea.setAttribute("aria-atomic", "false");
+    toastArea.setAttribute("aria-label", "Notifications");
+
+    document.body.append(rail, toastArea);
+
+    // Keep brief confirmations available to page-specific controls.
+    const showToast = (message) => {
+      const toast = document.createElement("p");
+      toast.className = "site-toast";
+      toast.textContent = message;
+      toastArea.append(toast);
+      window.setTimeout(() => toast.classList.add("is-visible"), 10);
+      window.setTimeout(() => {
+        toast.classList.remove("is-visible");
+        window.setTimeout(() => toast.remove(), 220);
+      }, 3000);
+    };
+
+    window.showPortfolioToast = showToast;
+    window.addEventListener("portfolio:toast", (event) => {
+      if (typeof event.detail?.message === "string") {
+        showToast(event.detail.message);
+      }
+    });
+
+    // Reveal the right-edge page links only after the laptop hero reaches the page.
+    const heroSection = document.querySelector(".portfolio-hero-section");
+    if (heroSection) {
+      const revealRail = () => rail.classList.toggle("is-visible", heroSection.classList.contains("is-current"));
+      new MutationObserver(revealRail).observe(heroSection, { attributes: true, attributeFilter: ["class"] });
+      revealRail();
+    } else {
+      rail.classList.add("is-visible");
+    }
+
+    return { rail, showToast };
+  };
+
+  const { showToast } = createSharedUi();
+
+  // Fade, unblur, and lift page content once it enters the viewport.
+  const initializeScrollReveals = () => {
+    const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *"));
+    document.querySelectorAll("[data-reveal], .page-content > * > [data-reveal]").forEach((item) => revealItems.add(item));
+
+    const revealGroups = new Map();
+    revealItems.forEach((item) => {
+      item.classList.add("reveal-on-scroll");
+      const parent = item.parentElement;
+      const siblings = revealGroups.get(parent) || [];
+      siblings.push(item);
+      revealGroups.set(parent, siblings);
+    });
+
+    revealGroups.forEach((siblings) => {
+      siblings.forEach((item, index) => {
+        item.style.setProperty("--reveal-delay", `${index * 120}ms`);
+      });
+    });
+
+    if (reducedMotion.matches || !("IntersectionObserver" in window)) {
+      revealItems.forEach((item) => item.classList.add("is-revealed"));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealItems.forEach((item) => observer.observe(item));
+    reducedMotion.addEventListener?.("change", () => {
+      if (reducedMotion.matches) {
+        revealItems.forEach((item) => item.classList.add("is-revealed"));
+      }
+    });
+  };
+
+  initializeScrollReveals();
+
+  // Let card spotlights follow the pointer without changing each card's content.
+  document.querySelectorAll(".spotlight-card, .card, [data-spotlight]").forEach((card) => {
+    card.classList.add("spotlight-card");
+    card.addEventListener("pointermove", (event) => {
+      const bounds = card.getBoundingClientRect();
+      card.style.setProperty("--spot-x", `${event.clientX - bounds.left}px`);
+      card.style.setProperty("--spot-y", `${event.clientY - bounds.top}px`);
+    });
+  });
+
+  // Desktop cursor dot follows directly; its larger ring eases toward the pointer.
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+  if (finePointer.matches && !reducedMotion.matches) {
+    const cursorDot = document.createElement("span");
+    const cursorRing = document.createElement("span");
+    cursorDot.className = "custom-cursor-dot";
+    cursorRing.className = "custom-cursor-ring";
+    cursorDot.setAttribute("aria-hidden", "true");
+    cursorRing.setAttribute("aria-hidden", "true");
+    document.body.append(cursorDot, cursorRing);
+    document.body.classList.add("has-custom-cursor");
+
+    let pointerX = -100;
+    let pointerY = -100;
+    let ringX = pointerX;
+    let ringY = pointerY;
+    let cursorAnimation = 0;
+    const followCursor = () => {
+      cursorAnimation = 0;
+      ringX += (pointerX - ringX) * (reducedMotion.matches ? 1 : 0.18);
+      ringY += (pointerY - ringY) * (reducedMotion.matches ? 1 : 0.18);
+      cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
+      if (Math.abs(pointerX - ringX) > 0.2 || Math.abs(pointerY - ringY) > 0.2) {
+        cursorAnimation = window.requestAnimationFrame(followCursor);
+      }
+    };
+
+    document.addEventListener("pointermove", (event) => {
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      cursorDot.style.transform = `translate3d(${pointerX}px, ${pointerY}px, 0)`;
+      cursorDot.classList.add("is-visible");
+      cursorRing.classList.add("is-visible");
+      if (!cursorAnimation) {
+        cursorAnimation = window.requestAnimationFrame(followCursor);
+      }
+    });
+    document.addEventListener("pointerover", (event) => {
+      const interactive = event.target.closest("a, button, [role='button'], .spotlight-card");
+      cursorRing.classList.toggle("is-interactive", Boolean(interactive));
+    });
+
+    // Magnetic controls move a small fraction of the pointer distance, then spring back.
+    if (!reducedMotion.matches) {
+      document.querySelectorAll(".hero-button, [data-magnetic]").forEach((button) => {
+        button.addEventListener("pointermove", (event) => {
+          const bounds = button.getBoundingClientRect();
+          const x = event.clientX - bounds.left - bounds.width / 2;
+          const y = event.clientY - bounds.top - bounds.height / 2;
+          button.style.setProperty("--magnetic-x", `${x * 0.25}px`);
+          button.style.setProperty("--magnetic-y", `${y * 0.35}px`);
+        });
+        button.addEventListener("pointerleave", () => {
+          button.style.setProperty("--magnetic-x", "0px");
+          button.style.setProperty("--magnetic-y", "0px");
+        });
+      });
+    }
+  }
+
+  // Add the home-only particle canvas and orbit response.
+  const particleHero = document.querySelector(".portfolio-hero");
+  if (particleHero) {
+    const particles = document.createElement("canvas");
+    particles.className = "hero-particles";
+    particles.setAttribute("aria-hidden", "true");
+    particleHero.prepend(particles);
+    const context = particles.getContext("2d");
+    const portrait = particleHero.querySelector(".hero-portrait");
+    let particleList = [];
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let pointer = { x: -1000, y: -1000 };
+    let animationId = 0;
+    let heroIsVisible = false;
+
+    const resizeCanvas = () => {
+      const bounds = particles.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvasWidth = particles.clientWidth;
+      canvasHeight = particles.clientHeight;
+      particles.width = Math.round(canvasWidth * ratio);
+      particles.height = Math.round(canvasHeight * ratio);
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const count = Math.min(90, Math.max(12, Math.floor((canvasWidth * canvasHeight) / 16000)));
+      particleList = Array.from({ length: count }, () => ({
+        x: Math.random() * canvasWidth,
+        y: Math.random() * canvasHeight,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        radius: 0.8 + Math.random() * 0.9,
+      }));
+      if (!bounds.width || !bounds.height) {
+        particleList = [];
+      }
+    };
+
+    const stopParticles = () => {
+      window.cancelAnimationFrame(animationId);
+      animationId = 0;
+    };
+
+    const drawParticles = () => {
+      animationId = 0;
+      if (!heroIsVisible || reducedMotion.matches || document.hidden) {
+        return;
+      }
+
+      const color = getComputedStyle(particleHero).getPropertyValue("--particle-color").trim();
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
+      particleList.forEach((dot, index) => {
+        const dx = pointer.x - dot.x;
+        const dy = pointer.y - dot.y;
+        const cursorDistance = Math.hypot(dx, dy);
+        if (cursorDistance < 180 && cursorDistance > 0) {
+          dot.vx += (dx / cursorDistance) * 0.004;
+          dot.vy += (dy / cursorDistance) * 0.004;
+        }
+        dot.vx *= 0.995;
+        dot.vy *= 0.995;
+        dot.x += dot.vx;
+        dot.y += dot.vy;
+        if (dot.x < 0) dot.x = canvasWidth;
+        if (dot.x > canvasWidth) dot.x = 0;
+        if (dot.y < 0) dot.y = canvasHeight;
+        if (dot.y > canvasHeight) dot.y = 0;
+
+        for (let otherIndex = index + 1; otherIndex < particleList.length; otherIndex += 1) {
+          const other = particleList[otherIndex];
+          const distance = Math.hypot(dot.x - other.x, dot.y - other.y);
+          if (distance < 140) {
+            context.strokeStyle = color;
+            context.globalAlpha = (1 - distance / 140) * 0.22;
+            context.lineWidth = 0.6;
+            context.beginPath();
+            context.moveTo(dot.x, dot.y);
+            context.lineTo(other.x, other.y);
+            context.stroke();
+          }
+        }
+
+        const nearCursor = cursorDistance < 180;
+        context.globalAlpha = nearCursor ? 0.9 : 0.55;
+        context.fillStyle = color;
+        context.beginPath();
+        context.arc(dot.x, dot.y, dot.radius + (nearCursor ? 0.8 : 0), 0, Math.PI * 2);
+        context.fill();
+        if (nearCursor) {
+          context.globalAlpha = (1 - cursorDistance / 180) * 0.5;
+          context.beginPath();
+          context.moveTo(dot.x, dot.y);
+          context.lineTo(pointer.x, pointer.y);
+          context.stroke();
+        }
+      });
+      context.globalAlpha = 1;
+      animationId = window.requestAnimationFrame(drawParticles);
+    };
+
+    const startParticles = () => {
+      if (heroIsVisible && !reducedMotion.matches && !document.hidden && !animationId) {
+        animationId = window.requestAnimationFrame(drawParticles);
+      }
+    };
+
+    if (context) {
+      resizeCanvas();
+      const visibilityObserver = new IntersectionObserver((entries) => {
+        heroIsVisible = entries.some((entry) => entry.isIntersecting);
+        if (heroIsVisible) startParticles();
+        else stopParticles();
+      });
+      visibilityObserver.observe(particleHero);
+      window.addEventListener("resize", resizeCanvas);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) stopParticles();
+        else startParticles();
+      });
+      const updateParticleMotion = () => {
+        if (reducedMotion.matches) stopParticles();
+        else startParticles();
+      };
+      if (typeof reducedMotion.addEventListener === "function") {
+        reducedMotion.addEventListener("change", updateParticleMotion);
+      } else {
+        reducedMotion.addListener(updateParticleMotion);
+      }
+      particleHero.addEventListener("pointermove", (event) => {
+        if (reducedMotion.matches) return;
+        const bounds = particles.getBoundingClientRect();
+        pointer = {
+          x: ((event.clientX - bounds.left) / bounds.width) * canvasWidth,
+          y: ((event.clientY - bounds.top) / bounds.height) * canvasHeight,
+        };
+        const orbit = portrait.getBoundingClientRect();
+        const relativeX = (event.clientX - orbit.left) / orbit.width - 0.5;
+        const relativeY = (event.clientY - orbit.top) / orbit.height - 0.5;
+        const distance = Math.min(1, Math.hypot(relativeX, relativeY) * 2);
+        portrait.style.setProperty("--orbit-tilt-x", `${-relativeY * 30}deg`);
+        portrait.style.setProperty("--orbit-tilt-y", `${relativeX * 30}deg`);
+        portrait.style.setProperty("--portrait-glow-opacity", `${(1 - distance) * 0.4}`);
+      });
+      particleHero.addEventListener("pointerleave", () => {
+        pointer = { x: -1000, y: -1000 };
+        portrait.style.setProperty("--orbit-tilt-x", "0deg");
+        portrait.style.setProperty("--orbit-tilt-y", "0deg");
+        portrait.style.setProperty("--portrait-glow-opacity", "0");
+      });
+    }
+  }
+
   const laptopIntro = document.querySelector(".laptop-intro");
   if (!laptopIntro) {
     return;
@@ -61,7 +394,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const heroFrame = heroSection.querySelector(".portfolio-hero-frame");
   const heroCanvas = heroFrame.querySelector(".portfolio-hero");
   const floatingNav = document.querySelector(".floating-nav");
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const typedPhrase = laptopIntro.querySelector(".typed-phrase");
   const lockDate = laptopIntro.querySelector(".lock-date");
   const lockTime = laptopIntro.querySelector(".lock-time");
