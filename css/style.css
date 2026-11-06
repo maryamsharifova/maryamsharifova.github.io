@@ -3024,21 +3024,24 @@ a.contact-value:hover,
   transform: translate(2px, -2px);
 }
 
-/* Sticky room so the lid can close across the last part of the page. */
+/* Extra height is the scroll that closes the lid. The laptop itself stays at the bottom. */
 .thanks-scroll {
-  height: 175vh;
-  margin-top: clamp(2rem, 6vw, 4rem);
+  height: calc(52vh + clamp(16rem, 42vw, 26rem));
+  margin-top: clamp(1.5rem, 4vw, 3rem);
 }
 
+/* A short window above the footer. The deck continues below the clip, behind the footer line. */
 .thanks-stage {
   position: sticky;
-  top: 0;
-  height: 100vh;
-  display: grid;
-  place-items: center;
+  bottom: 0;
+  height: clamp(16rem, 42vw, 26rem);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
   overflow: clip;
-  perspective: 1100px;
-  perspective-origin: 50% 42%;
+  padding-bottom: clamp(2.6rem, 7vw, 4.5rem);
+  perspective: 900px;
+  perspective-origin: 50% 100%;
   /* Open pose. Scroll script eases these toward a closed lid. */
   --camera-angle: -28deg;
   --laptop-yaw: 0deg;
@@ -3052,7 +3055,7 @@ a.contact-value:hover,
 }
 
 .thanks-stage .laptop {
-  width: min(32rem, 86vw);
+  width: min(520px, 70vw);
 }
 
 .thanks-screen {
@@ -3106,15 +3109,12 @@ a.contact-value:hover,
   }
 
   .thanks-scroll {
-    height: 150vh;
+    height: calc(40vh + 18rem);
   }
 
   .thanks-stage {
-    height: 100svh;
-  }
-
-  .thanks-stage .laptop {
-    width: min(20rem, 88vw);
+    height: 18rem;
+    padding-bottom: 2.4rem;
   }
 
   .contact-card {
