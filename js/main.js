@@ -8,6 +8,14 @@ try {
   console.warn("Could not read the saved theme preference.", error);
 }
 
+// Open each new page at the top, including after a cross-document transition.
+if ("scrollRestoration" in history) {
+  history.scrollRestoration = "manual";
+}
+if (!window.location.hash) {
+  window.scrollTo(0, 0);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -252,6 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
         projectList.style.transform = "";
         displayedProgress = 0;
         targetProgress = 0;
+        // A stacked list has no sideways track, so the next page can arm at the footer.
+        projectPage.dataset.trackDone = "1";
         return;
       }
 
@@ -270,6 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
       progressCount.textContent = `${String(currentCard).padStart(2, "0")} ——— ${String(cards.length).padStart(2, "0")}`;
       progressCount.parentElement.setAttribute("aria-label", `Project ${currentCard} of ${cards.length}`);
       progressBar.style.transform = `scaleX(${displayedProgress})`;
+      // The next page only arms once the last card has slid into place.
+      projectPage.dataset.trackDone = displayedProgress >= 0.985 ? "1" : "0";
     };
 
     const animateHorizontalTrack = () => {
@@ -988,14 +1000,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const laptopStage = laptopIntro.querySelector(".laptop-stage");
   const laptopDive = laptopIntro.querySelector(".laptop-dive");
   const screenDisplay = laptopIntro.querySelector(".screen-display");
-  const lockScreen = laptopIntro.querySelector(".lock-screen");
   const heroSection = document.querySelector(".portfolio-hero-section");
   const heroFrame = heroSection.querySelector(".portfolio-hero-frame");
   const heroCanvas = heroFrame.querySelector(".portfolio-hero");
   const floatingNav = document.querySelector(".floating-nav");
   const typedPhrase = laptopIntro.querySelector(".typed-phrase");
-  const lockDate = laptopIntro.querySelector(".lock-date");
-  const lockTime = laptopIntro.querySelector(".lock-time");
   // These phrases appear one at a time in the intro's typing line.
   const phrases = [
     "secure company data",
@@ -1015,44 +1024,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let deleting = false;
   let keySequencePlayed = false;
   let keySequenceTimers = [];
-
-  // Fill the lock screen's date and clock using the visitor's local time.
-  const updateLockClock = () => {
-    const now = new Date();
-    lockDate.textContent = new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    }).format(now);
-    lockTime.textContent = new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(now);
-  };
-
-  // Give each of the 14 hex columns its own speed and starting offset.
-  const createHexRain = () => {
-    const rain = laptopIntro.querySelector(".hex-rain");
-    const hexCharacters = "0123456789ABCDEF";
-
-    for (let columnIndex = 0; columnIndex < 14; columnIndex += 1) {
-      const column = document.createElement("span");
-      const stream = document.createElement("span");
-      const randomCode = Array.from(
-        { length: 24 },
-        () => hexCharacters[Math.floor(Math.random() * hexCharacters.length)],
-      ).join("\n");
-      const duration = 8 + Math.random() * 10;
-
-      column.className = "hex-column";
-      stream.className = "hex-stream";
-      stream.textContent = `${randomCode}\n${randomCode}`;
-      column.style.setProperty("--fall-duration", `${duration}s`);
-      column.style.setProperty("--fall-delay", `${-Math.random() * duration}s`);
-      column.append(stream);
-      rain.append(column);
-    }
-  };
 
   // Stop any remaining presses and allow the sequence to run on the next opening.
   const resetKeySequence = () => {
@@ -1132,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Measure the real screen and fit the undistorted hero inside its changing bounds.
-  const updateHeroScene = (progress, diveProgress) => {
+  const updateHeroScene = (progress, diveProgress, screenPower) => {
     const heroSectionTop = heroSection.getBoundingClientRect().top + window.scrollY;
 
     if (window.scrollY >= heroSectionTop) {
@@ -1147,7 +1118,6 @@ document.addEventListener("DOMContentLoaded", () => {
     heroFrame.style.position = "fixed";
 
     const screenRect = screenDisplay.getBoundingClientRect();
-    const openingReveal = easeInOut(progressBetween(progress, 0.4, 0.5));
     const viewportRect = laptopStage.getBoundingClientRect();
     const centerX = viewportRect.left + viewportRect.width / 2;
     const centerY = viewportRect.top + viewportRect.height / 2;
@@ -1181,10 +1151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     heroFrame.style.width = `${alignedScreenRect.width}px`;
     heroFrame.style.height = `${alignedScreenRect.height}px`;
     heroFrame.style.borderRadius = `${radius}px`;
-    heroFrame.style.opacity = `${openingReveal}`;
+    // The homepage fades in with the same progress that lifts the black power layer.
+    heroFrame.style.opacity = `${screenPower}`;
     heroCanvas.style.setProperty("--hero-fit-scale", `${fitScale}`);
-    lockScreen.style.opacity = `${1 - openingReveal}`;
-    lockScreen.style.transform = `translateY(${-40 * openingReveal}%)`;
 
     // At the last intro frame, remove the hero mask and canvas transform completely.
     if (progress >= 0.999) {
@@ -1304,7 +1273,7 @@ document.addEventListener("DOMContentLoaded", () => {
       playKeySequence();
     }
 
-    updateHeroScene(progress, diveProgress);
+    updateHeroScene(progress, diveProgress, screenPower);
 
     // Keep measuring the screen while the smoothed position catches the real scroll.
     if (Math.abs(targetProgress - currentProgress) >= 0.0005) {
@@ -1335,10 +1304,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Start from the visitor's current scroll position instead of animating from zero.
   currentProgress = readScrollProgress();
   targetProgress = currentProgress;
-  updateLockClock();
-  // Refresh the displayed local time every 20 seconds.
-  window.setInterval(updateLockClock, 20000);
-  createHexRain();
   updateTypewriterMotion();
   requestLaptopUpdate();
 

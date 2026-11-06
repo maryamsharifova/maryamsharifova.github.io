@@ -1,5 +1,47 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
+/* Cross-document fade. Browsers without this rule just load the next page. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 400ms cubic-bezier(0.22, 1, 0.36, 1) both page-leave;
+}
+
+::view-transition-new(root) {
+  animation: 400ms cubic-bezier(0.22, 1, 0.36, 1) both page-enter;
+}
+
+@keyframes page-leave {
+  to {
+    opacity: 0;
+    transform: translateY(-28px);
+  }
+}
+
+@keyframes page-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Hold the floating nav in place while the rest of the page moves. */
+::view-transition-group(site-nav) {
+  animation: none;
+  z-index: 100;
+}
+
+::view-transition-old(site-nav),
+::view-transition-new(site-nav) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
 /* ===== Theme variables ===== */
 /* Dark colors are the defaults; the light theme overrides only what changes. */
 :root {
@@ -21,6 +63,7 @@
   --hero-line: rgb(255 255 255 / 9%);
   --hero-nav-muted: rgb(244 244 245 / 72%);
   --hero-grid-line: rgb(255 255 255 / 3%);
+  --portrait-label: rgb(185 226 240 / 82%);
   --hero-primary-button: #f4f4f5;
   --hero-primary-text: #101113;
   --particle-color: rgb(190 214 224 / 45%);
@@ -79,6 +122,7 @@
   --hero-line: rgb(13 16 32 / 13%);
   --hero-nav-muted: rgb(23 25 28 / 70%);
   --hero-grid-line: rgb(13 16 32 / 5%);
+  --portrait-label: rgb(8 80 110 / 86%);
   --hero-primary-button: #0d1020;
   --hero-primary-text: #ffffff;
   --particle-color: rgb(13 16 32 / 30%);
@@ -438,341 +482,7 @@ a {
   box-shadow: inset 0 0 0 0.12cqi var(--screen-shadow);
 }
 
-/* ===== Laptop screen: wallpaper and lock screen ===== */
-.lock-screen {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  padding: 3.1cqi 4cqi 2.2cqi;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse at 18% 30%, rgb(43 181 216 / 55%), transparent 34%),
-    radial-gradient(ellipse at 85% 25%, rgb(31 127 184 / 60%), transparent 34%),
-    radial-gradient(ellipse at 70% 95%, rgb(111 208 234 / 42%), transparent 40%),
-    linear-gradient(165deg, #1c1c20 0%, #121214 55%, #18161c 100%);
-  color: #f7fbff;
-  font-family: var(--font-body);
-  isolation: isolate;
-  text-align: center;
-}
-
-.lock-grid,
-.hex-rain,
-.lock-waves {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-/* Fade the fine grid toward the edges of the screen. */
-.lock-grid {
-  z-index: -1;
-  background-image:
-    linear-gradient(rgb(43 181 216 / 12%) 0.1cqi, transparent 0.1cqi),
-    linear-gradient(90deg, rgb(43 181 216 / 12%) 0.1cqi, transparent 0.1cqi);
-  background-size: 3.2cqi 3.2cqi;
-  mask-image: radial-gradient(ellipse at center, #000 12%, transparent 78%);
-}
-
-/* Keep the 14 streams dim and mostly hidden behind the screen's side edges. */
-.hex-rain {
-  z-index: -1;
-  display: flex;
-  justify-content: space-between;
-  overflow: hidden;
-  padding-inline: 1cqi;
-  color: #6fd0ea;
-  font-family: var(--font-label);
-  font-size: 1.15cqi;
-  line-height: 2cqi;
-  mask-image: linear-gradient(90deg, #000 0%, transparent 22%, transparent 78%, #000 100%);
-}
-
-.hex-column {
-  flex: 0 0 3cqi;
-  overflow: hidden;
-  opacity: 0.28;
-}
-
-.hex-stream {
-  display: block;
-  white-space: pre;
-  animation: hex-fall var(--fall-duration) linear var(--fall-delay) infinite;
-}
-
-@keyframes hex-fall {
-  to {
-    transform: translateY(-50%);
-  }
-}
-
-/* The back, middle, and front SVG layers drift at different speeds. */
-.lock-waves {
-  z-index: -1;
-  top: auto;
-  height: 70%;
-  overflow: visible;
-}
-
-.lock-wave {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation-name: wave-sway;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
-}
-
-.lock-wave-back {
-  fill: rgb(43 181 216 / 18%);
-  animation-duration: 12s;
-}
-
-.lock-wave-middle {
-  fill: rgb(31 127 184 / 22%);
-  animation-duration: 16s;
-  animation-direction: alternate-reverse;
-}
-
-.lock-wave-front {
-  fill: rgb(14 14 16 / 60%);
-  animation-duration: 20s;
-}
-
-@keyframes wave-sway {
-  from {
-    transform: translateX(-1.5%) scaleX(1.04);
-  }
-
-  to {
-    transform: translateX(1.5%) scaleX(0.96);
-  }
-}
-
-.lock-top,
-.lock-user {
-  position: relative;
-  z-index: 1;
-}
-
-.lock-date {
-  margin: 0;
-  font-size: 2.15cqi;
-  font-weight: 600;
-  letter-spacing: 0.02cqi;
-}
-
-.lock-time {
-  margin: 0.2cqi 0 1.8cqi;
-  background: linear-gradient(180deg, #fff 20%, rgb(225 239 247 / 78%) 100%);
-  background-clip: text;
-  color: transparent;
-  font-family: var(--font-heading);
-  font-size: 11cqi;
-  font-weight: 700;
-  letter-spacing: -0.65cqi;
-  line-height: 0.98;
-}
-
-/* Four small status cards fit in a single row across the screen. */
-.lock-status {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.1cqi;
-}
-
-.lock-status-card {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 1.2cqi 1fr;
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 0.8cqi;
-  padding: 1.15cqi 1cqi;
-  border: 0.12cqi solid rgb(235 248 255 / 24%);
-  border-radius: 1cqi;
-  background: rgb(12 17 23 / 46%);
-  box-shadow: inset 0 0 1.4cqi rgb(255 255 255 / 4%);
-  backdrop-filter: blur(0.8cqi);
-  text-align: left;
-}
-
-.status-dot {
-  width: 0.8cqi;
-  height: 0.8cqi;
-  grid-row: 1 / 3;
-  border-radius: 50%;
-  background: #6fd0ea;
-  box-shadow: 0 0 1.2cqi rgb(111 208 234 / 85%);
-}
-
-.status-title {
-  overflow: hidden;
-  font-size: 1.45cqi;
-  font-weight: 600;
-  line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-caption {
-  overflow: hidden;
-  color: rgb(222 235 242 / 70%);
-  font-family: var(--font-label);
-  font-size: 0.95cqi;
-  letter-spacing: 0.04cqi;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-card-dlp .status-dot {
-  background: #ffb547;
-  box-shadow: 0 0 1.2cqi rgb(255 181 71 / 85%);
-  animation: amber-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes amber-pulse {
-  50% {
-    opacity: 0.35;
-  }
-}
-
-/* The profile and verification message stay grouped at the screen bottom. */
-.lock-user {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.lock-avatar {
-  position: relative;
-  width: 11cqi;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border: 0.12cqi solid rgb(111 208 234 / 52%);
-  border-radius: 50%;
-  background: rgb(14 25 32 / 62%);
-  box-shadow: inset 0 0 2cqi rgb(111 208 234 / 12%), 0 0 1.5cqi rgb(43 181 216 / 18%);
-}
-
-.avatar-initials {
-  z-index: 1;
-  color: #f4fbff;
-  font-family: var(--font-heading);
-  font-size: 4.2cqi;
-  font-weight: 700;
-}
-
-.avatar-scan {
-  position: absolute;
-  z-index: 2;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 0.35cqi;
-  background: #6fd0ea;
-  box-shadow: 0 0 1.2cqi #6fd0ea;
-  animation: avatar-scan 2.6s ease-in-out infinite alternate;
-}
-
-@keyframes avatar-scan {
-  to {
-    transform: translateY(10.3cqi);
-  }
-}
-
-.avatar-arc {
-  position: absolute;
-  inset: -0.6cqi;
-  border: 0.12cqi solid transparent;
-  border-top-color: rgb(111 208 234 / 90%);
-  border-right-color: rgb(111 208 234 / 32%);
-  border-radius: 50%;
-  animation: avatar-spin 5s linear infinite;
-}
-
-@keyframes avatar-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.lock-user-name {
-  margin: 0.7cqi 0 0.9cqi;
-  font-size: 2.05cqi;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.verify-pill {
-  min-height: 5.2cqi;
-  display: flex;
-  align-items: center;
-  gap: 1.2cqi;
-  padding: 0.7cqi 1.7cqi;
-  border: 0.12cqi solid rgb(235 248 255 / 24%);
-  border-radius: 3cqi;
-  background: rgb(12 17 23 / 48%);
-  box-shadow: inset 0 0 1.4cqi rgb(255 255 255 / 4%);
-  backdrop-filter: blur(0.8cqi);
-  color: rgb(244 250 255 / 92%);
-  font-size: 1.45cqi;
-}
-
-.verify-icon {
-  width: 2.5cqi;
-  height: 2.5cqi;
-  fill: none;
-  stroke: #6fd0ea;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.6cqi;
-}
-
-.verify-loader {
-  position: relative;
-  width: 5.6cqi;
-  height: 0.3cqi;
-  overflow: hidden;
-  border-radius: 1cqi;
-  background: rgb(111 208 234 / 17%);
-}
-
-.verify-loader span {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 42%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #0889b0, #6fd0ea);
-  animation: verify-progress 1.3s ease-in-out infinite;
-}
-
-@keyframes verify-progress {
-  from {
-    transform: translateX(-110%);
-  }
-
-  to {
-    transform: translateX(250%);
-  }
-}
-
-.lock-security-note {
-  margin: 0.7cqi 0 0;
-  color: rgb(205 224 234 / 48%);
-  font-family: var(--font-label);
-  font-size: 0.9cqi;
-  letter-spacing: 0.11cqi;
-}
-
-/* The black layer masks the wallpaper until the lid is mostly open. */
+/* The black layer hides the glass until the lid is mostly open. */
 .screen-power-off {
   position: absolute;
   z-index: 3;
@@ -1093,6 +803,13 @@ a {
 
 .portfolio-hero-frame.is-active {
   visibility: visible;
+  /* Bands around the unstretched hero use the same background and grid. */
+  background-color: var(--hero-background);
+  background-image:
+    linear-gradient(var(--hero-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hero-grid-line) 1px, transparent 1px);
+  background-size: calc(42px * var(--hero-fit-scale, 1)) calc(42px * var(--hero-fit-scale, 1));
+  background-position: center;
 }
 
 .hero-atmosphere {
@@ -1106,6 +823,7 @@ a {
     linear-gradient(90deg, var(--hero-grid-line) 1px, transparent 1px),
     var(--hero-background);
   background-size: auto, auto, 42px 42px, 42px 42px, auto;
+  background-position: center;
   mask-image: radial-gradient(ellipse at center, #000 32%, transparent 100%);
 }
 
@@ -1374,7 +1092,7 @@ a {
 
 .portrait-label {
   position: absolute;
-  color: rgb(185 226 240 / 72%);
+  color: var(--portrait-label);
   font-family: var(--font-label);
   font-size: clamp(0.55rem, 0.8vw, 0.7rem);
   letter-spacing: 0.08em;
@@ -1416,6 +1134,7 @@ a {
 .floating-nav {
   position: fixed;
   z-index: 50;
+  view-transition-name: site-nav;
   top: 1rem;
   left: 50%;
   display: flex;
@@ -1690,15 +1409,9 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .typed-caret,
   .scroll-cue-line,
-  .hex-stream,
-  .lock-wave,
-  .status-card-dlp .status-dot,
-  .avatar-scan,
-  .avatar-arc,
   .portrait-ring-outer,
   .portrait-ring-middle,
-  .portrait-ring-inner,
-  .verify-loader span {
+  .portrait-ring-inner {
     animation: none;
   }
 
