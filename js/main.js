@@ -29,40 +29,74 @@ const openedAtEnd = portfolioEnter === "end" && !window.location.hash;
 // The project track reads this while it is measuring, before the scroll listeners exist.
 window.portfolioEnter = openedAtEnd ? "end" : "start";
 
+// Measure the sideways track now so its height does not change after the first frame.
+const settleProjectsTrack = (landOnLastCard) => {
+  const projectPage = document.querySelector(".projects-page");
+  if (!projectPage) return false;
+
+  const wideScreen = window.matchMedia("(min-width: 861px)").matches;
+  const allowMotion = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const trackSection = projectPage.querySelector(".projects-track");
+  const stickyTrack = projectPage.querySelector(".projects-pin");
+  const projectList = projectPage.querySelector(".project-list");
+
+  if (wideScreen && allowMotion && trackSection && stickyTrack && projectList) {
+    const distance = Math.max(0, projectList.scrollWidth - stickyTrack.clientWidth);
+    trackSection.style.height = `${window.innerHeight + distance}px`;
+    projectPage.dataset.trackMeasured = "1";
+    if (landOnLastCard) {
+      const trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, trackStart + distance);
+    }
+  } else if (landOnLastCard) {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+  }
+
+  if (landOnLastCard) window.portfolioEnter = "start";
+  return true;
+};
+
+// Show the finished homepage hero before the laptop loop gets a frame.
+const showHomeHero = () => {
+  const hero = document.querySelector(".portfolio-hero-section");
+  if (!hero) return;
+
+  const frame = hero.querySelector(".portfolio-hero-frame");
+  const canvas = hero.querySelector(".portfolio-hero");
+  const nav = document.querySelector(".floating-nav");
+  hero.classList.add("is-current");
+  if (frame) {
+    frame.classList.remove("is-active", "is-fullscreen");
+    ["position", "left", "top", "width", "height", "border-radius", "opacity", "transform"].forEach((property) => {
+      frame.style.removeProperty(property);
+    });
+  }
+  if (canvas) {
+    canvas.style.removeProperty("transform");
+    canvas.style.removeProperty("--hero-fit-scale");
+  }
+  // Sit just far enough into the hero that the nav's own rule keeps it visible.
+  window.scrollTo(0, hero.offsetTop + window.innerHeight * 0.08 + 1);
+  if (nav) nav.classList.add("is-visible");
+};
+
 // Put the new page at its landing spot before the transition takes its snapshot.
 const placePageEntry = () => {
   if (window.location.hash) return;
 
   if (!openedAtEnd) {
+    settleProjectsTrack(false);
     window.scrollTo(0, 0);
     return;
   }
 
-  // Home opens on the hero, after the laptop intro has finished.
-  const hero = document.querySelector(".portfolio-hero-section");
-  if (hero) {
-    window.scrollTo(0, hero.offsetTop);
+  // Home opens on the hero, already in its final visible state.
+  if (document.querySelector(".portfolio-hero-section")) {
+    showHomeHero();
     return;
   }
 
-  const projectPage = document.querySelector(".projects-page");
-  if (projectPage) {
-    const wideScreen = window.matchMedia("(min-width: 861px)").matches;
-    const allowMotion = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const trackSection = projectPage.querySelector(".projects-track");
-    const stickyTrack = projectPage.querySelector(".projects-pin");
-    const projectList = projectPage.querySelector(".project-list");
-    if (wideScreen && allowMotion && trackSection && stickyTrack && projectList) {
-      const distance = Math.max(0, projectList.scrollWidth - stickyTrack.clientWidth);
-      trackSection.style.height = `${window.innerHeight + distance}px`;
-      const trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo(0, trackStart + distance);
-    } else {
-      window.scrollTo(0, document.documentElement.scrollHeight);
-    }
-    window.portfolioEnter = "start";
-    return;
-  }
+  if (settleProjectsTrack(true)) return;
 
   window.scrollTo(0, document.documentElement.scrollHeight);
 };
@@ -366,6 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let horizontalTrackEnabled = false;
     let trackDistance = 0;
     let trackStart = 0;
+    let usedCommittedHeight = false;
     let targetProgress = 0;
     let displayedProgress = 0;
     let trackAnimationFrame = 0;
@@ -389,7 +424,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       trackDistance = Math.max(0, projectList.scrollWidth - stickyTrack.clientWidth);
-      trackSection.style.height = `${window.innerHeight + trackDistance}px`;
+      // The first pass keeps the height already chosen in pagereveal.
+      if (!usedCommittedHeight && projectPage.dataset.trackMeasured === "1") {
+        usedCommittedHeight = true;
+        trackDistance = Math.max(0, Number.parseFloat(trackSection.style.height) - window.innerHeight);
+      } else {
+        trackSection.style.height = `${window.innerHeight + trackDistance}px`;
+      }
       trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
       targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
       displayedProgress = targetProgress;
@@ -1128,14 +1169,91 @@ document.addEventListener("DOMContentLoaded", () => {
     const previousPage = portfolioPages[portfolioIndex - 1];
     if (!nextPage && !previousPage) return;
 
-    const restDelay = 300;
+    const restDelay = 150;
     const wheelWindow = 1000;
-    const wheelDistance = 120;
+    const wheelDistance = 100;
     const swipeDistance = 60;
+    const pullRatio = 0.35;
+    const pullLimit = 60;
     let lastScrollAt = performance.now();
     let wheelSamples = [];
     let touchGesture = null;
     let navigating = false;
+    let displayedPull = 0;
+    let pullTarget = 0;
+    let pullFrame = 0;
+    let pullMode = "follow";
+    let springFrom = 0;
+    let springStart = 0;
+    let pullIdle = 0;
+
+    // Move the page, not the floating nav. Positive distance pulls down.
+    const paintEdgePull = (offset) => {
+      const limited = Math.max(-pullLimit, Math.min(pullLimit, offset));
+      displayedPull = limited;
+      const fade = 1 - (Math.abs(limited) / pullLimit) * 0.16;
+      document.querySelectorAll("main, #page-end").forEach((element) => {
+        if (limited === 0) {
+          element.style.transform = "";
+          element.style.opacity = "";
+          return;
+        }
+        element.style.transform = `translateY(${limited}px)`;
+        element.style.opacity = fade.toFixed(3);
+      });
+    };
+
+    const stopPullFrame = () => {
+      if (pullFrame) window.cancelAnimationFrame(pullFrame);
+      pullFrame = 0;
+    };
+
+    // One frame loop either follows the finger or eases the page back to rest.
+    const runPullFrame = (now) => {
+      if (pullMode === "spring") {
+        const progress = Math.min(1, (now - springStart) / 300);
+        const eased = 1 - (1 - progress) ** 3;
+        const next = springFrom * (1 - eased);
+        paintEdgePull(Math.abs(next) < 0.4 ? 0 : next);
+        if (progress < 1) {
+          pullFrame = window.requestAnimationFrame(runPullFrame);
+          return;
+        }
+        wheelSamples = [];
+        pullMode = "follow";
+        pullFrame = 0;
+        return;
+      }
+
+      paintEdgePull(pullTarget);
+      pullFrame = 0;
+    };
+
+    const queuePull = (offset) => {
+      pullMode = "follow";
+      pullTarget = offset;
+      if (!pullFrame) pullFrame = window.requestAnimationFrame(runPullFrame);
+    };
+
+    const springEdgeBack = () => {
+      window.clearTimeout(pullIdle);
+      if (navigating || displayedPull === 0) return;
+      stopPullFrame();
+      pullMode = "spring";
+      springFrom = displayedPull;
+      springStart = performance.now();
+      pullFrame = window.requestAnimationFrame(runPullFrame);
+    };
+
+    // Scrolling down pulls the content up, and scrolling up pulls it down.
+    const holdEdgePull = (traveled) => {
+      window.clearTimeout(pullIdle);
+      const offset = Math.max(-pullLimit, Math.min(pullLimit, -traveled * pullRatio));
+      queuePull(offset);
+      pullIdle = window.setTimeout(() => {
+        if (!navigating) springEdgeBack();
+      }, 200);
+    };
 
     const atTop = () => window.scrollY <= 4;
 
@@ -1168,6 +1286,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (navigating) return;
       // One gesture can fire several events. Leave only after the first one.
       navigating = true;
+      window.clearTimeout(pullIdle);
+      // Paint the pulled position now, so the leaving snapshot starts from it.
+      paintEdgePull(pullTarget);
+      stopPullFrame();
       wheelSamples = [];
       touchGesture = null;
       try {
@@ -1182,7 +1304,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("scroll", () => {
       lastScrollAt = performance.now();
-      if (!atTop() && !atBottom()) wheelSamples = [];
+      if (!atTop() && !atBottom()) {
+        wheelSamples = [];
+        springEdgeBack();
+      }
     }, { passive: true });
 
     // These listeners stay passive, so the page can always scroll while it still has room.
@@ -1203,13 +1328,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const now = performance.now();
-      // A change of direction starts the distance again.
+      // Releasing the edge before the threshold lets the page spring back.
       if (wheelSamples.some((sample) => Math.sign(sample.pixels) !== Math.sign(pixels))) {
         wheelSamples = [];
+        springEdgeBack();
+        return;
       }
       wheelSamples.push({ time: now, pixels });
       wheelSamples = wheelSamples.filter((sample) => now - sample.time <= wheelWindow);
       const traveled = wheelSamples.reduce((total, sample) => total + sample.pixels, 0);
+      holdEdgePull(traveled);
       if (traveled >= wheelDistance && nextPage) openPage(nextPage, "forward");
       if (traveled <= -wheelDistance && previousPage) openPage(previousPage, "back");
     }, { passive: true });
@@ -1233,19 +1361,21 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!touch) return;
       const rise = touchGesture.startY - touch.clientY;
       // Finger up continues downward. Finger down goes back to the previous page.
-      if (touchGesture.direction === "forward" && rise >= swipeDistance && nextPage) {
-        openPage(nextPage, "forward");
-      } else if (touchGesture.direction === "back" && rise <= -swipeDistance && previousPage) {
-        openPage(previousPage, "back");
+      if (touchGesture.direction === "forward") {
+        holdEdgePull(Math.max(0, rise));
+        if (rise >= swipeDistance && nextPage) openPage(nextPage, "forward");
+      } else if (touchGesture.direction === "back") {
+        holdEdgePull(Math.min(0, rise));
+        if (rise <= -swipeDistance && previousPage) openPage(previousPage, "back");
       }
     }, { passive: true });
 
-    window.addEventListener("touchend", () => {
+    const endTouch = () => {
       touchGesture = null;
-    }, { passive: true });
-    window.addEventListener("touchcancel", () => {
-      touchGesture = null;
-    }, { passive: true });
+      if (!navigating) springEdgeBack();
+    };
+    window.addEventListener("touchend", endTouch, { passive: true });
+    window.addEventListener("touchcancel", endTouch, { passive: true });
   };
 
   initializePageFlow();

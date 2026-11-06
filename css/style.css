@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+/* Fonts are linked from each page head so they are ready before the first frame. */
 
 /* Cross-document move. Browsers without this rule just load the next page. */
 @view-transition {

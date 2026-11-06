@@ -6,6 +6,11 @@
     <meta name="description" content="Maryam Sharifova's personal portfolio.">
     <title>Home | Maryam Sharifova</title>
     <!-- One stylesheet and script are shared across every page. -->
+    <!-- Load the fonts early, and wait until the footer exists before the first frame. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+    <link rel="expect" href="#page-end" blocking="render">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/main.js"></script>
   </head>
@@ -251,7 +256,7 @@
     </nav>
 
     <!-- Shared footer links back to the public source repository. -->
-    <footer class="site-footer">
+    <footer class="site-footer" id="page-end">
       <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
       <a
