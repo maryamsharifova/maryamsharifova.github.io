@@ -1381,6 +1381,8 @@ a {
   color: rgb(244 244 245 / 72%);
   font-size: 0.78rem;
   text-decoration: none;
+  /* Every label stays on one line, and so does the pill. */
+  white-space: nowrap;
 }
 
 /* Any aria-current value: "page" on the separate pages, "location" for a section on Home. */
@@ -1495,9 +1497,11 @@ a {
     padding: 0.25rem;
   }
 
+  /* Six links and the theme button share one line. Text and side padding shrink a little with
+     the screen width (down to about 9px text on a 320px phone), so the pill never wraps. */
   .floating-nav > a {
-    padding: 0.42rem 0.48rem;
-    font-size: 0.66rem;
+    padding: 0.42rem clamp(0.26rem, 1.3vw, 0.48rem);
+    font-size: clamp(0.58rem, 2.9vw, 0.66rem);
   }
 
   .floating-theme-toggle {

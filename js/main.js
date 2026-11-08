@@ -63,10 +63,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const rail = document.createElement("nav");
     rail.className = "page-rail";
     rail.setAttribute("aria-label", "Page shortcuts");
+    // Links in the floating nav on the separate pages. The Security lab has no page of its own:
+    // it is a section at the end of projects.html (and on Home, whose nav is in index.html).
     const pages = [
       ["Home", "index.html"],
       ["About", "about.html"],
       ["Projects", "projects.html"],
+      ["Lab", "projects.html#lab"],
       ["Resume", "resume.html"],
       ["Contact", "contact.html"],
     ];
@@ -1454,11 +1457,40 @@ document.addEventListener("DOMContentLoaded", () => {
     // On projects.html a link such as projects.html#lab (the right-edge dot on the other pages)
     // can land too high, because the sideways project track only gets its full height once the
     // script has run. Line the lab up again once the layout has settled.
-    if (window.location.hash === "#lab" && !document.querySelector(".home-section")) {
+    const labSection = document.getElementById("lab");
+    const onProjectsPage = labSection && !document.querySelector(".home-section");
+    if (!onProjectsPage) return;
+
+    if (window.location.hash === "#lab") {
       window.addEventListener("load", () => {
         const fontsReady = document.fonts?.ready ?? Promise.resolve();
-        fontsReady.then(() => document.getElementById("lab")?.scrollIntoView({ block: "start" }));
+        fontsReady.then(() => labSection.scrollIntoView({ block: "start" }));
       }, { once: true });
+    }
+
+    // On projects.html the nav's "Lab" link and the "Security lab" dot point to this same page,
+    // so glide down to the lab instead of jumping. (Home handles its own section links.)
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest('a[href="projects.html#lab"]');
+      if (!link) return;
+      event.preventDefault();
+      labSection.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" });
+      history.replaceState(null, "", "#lab");
+    });
+
+    // Light up "Lab" instead of "Projects" (in the nav and the dots) while the lab is the part
+    // being read, using the same thin band across the middle of the screen as Home.
+    if ("IntersectionObserver" in window) {
+      const projectLinks = [...document.querySelectorAll('.floating-nav a[href="projects.html"], .page-rail a[href="projects.html"]')];
+      const labLinks = [...document.querySelectorAll('.floating-nav a[href="projects.html#lab"], .page-rail a[href="projects.html#lab"]')];
+      const markReading = (inLab) => {
+        projectLinks.forEach((link) => (inLab ? link.removeAttribute("aria-current") : link.setAttribute("aria-current", "page")));
+        labLinks.forEach((link) => (inLab ? link.setAttribute("aria-current", "location") : link.removeAttribute("aria-current")));
+      };
+      new IntersectionObserver((entries) => {
+        // The band is either inside the lab or above it, in the project track.
+        entries.forEach((entry) => markReading(entry.isIntersecting || entry.boundingClientRect.top < 0));
+      }, { rootMargin: "-45% 0px -54% 0px" }).observe(labSection);
     }
   };
 
