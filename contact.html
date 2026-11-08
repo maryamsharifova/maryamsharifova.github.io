@@ -6,11 +6,10 @@
     <meta name="description" content="Contact Maryam Sharifova.">
     <title>Contact | Maryam Sharifova</title>
     <!-- The site's shared styles and behavior keep every page consistent. -->
-    <!-- Load the fonts early, and wait until the footer exists before the first frame. -->
+    <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-    <link rel="expect" href="#page-end" blocking="render">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/main.js"></script>
   </head>
@@ -134,7 +133,7 @@
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->
-    <footer class="site-footer" id="page-end">
+    <footer class="site-footer">
       <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
       <a class="github-link" href="https://github.com/maryamsharifova/maryamsharifova.github.io" aria-label="Visit the portfolio repository on GitHub" title="Portfolio repository on GitHub">
