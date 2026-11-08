@@ -172,6 +172,13 @@ body {
 body {
   min-width: 320px;
   min-height: 100vh;
+  /* svh is the height with the phone's browser bars showing, so nothing hides behind them.
+     Browsers without svh keep the vh line above. */
+  min-height: 100svh;
+  /* Each page sets viewport-fit=cover, so on a phone held sideways the page reaches under the
+     camera notch and the rounded corners. These insets (0 everywhere else) keep the content
+     clear of them; the page colour still fills the edges. */
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -309,9 +316,9 @@ a {
   padding-block: 0;
 }
 
-/* Without the sideways track (phones, reduced motion) Projects is an ordinary section,
-   so its panel takes the same shared gap as the others. */
-@media (max-width: 860px), (prefers-reduced-motion: reduce) {
+/* Without the sideways track (phones, short screens under 600px, reduced motion) Projects is
+   an ordinary section, so its panel takes the same shared gap as the others. */
+@media (max-width: 860px), (max-height: 599px), (prefers-reduced-motion: reduce) {
   .home-intro-page .projects-pin {
     padding-block: var(--home-section-space);
   }
@@ -1037,11 +1044,16 @@ a {
   mask-image: radial-gradient(ellipse at center, #000 32%, transparent 100%);
 }
 
-/* The brand and links sit on one clean row at the top of the hero. */
+/* The brand and links sit on one clean row at the top of the hero.
+   During the intro the window-sized hero is scaled to fill the laptop glass (16:10), and on a
+   wider window its left and right edges are cropped (main.js, coverScale). Keeping the top
+   bar, content and corner labels within 150svh of width (the glass's shape at this height,
+   with a small margin) means nothing important is ever cropped. On most screens the other
+   limits are smaller anyway; it matters on wide, short windows such as phones on their side. */
 .hero-topbar {
   position: relative;
   z-index: 1;
-  width: min(100% - 8vw, 1280px);
+  width: min(100% - 8vw, 1280px, 150svh);
   min-height: 92px;
   display: flex;
   align-items: center;
@@ -1099,7 +1111,7 @@ a {
 
 /* The copy and portrait share the central width of the viewport. */
 .hero-main {
-  width: min(100% - 12vw, 1160px);
+  width: min(100% - 12vw, 1160px, 146svh);
   min-height: calc(100% - 164px);
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
@@ -1321,9 +1333,10 @@ a {
 
 .hero-footer {
   position: absolute;
-  right: 4vw;
+  /* Inside the same 150svh-wide middle as the top bar. */
+  right: max(4vw, (100% - 150svh) / 2);
   bottom: 1.5rem;
-  left: 4vw;
+  left: max(4vw, (100% - 150svh) / 2);
   display: flex;
   justify-content: space-between;
   color: var(--hero-copy-muted);
@@ -1493,6 +1506,137 @@ a {
   }
 }
 
+/* ===== Hero and nav on short, wide screens (phones and small tablets held sideways) ===== */
+/* The screen is wide but only 360-540px tall, so the stacked phone layout (photo above text)
+   would push the text off screen, and the desktop layout's big title would not fit either.
+   Instead: one slim top bar, the text on the left and a smaller photo on the right, with every
+   size tied to the height (svh) so the whole hero fits in one screen. This comes after the
+   phone rules above, so it also wins on a 667px-wide phone. */
+@media (orientation: landscape) and (max-height: 540px) {
+  /* During the intro the hero is a fixed layer over the whole window, outside the padded body,
+     so there it keeps its own distance from the camera notch. Once it is part of the page the
+     body's padding does this instead. */
+  .portfolio-hero-frame:is(.is-active, .is-fullscreen) .portfolio-hero {
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  }
+
+  .hero-topbar {
+    width: min(100% - 3rem, 1280px, 150svh);
+    min-height: 3.2rem;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0;
+  }
+
+  .hero-brand {
+    width: auto;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .hero-brand-mark {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.95rem;
+  }
+
+  .hero-page-nav {
+    width: auto;
+    gap: clamp(0.6rem, 2vw, 1.2rem);
+  }
+
+  .hero-page-nav > a {
+    font-size: 0.74rem;
+  }
+
+  .hero-theme-toggle {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .hero-main {
+    width: min(100% - 3rem, 1100px, 146svh);
+    /* The top bar above and the corner labels below. */
+    min-height: calc(100% - 5.4rem);
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-items: stretch;
+    gap: clamp(1.25rem, 4vw, 3rem);
+    padding-block: 0.4rem 1.6rem;
+  }
+
+  .hero-copy,
+  .hero-portrait {
+    grid-row: auto;
+  }
+
+  .hero-portrait {
+    /* At most half the height, and never more than 30% of the width. */
+    width: min(50svh, 30vw);
+  }
+
+  .hero-eyebrow {
+    margin-bottom: 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .hero-title {
+    font-size: min(clamp(2.2rem, 6vw, 4rem), 12svh);
+  }
+
+  .hero-description {
+    max-width: 34rem;
+    margin-top: 0.6rem;
+    font-size: clamp(0.72rem, 3.4svh, 0.82rem);
+    line-height: 1.5;
+  }
+
+  .hero-actions {
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+
+  .hero-button {
+    min-height: 2.3rem;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.78rem;
+  }
+
+  .hero-footer {
+    right: max(1.5rem, env(safe-area-inset-right, 0px), (100% - 150svh) / 2);
+    bottom: 0.5rem;
+    left: max(1.5rem, env(safe-area-inset-left, 0px), (100% - 150svh) / 2);
+    font-size: 0.55rem;
+  }
+
+  .portrait-label {
+    font-size: 0.5rem;
+  }
+}
+
+/* The floating nav stays a slim pill near the top edge on short screens, so it covers as
+   little of the page as possible. Section tops have at least 4.5rem of space above their
+   headings (see .home-intro-page), which keeps the headings below it. */
+@media (max-height: 540px) {
+  .floating-nav {
+    top: 0.4rem;
+    width: max-content;
+    max-width: calc(100% - 1rem);
+    gap: 0;
+    padding: 0.2rem;
+  }
+
+  .floating-nav > a {
+    padding: 0.36rem 0.6rem;
+    font-size: 0.68rem;
+  }
+
+  .floating-theme-toggle {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+}
+
 .eyebrow {
   margin: 0 0 1rem;
   color: var(--color-text-muted);
@@ -1584,7 +1728,8 @@ a {
   }
 
   .intro-title {
-    font-size: clamp(2.2rem, 9vw, 3.2rem);
+    /* The 10svh cap also applies here, so the greeting stays small on a phone held sideways. */
+    font-size: min(clamp(2.2rem, 9vw, 3.2rem), 10svh);
   }
 
   .desk-surface {
@@ -1601,10 +1746,39 @@ a {
   }
 }
 
-/* Short windows (phones on their side) have no room beside the laptop for the AI and SEC labels. */
-@media (max-height: 500px) {
+/* Short windows (phones on their side) have no room beside the laptop for the AI and SEC labels.
+   The greeting and the scroll hint move closer to the edges and get smaller, which leaves a
+   tall enough band between them for the closed laptop (main.js sizes and places it there). */
+@media (max-height: 540px) {
   .intro-detail {
     display: none;
+  }
+
+  .intro-copy {
+    top: 3%;
+  }
+
+  .intro-label {
+    margin-bottom: 0.35rem;
+  }
+
+  .intro-title {
+    font-size: min(clamp(1.8rem, 5vw, 2.6rem), 9svh);
+  }
+
+  .typed-line {
+    min-height: 1.5em;
+    margin-top: 0.3rem;
+    font-size: 0.72rem;
+  }
+
+  .scroll-cue {
+    bottom: 3%;
+    gap: 0.35rem;
+  }
+
+  .scroll-cue-line {
+    height: 1.1rem;
   }
 }
 
@@ -1672,7 +1846,8 @@ a {
   position: fixed;
   z-index: 60;
   top: 50%;
-  right: 1.25rem;
+  /* Stay clear of a camera notch on the right side. */
+  right: max(1.25rem, env(safe-area-inset-right, 0px));
   display: grid;
   gap: 0.8rem;
   opacity: 0;
@@ -1875,7 +2050,8 @@ a {
   color: #b9f1ff;
 }
 
-@media (max-width: 860px) {
+/* Hidden on narrow screens, and on short ones, where the dots would sit on top of the content. */
+@media (max-width: 860px), (max-height: 540px) {
   .page-rail {
     display: none;
   }
@@ -2054,7 +2230,11 @@ a {
 }
 
 .terminal-output {
+  /* 300px on most screens. On short screens it takes what is left of the window after the
+     terminal's header, command chips, input line and the nav (about 16rem), but never less
+     than 8.5rem, so the whole terminal fits on one screen. */
   height: 300px;
+  height: clamp(8.5rem, 100svh - 16rem, 300px);
   overflow: auto;
   padding: 1rem;
   background: #0a0d0e;
@@ -2170,7 +2350,6 @@ a {
   }
 
   .terminal-output {
-    height: 300px;
     padding: 0.8rem;
     font-size: 0.7rem;
   }
@@ -3464,6 +3643,12 @@ a.contact-value:hover,
     height: 4.6rem;
   }
 
+  /* The side margin here is 1rem, so unlit missions start a shorter slide (12px instead of
+     18px) that stays inside the screen. */
+  .quest {
+    transform: translateX(12px);
+  }
+
   .contact-intro .page-title {
     font-size: clamp(3.4rem, 16vw, 4.6rem);
   }
@@ -3509,6 +3694,8 @@ a.contact-value:hover,
   position: sticky;
   top: 0;
   height: 100vh;
+  /* The visible height with browser bars showing, so the pinned card is never under them. */
+  height: 100svh;
   min-height: 0;
   overflow: clip;
 }
@@ -3576,6 +3763,7 @@ a.contact-value:hover,
   position: relative;
   width: min(980px, 80vw);
   height: min(600px, calc(100vh - 15rem));
+  height: min(600px, calc(100svh - 15rem));
   min-height: 0;
   flex: 0 0 min(980px, 80vw);
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
@@ -3652,6 +3840,8 @@ a.contact-value:hover,
   width: min(72rem, calc(100% - 2rem));
   max-width: 72rem;
   max-height: min(84vh, 52rem);
+  /* dvh follows the browser bars as they slide, so the window always fits what is visible. */
+  max-height: min(84dvh, 52rem);
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
@@ -3680,6 +3870,7 @@ a.contact-value:hover,
   display: flex;
   flex-direction: column;
   max-height: min(84vh, 52rem);
+  max-height: min(84dvh, 52rem);
 }
 
 .project-window-titlebar {
@@ -3821,7 +4012,10 @@ a.contact-value:hover,
   margin-top: 0.9rem;
 }
 
-@media (max-width: 860px), (prefers-reduced-motion: reduce) {
+/* Stacked cards instead of the pinned sideways track: on narrow screens, on screens under
+   600px tall (a pinned card would be cut off at the bottom; main.js uses the same limits),
+   and for reduced motion. */
+@media (max-width: 860px), (max-height: 599px), (prefers-reduced-motion: reduce) {
   .projects-pin,
   .projects-page.has-horizontal-scroll .projects-pin {
     position: relative;
@@ -3890,7 +4084,8 @@ a.contact-value:hover,
   }
 }
 
-@media (max-height: 800px) and (min-width: 861px) and (prefers-reduced-motion: no-preference) {
+/* Sideways track on a medium-height screen (600-800px): a tighter frame so the card stays tall. */
+@media (max-height: 800px) and (min-height: 600px) and (min-width: 861px) and (prefers-reduced-motion: no-preference) {
   .projects-pin {
     gap: 0.8rem;
     padding-top: 5.2rem;
@@ -3899,6 +4094,7 @@ a.contact-value:hover,
 
   .project-card {
     height: min(600px, calc(100vh - 14rem));
+    height: min(600px, calc(100svh - 14rem));
   }
 
   .project-label {
@@ -3921,4 +4117,56 @@ a.contact-value:hover,
 
 body.project-dialog-open {
   overflow: hidden;
+}
+
+/* ===== Short screens (phones and small tablets held sideways, under 540px tall) ===== */
+/* These come last so they adjust the rules above only where height is the tight side. */
+@media (max-height: 540px) {
+  /* The project window uses nearly the full height. Its content scrolls inside it as one
+     column of text beside (or above) a shorter demo, instead of the demo forcing 20rem. */
+  .project-dialog,
+  .project-window {
+    max-height: calc(100dvh - 1.5rem);
+  }
+
+  .project-window-titlebar {
+    min-height: 2.5rem;
+  }
+
+  .project-window-content {
+    padding: 0.9rem 1rem;
+  }
+
+  .project-window-visual,
+  .project-window-visual .project-visual {
+    height: min(15rem, 52dvh);
+    min-height: 0;
+  }
+
+  /* One scroll area (the whole content) is easier on a small screen than two nested ones. */
+  .project-window-details {
+    overflow: visible;
+  }
+
+  /* A slimmer terminal header and chip row leave more of the screen for the output. */
+  .terminal-header {
+    min-height: 2.6rem;
+    padding-block: 0.45rem;
+  }
+
+  .terminal-shortcuts {
+    gap: 0.35rem;
+    padding-block: 0.55rem;
+  }
+
+  .terminal-form {
+    min-height: 2.6rem;
+  }
+
+  /* Less empty room below the closing laptop, so at the page end the closed lid sits below
+     the nav pill (main.js sizes the laptop to fit what is left). */
+  .closing-laptop {
+    margin-top: 2.5rem;
+    margin-bottom: 2rem;
+  }
 }

@@ -340,9 +340,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let displayedProgress = 0;
     let trackAnimationFrame = 0;
 
-    // Pin the project list only on wide screens when motion is allowed.
+    // Pin the project list only on screens that are both wide and tall enough, when motion is
+    // allowed. Below 600px of height (phones and small tablets on their side) a pinned card
+    // would be cut off, so the cards stack instead. The same limits are in style.css.
+    const sidewaysTrackQuery = window.matchMedia("(min-width: 861px) and (min-height: 600px)");
     const updateHorizontalTrack = () => {
-      horizontalTrackEnabled = window.matchMedia("(min-width: 861px)").matches && !reducedMotion.matches;
+      horizontalTrackEnabled = sidewaysTrackQuery.matches && !reducedMotion.matches;
       projectPage.classList.toggle("has-horizontal-scroll", horizontalTrackEnabled);
       if (!horizontalTrackEnabled) {
         trackSection.style.height = "";
@@ -1082,9 +1085,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Draw the lid at most 370px wide (70% of the window on phones). With the base widening a
     // little toward the viewer, the whole laptop stays around 420px on desktop.
+    // On short screens (phones on their side) the height decides instead: the open laptop's box
+    // is about 1.02 design widths tall, and it must fit below the floating nav with the space
+    // below it and the footer, so the closed lid also ends up clear of the nav at the page end.
     const sizeClosingLaptop = () => {
       const designWidth = Number.parseFloat(getComputedStyle(section).getPropertyValue("--closing-design-width")) || 900;
-      section.style.setProperty("--closing-scale", String(Math.min(370, window.innerWidth * 0.7) / designWidth));
+      const footer = document.querySelector(".site-footer");
+      const spaceBelow = Number.parseFloat(getComputedStyle(section).marginBottom) + (footer ? footer.offsetHeight : 0);
+      // About 4.5rem at the top for the nav pill and a small gap.
+      const roomForLaptop = window.innerHeight - spaceBelow - 72;
+      const lidWidth = Math.max(150, Math.min(370, window.innerWidth * 0.7, roomForLaptop / 1.02));
+      section.style.setProperty("--closing-scale", String(lidWidth / designWidth));
     };
     sizeClosingLaptop();
 
@@ -1234,6 +1245,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const OPEN_SCALE_MAX = 1.06;
   // Open size for the current window; fitOpenPose() replaces it.
   let openScale = OPEN_SCALE_MAX;
+  // Closed size and its height offset from the window's middle, also set by fitOpenPose().
+  // On tall windows they stay at the design values (CLOSED_SCALE, centred). On short windows,
+  // such as phones held sideways, the closed laptop shrinks and moves so it fits between the
+  // greeting and the scroll hint. The offset fades to zero as the lid opens.
+  let closedScale = CLOSED_SCALE;
+  let closedOffsetY = 0;
+  // The part of that offset still in use at the current frame.
+  let restOffsetY = 0;
+  const introCopy = laptopIntro.querySelector(".intro-copy");
+  const scrollCue = laptopIntro.querySelector(".scroll-cue");
 
   // Keep animation inputs inside the 0-to-1 range.
   const clamp = (value) => Math.min(1, Math.max(0, value));
@@ -1268,12 +1289,27 @@ document.addEventListener("DOMContentLoaded", () => {
   screenHomepage.append(homepageCopy);
   screenDisplay.prepend(screenHomepage);
 
-  // Fit the copy inside the glass the same way the homepage layer is fitted later: the
-  // window-sized page, scaled down uniformly until it fits, centred, never stretched.
+  // How much to scale the window-sized homepage so it fills the visible part of the glass:
+  // uniformly (never stretched), centred, and with no empty bands at the sides or top and
+  // bottom. The glass's shape (16:10) rarely matches the window's (a wide monitor, a phone on
+  // its side or upright), so the page is scaled until it covers the glass and the overflow is
+  // cropped evenly from both edges. During the dive the glass grows past the window; only the
+  // part inside the window is visible, so each side is capped at the window. When the glass
+  // covers the whole window this gives exactly 1, the real page size, so the switch to the
+  // full-size homepage at the end of the dive has nothing to jump.
+  const coverScale = (glassWidth, glassHeight, pageWidth, pageHeight) => Math.max(
+    Math.min(glassWidth / pageWidth, 1),
+    Math.min(glassHeight / pageHeight, 1),
+  );
+
+  // Fit the copy inside the glass the same way the homepage layer is fitted later, so the
+  // hand-over between the two (when the lid is fully open) shows the identical picture.
   const fitScreenHomepage = () => {
-    const fit = Math.min(
-      screenDisplay.clientWidth / homepageCopy.offsetWidth,
-      screenDisplay.clientHeight / homepageCopy.offsetHeight,
+    const fit = coverScale(
+      screenDisplay.clientWidth,
+      screenDisplay.clientHeight,
+      homepageCopy.offsetWidth,
+      homepageCopy.offsetHeight,
     );
     screenHomepage.style.setProperty("--hero-fit-scale", String(fit));
   };
@@ -1340,16 +1376,20 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     diveScale = 1 + (finalScale - 1) * diveProgress;
     diveX = centerX - (centerX + (baseCenterX - centerX) * diveScale);
-    diveY = centerY - (centerY + (baseCenterY - centerY) * diveScale);
+    // The screen is held at the window's middle, moved by restOffsetY while the laptop is still
+    // (partly) closed on a short window. That offset is zero once the lid is open.
+    diveY = centerY + restOffsetY - (centerY + (baseCenterY - centerY) * diveScale);
     laptopDive.style.setProperty("--dive-scale", `${diveScale}`);
     laptopDive.style.setProperty("--dive-x", `${diveX}px`);
     laptopDive.style.setProperty("--dive-y", `${diveY}px`);
 
     // Measure again after zooming so the clipped hero matches this exact frame.
     const alignedScreenRect = screenDisplay.getBoundingClientRect();
-    const fitScale = Math.min(
-      alignedScreenRect.width / window.innerWidth,
-      alignedScreenRect.height / window.innerHeight,
+    const fitScale = coverScale(
+      alignedScreenRect.width,
+      alignedScreenRect.height,
+      window.innerWidth,
+      window.innerHeight,
     );
     const radius = Math.min(alignedScreenRect.width * 0.012, alignedScreenRect.height * 0.024);
 
@@ -1496,7 +1536,10 @@ document.addEventListener("DOMContentLoaded", () => {
     laptopIntro.style.setProperty("--camera-angle", `${CLOSED_CAMERA + (OPEN_CAMERA - CLOSED_CAMERA) * opening}deg`);
     // Grow from the small closed size to the open size while the lid opens.
     // The open size comes from fitOpenPose(), so the open laptop always fits the window.
-    laptopIntro.style.setProperty("--laptop-scale", `${CLOSED_SCALE + (openScale - CLOSED_SCALE) * opening}`);
+    laptopIntro.style.setProperty("--laptop-scale", `${closedScale + (openScale - closedScale) * opening}`);
+    // On short windows the closed laptop sits lower or higher than the middle (see
+    // fitOpenPose); it glides back to the middle as the lid opens.
+    restOffsetY = closedOffsetY * (1 - opening);
     laptopIntro.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
     // Keep the closed laptop a little above the centre, then lower it into the open framing.
     laptopIntro.style.setProperty("--lid-lift", `${-27 + 22 * opening}vh`);
@@ -1544,6 +1587,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // in the middle of the window, and the base reaches further below it than the lid does
   // above, so each side is measured from the screen's centre. Perspective makes the base
   // much bigger than its layout box, so measuring the real pose beats a fixed CSS size.
+  // It also fits the closed starting pose between the greeting and the scroll hint, so the
+  // laptop is sized by the window's height as well as its width at both ends of the intro.
   const fitOpenPose = () => {
     const savedIntroStyle = laptopIntro.getAttribute("style") || "";
     const savedDiveStyle = laptopDive.getAttribute("style") || "";
@@ -1583,6 +1628,52 @@ document.addEventListener("DOMContentLoaded", () => {
       scale = Math.min(OPEN_SCALE_MAX, scale / Math.max(1, overflowAt(scale)));
     }
     openScale = scale;
+
+    // The closed laptop at the start: turned, seen from above, lid shut. The dive holds the
+    // screen's centre at the window's middle, so measure how far the laptop reaches above and
+    // below that centre, and how wide it is.
+    laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW}deg`);
+    laptopIntro.style.setProperty("--camera-angle", `${CLOSED_CAMERA}deg`);
+    laptopIntro.style.setProperty("--lid-angle", "-90deg");
+    const closedReach = (closedSize) => {
+      laptopIntro.style.setProperty("--laptop-scale", String(closedSize));
+      const screen = screenDisplay.getBoundingClientRect();
+      const centerY = screen.top + screen.height / 2;
+      const reach = { above: 0, below: 0, left: Infinity, right: -Infinity };
+      parts.forEach((part) => {
+        const rect = part.getBoundingClientRect();
+        reach.above = Math.max(reach.above, centerY - rect.top);
+        reach.below = Math.max(reach.below, rect.bottom - centerY);
+        reach.left = Math.min(reach.left, rect.left);
+        reach.right = Math.max(reach.right, rect.right);
+      });
+      return reach;
+    };
+
+    // Free band between the greeting and the scroll hint, with a small gap to each. Both are
+    // measured from the top of the stage, without their fade-out movement.
+    const gap = 12;
+    const bandTop = introCopy.offsetTop + introCopy.offsetHeight + gap;
+    const bandBottom = scrollCue.offsetTop - gap;
+    const stageMiddle = stageRect.height / 2;
+
+    // Shrink the closed laptop only if it does not fit that band (or 90% of the width).
+    let reach = closedReach(CLOSED_SCALE);
+    const shrink = Math.min(
+      1,
+      (bandBottom - bandTop) / Math.max(1, reach.above + reach.below),
+      (stageRect.width * 0.9) / Math.max(1, reach.right - reach.left),
+    );
+    closedScale = CLOSED_SCALE * Math.max(0.5, shrink);
+    reach = closedReach(closedScale);
+
+    // Keep the designed middle position when it already clears both. Otherwise move the laptop
+    // down below the greeting, or up above the hint, and centre it in the band if both are tight.
+    const lowestOffset = bandBottom - reach.below - stageMiddle;
+    const highestOffset = bandTop + reach.above - stageMiddle;
+    closedOffsetY = highestOffset > lowestOffset
+      ? (highestOffset + lowestOffset) / 2
+      : Math.min(Math.max(0, highestOffset), lowestOffset);
 
     // Put the live pose back; the next frame redraws it with the new size.
     laptopIntro.setAttribute("style", savedIntroStyle);
