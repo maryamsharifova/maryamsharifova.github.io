@@ -1133,11 +1133,11 @@ a {
   border-radius: 50%;
 }
 
+/* The three rings and their glowing dots are still. The whole portrait still tilts toward the cursor. */
 .portrait-ring-outer {
   inset: 0;
   border-style: dashed;
   border-color: rgb(111 208 234 / 30%);
-  animation: portrait-spin 36s linear infinite;
 }
 
 .portrait-ring-outer > span {
@@ -1154,7 +1154,6 @@ a {
 .portrait-ring-middle {
   inset: 10%;
   border-color: rgb(28 159 208 / 35%);
-  animation: portrait-spin 26s linear infinite reverse;
 }
 
 .portrait-ring-middle > span {
@@ -1171,13 +1170,6 @@ a {
 .portrait-ring-inner {
   inset: 20%;
   border-color: rgb(111 208 234 / 18%);
-  animation: portrait-spin 42s linear infinite;
-}
-
-@keyframes portrait-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .portrait-photo-wrap {
@@ -1527,10 +1519,7 @@ a {
 /* Keep the static layout usable when visitors prefer less motion. */
 @media (prefers-reduced-motion: reduce) {
   .typed-caret,
-  .scroll-cue-line,
-  .portrait-ring-outer,
-  .portrait-ring-middle,
-  .portrait-ring-inner {
+  .scroll-cue-line {
     animation: none;
   }
 
