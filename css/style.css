@@ -3240,7 +3240,8 @@ a.contact-value:hover,
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 3cqi;
+  /* A small gap between the mark and the caption. */
+  gap: 2.2cqi;
   overflow: hidden;
   border-radius: inherit;
   /* The mint blob is a background layer larger than the screen; sliding its position makes it
@@ -3293,26 +3294,27 @@ a.contact-value:hover,
   }
 }
 
-/* Large dark navy mark. */
+/* A light, refined logo mark: Inter at medium weight, letters set close together,
+   dark navy with no shadow or glow, about 16% of the screen width. */
 .closing-mark {
   margin: 0;
-  color: #1b2a4a;
-  font-family: var(--font-heading);
-  font-size: 22cqi;
-  font-weight: 700;
+  color: #0d1f2a;
+  font-family: var(--font-body);
+  font-size: 16cqi;
+  font-weight: 500;
   letter-spacing: -0.06em;
-  line-height: 0.9;
+  line-height: 1;
 }
 
-/* Small spaced-out mono capitals in a muted slate blue. */
+/* Small, widely spaced JetBrains Mono capitals in a muted slate blue. */
 .closing-caption {
   margin: 0;
   /* Letter spacing also follows the last letter; matching left padding keeps it centred. */
-  padding-left: 0.3em;
-  color: #5a6a86;
+  padding-left: 0.16em;
+  color: #33505f;
   font-family: var(--font-label);
-  font-size: 3.3cqi;
-  letter-spacing: 0.3em;
+  font-size: 3.8cqi;
+  letter-spacing: 0.16em;
   white-space: nowrap;
 }
 
