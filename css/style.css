@@ -92,9 +92,11 @@
   --laptop-silver-highlight: rgb(255 255 255 / 20%);
   --laptop-silver-shadow: rgb(36 40 44 / 22%);
   --laptop-sheen: rgb(255 255 255 / 15%);
-  /* Fine brushing lines and the soft light that catches the lid's top edge. */
-  --laptop-brush-light: rgb(255 255 255 / 5%);
-  --laptop-brush-dark: rgb(20 24 28 / 4.5%);
+  /* A very fine, barely visible grain: random grey noise at 6% opacity, used on both laptops.
+     Noise has no regular pattern, so unlike stripes or dot grids it cannot form lines or moiré
+     at any size or angle, and the metal reads as smooth from any distance. */
+  --metal-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 1 0  0 0 0 1 0  0 0 0 1 0  0 0 0 0 0.06'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* The soft light that catches the lid's top edge. */
   --laptop-edge-light: rgb(255 255 255 / 34%);
   --laptop-metal-shadow: rgb(30 34 38 / 26%);
   --laptop-glint: rgb(255 255 255 / 26%);
@@ -578,11 +580,11 @@ a {
   /* Turn the silver shell outward while the screen face points inward. */
   transform: rotateY(180deg) translateZ(0.5rem);
   background-color: var(--laptop-silver-base);
-  /* Brushed aluminium, layered top to bottom:
+  /* Smooth aluminium, layered top to bottom:
      1. a thin soft light along the hinge, which is the top edge on screen when the lid is shut;
      2. a wide, faint sheen band that drifts with --metal-sheen as the lid opens;
-     3. fine lines running parallel to the front edge, like brushed metal;
-     4. a base that darkens a little toward one corner. */
+     3. a very fine noise grain;
+     4. a smooth silver gradient that darkens a little toward one corner. */
   background-image:
     linear-gradient(0deg, var(--laptop-edge-light), transparent 7%),
     linear-gradient(
@@ -591,8 +593,7 @@ a {
       var(--laptop-sheen) var(--metal-sheen, 40%),
       transparent calc(var(--metal-sheen, 40%) + 24%)
     ),
-    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-light) 3px, transparent 6px 14px),
-    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-dark) 5px, transparent 10px 31px),
+    var(--metal-grain),
     linear-gradient(160deg, var(--laptop-silver-base) 25%, var(--laptop-silver-dark));
   /* A light rim all round, and a slightly darker front edge. */
   box-shadow: inset 0 0 0 1px var(--laptop-glint), inset 0 0.35rem 0.7rem var(--laptop-metal-shadow);
@@ -625,7 +626,7 @@ a {
   border: 1px solid var(--laptop-edge);
   border-radius: 1.35rem;
   background-color: var(--laptop-silver-base);
-  /* The same brushed metal as the lid; its faint sheen runs the other way so the faces differ. */
+  /* The same smooth metal and fine grain as the lid; its faint sheen runs the other way so the faces differ. */
   background-image:
     linear-gradient(
       65deg,
@@ -634,8 +635,7 @@ a {
       transparent calc(var(--metal-sheen, 40%) + 24%)
     ),
     radial-gradient(ellipse at 38% 25%, var(--laptop-silver-highlight), transparent 54%),
-    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-light) 3px, transparent 6px 14px),
-    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-dark) 5px, transparent 10px 31px),
+    var(--metal-grain),
     linear-gradient(180deg, var(--laptop-silver-base) 35%, var(--laptop-silver-dark));
   box-shadow: inset 0 0 0 1px var(--laptop-glint), inset 0 -0.4rem 1rem var(--laptop-metal-shadow);
   /* Tip the deck down from the lid's hinge so it lies flat beneath the screen. */
@@ -3212,7 +3212,8 @@ a.contact-value:hover,
   width: 100%;
   height: calc(var(--cw) * 0.6);
   border-radius: var(--cl-radius);
-  background: linear-gradient(180deg, #8d8f97, #6c6e75);
+  /* Smooth gradient with the same barely visible grain as the lid. */
+  background: var(--metal-grain), linear-gradient(180deg, #8d8f97, #6c6e75);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 18%),
     inset 0 1px 0 rgb(255 255 255 / 30%);
@@ -3395,7 +3396,7 @@ a.contact-value:hover,
   transform: translateX(-50%);
 }
 
-/* Back: darker silver with a fine grain and a sheen that shifts as the lid closes. */
+/* Back: a smooth darker silver gradient with the shared fine grain and a sheen that shifts as the lid closes. */
 .cl-lid-back {
   position: absolute;
   inset: 0;
@@ -3407,7 +3408,7 @@ a.contact-value:hover,
       rgb(255 255 255 / 16%) var(--cl-sheen),
       transparent calc(var(--cl-sheen) + 22%)
     ),
-    radial-gradient(circle at 1px 1px, rgb(20 22 26 / 10%) 0.45px, transparent 0.7px) 0 0 / 3px 3px,
+    var(--metal-grain),
     linear-gradient(160deg, #9a9ea5, #7d8188);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 20%);
   backface-visibility: hidden;
