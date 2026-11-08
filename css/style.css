@@ -89,10 +89,13 @@
   --laptop-edge: #a6abb0;
   --laptop-silver-base: #a4a9ae;
   --laptop-silver-dark: #7d8389;
-  --laptop-silver-highlight: rgb(255 255 255 / 52%);
-  --laptop-silver-shadow: rgb(36 40 44 / 34%);
-  --laptop-sheen: rgb(255 255 255 / 36%);
-  --laptop-grain: rgb(30 34 38 / 7%);
+  --laptop-silver-highlight: rgb(255 255 255 / 20%);
+  --laptop-silver-shadow: rgb(36 40 44 / 22%);
+  --laptop-sheen: rgb(255 255 255 / 15%);
+  /* Fine brushing lines and the soft light that catches the lid's top edge. */
+  --laptop-brush-light: rgb(255 255 255 / 5%);
+  --laptop-brush-dark: rgb(20 24 28 / 4.5%);
+  --laptop-edge-light: rgb(255 255 255 / 34%);
   --laptop-metal-shadow: rgb(30 34 38 / 26%);
   --laptop-glint: rgb(255 255 255 / 26%);
   --keyboard-frame: #767b80;
@@ -278,10 +281,9 @@ a {
   height: 420svh;
   /* Starting pose: closed, small, turned to the side, a little above the centre.
      The script moves every value below as the page scrolls. */
-  --camera-angle: -38deg;
-  --laptop-yaw: -26deg;
+  --camera-angle: -32deg;
+  --laptop-yaw: -6deg;
   --laptop-scale: 0.46;
-  --laptop-open-scale: 1.06;
   /* Half the deck's depth: the turn pivots around the middle of the laptop, not its hinge. */
   --laptop-pivot: calc(min(84vw, 118vh, 980px) * 0.322);
   --lid-angle: -90deg;
@@ -576,21 +578,41 @@ a {
   /* Turn the silver shell outward while the screen face points inward. */
   transform: rotateY(180deg) translateZ(0.5rem);
   background-color: var(--laptop-silver-base);
-  /* Layers, top to bottom: a diagonal sheen band whose position follows --metal-sheen,
-     a soft highlight, a shadowed corner, fine grain, and a base that darkens to one edge. */
+  /* Brushed aluminium, layered top to bottom:
+     1. a thin soft light along the hinge, which is the top edge on screen when the lid is shut;
+     2. a wide, faint sheen band that drifts with --metal-sheen as the lid opens;
+     3. fine lines running parallel to the front edge, like brushed metal;
+     4. a base that darkens a little toward one corner. */
   background-image:
+    linear-gradient(0deg, var(--laptop-edge-light), transparent 7%),
     linear-gradient(
-      115deg,
-      transparent calc(var(--metal-sheen, 40%) - 16%),
+      105deg,
+      transparent calc(var(--metal-sheen, 40%) - 24%),
       var(--laptop-sheen) var(--metal-sheen, 40%),
-      transparent calc(var(--metal-sheen, 40%) + 16%)
+      transparent calc(var(--metal-sheen, 40%) + 24%)
     ),
-    radial-gradient(ellipse at 38% 25%, var(--laptop-silver-highlight), transparent 54%),
-    radial-gradient(ellipse at 72% 78%, var(--laptop-silver-shadow), transparent 62%),
-    radial-gradient(circle at 1px 1px, var(--laptop-grain) 0.35px, transparent 0.55px),
-    linear-gradient(160deg, var(--laptop-silver-base) 30%, var(--laptop-silver-dark));
-  background-size: auto, auto, auto, 6px 6px, auto;
-  box-shadow: inset 0 0 0 1px var(--laptop-glint), inset 0 -0.4rem 1rem var(--laptop-metal-shadow);
+    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-light) 3px, transparent 6px 14px),
+    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-dark) 5px, transparent 10px 31px),
+    linear-gradient(160deg, var(--laptop-silver-base) 25%, var(--laptop-silver-dark));
+  /* A light rim all round, and a slightly darker front edge. */
+  box-shadow: inset 0 0 0 1px var(--laptop-glint), inset 0 0.35rem 0.7rem var(--laptop-metal-shadow);
+}
+
+/* The lid's thickness: a thin metal strip along its top edge, turned 90 degrees to stand
+   between the screen and the back. It shows as the front edge when the lid is shut and
+   as a fine bright rim above the screen when it is open. The ends are inset by the
+   corner radius so the strip follows the rounded corners. */
+.lid::before {
+  position: absolute;
+  top: 0;
+  left: 1.1rem;
+  right: 1.1rem;
+  height: 0.6rem;
+  border-radius: 0.3rem;
+  background: linear-gradient(180deg, var(--laptop-edge-light), var(--laptop-silver-dark));
+  content: "";
+  transform: translateZ(-0.5rem) rotateX(90deg);
+  transform-origin: 50% 0%;
 }
 
 /* ===== Laptop: flat deck ===== */
@@ -603,16 +625,17 @@ a {
   border: 1px solid var(--laptop-edge);
   border-radius: 1.35rem;
   background-color: var(--laptop-silver-base);
-  /* The same metal as the lid; its sheen runs the other way so the two faces differ a little. */
+  /* The same brushed metal as the lid; its faint sheen runs the other way so the faces differ. */
   background-image:
     linear-gradient(
       65deg,
-      transparent calc(var(--metal-sheen, 40%) - 16%),
+      transparent calc(var(--metal-sheen, 40%) - 24%),
       var(--laptop-sheen) var(--metal-sheen, 40%),
-      transparent calc(var(--metal-sheen, 40%) + 16%)
+      transparent calc(var(--metal-sheen, 40%) + 24%)
     ),
     radial-gradient(ellipse at 38% 25%, var(--laptop-silver-highlight), transparent 54%),
-    radial-gradient(ellipse at 72% 78%, var(--laptop-silver-shadow), transparent 62%),
+    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-light) 3px, transparent 6px 14px),
+    repeating-linear-gradient(0deg, transparent 0, var(--laptop-brush-dark) 5px, transparent 10px 31px),
     linear-gradient(180deg, var(--laptop-silver-base) 35%, var(--laptop-silver-dark));
   box-shadow: inset 0 0 0 1px var(--laptop-glint), inset 0 -0.4rem 1rem var(--laptop-metal-shadow);
   /* Tip the deck down from the lid's hinge so it lies flat beneath the screen. */
@@ -1494,10 +1517,10 @@ a {
   }
 }
 
-@media (max-height: 650px) {
-  .laptop-intro {
-    /* A slightly smaller open laptop leaves room on short screens. */
-    --laptop-open-scale: 0.96;
+/* Short windows (phones on their side) have no room beside the laptop for the AI and SEC labels. */
+@media (max-height: 500px) {
+  .intro-detail {
+    display: none;
   }
 }
 

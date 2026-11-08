@@ -1179,6 +1179,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Size of the closed laptop at the start of the intro, before it grows to the open size.
   const CLOSED_SCALE = 0.46;
+  // The closed laptop is turned slightly on the desk and seen from 32 degrees above.
+  // It ends facing straight ahead at the shallower 7 degree view of the open laptop.
+  const CLOSED_YAW = -6;
+  const CLOSED_CAMERA = -32;
+  const OPEN_CAMERA = -7;
+  // The open laptop never grows past this size, even on very large windows.
+  const OPEN_SCALE_MAX = 1.06;
+  // Open size for the current window; fitOpenPose() replaces it.
+  let openScale = OPEN_SCALE_MAX;
 
   // Keep animation inputs inside the 0-to-1 range.
   const clamp = (value) => Math.min(1, Math.max(0, value));
@@ -1372,15 +1381,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     renderedProgress = progress;
 
-    const laptopOpenScale = Number.parseFloat(
-      window.getComputedStyle(laptopIntro).getPropertyValue("--laptop-open-scale"),
-    );
-
-    // Turn from 26 degrees to the side until the laptop faces the visitor.
-    laptopIntro.style.setProperty("--laptop-yaw", `${-26 * (1 - turn)}deg`);
-    laptopIntro.style.setProperty("--camera-angle", `${-38 + 31 * opening}deg`);
+    // Turn from 6 degrees to the side until the laptop faces the visitor. A small turn on the
+    // desk keeps the front edge close to horizontal, so it still reads as a laptop lying flat.
+    laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW * (1 - turn)}deg`);
+    laptopIntro.style.setProperty("--camera-angle", `${CLOSED_CAMERA + (OPEN_CAMERA - CLOSED_CAMERA) * opening}deg`);
     // Grow from the small closed size to the open size while the lid opens.
-    laptopIntro.style.setProperty("--laptop-scale", `${CLOSED_SCALE + (laptopOpenScale - CLOSED_SCALE) * opening}`);
+    // The open size comes from fitOpenPose(), so the open laptop always fits the window.
+    laptopIntro.style.setProperty("--laptop-scale", `${CLOSED_SCALE + (openScale - CLOSED_SCALE) * opening}`);
     laptopIntro.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
     // Keep the closed laptop a little above the centre, then lower it into the open framing.
     laptopIntro.style.setProperty("--lid-lift", `${-27 + 22 * opening}vh`);
@@ -1423,10 +1430,74 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  window.addEventListener("scroll", requestLaptopUpdate, { passive: true });
-  // A resize can change the laptop's open size, so redraw it even if the progress is the same.
-  window.addEventListener("resize", () => {
+  // Find the largest open size (up to OPEN_SCALE_MAX) at which the fully open laptop,
+  // base and keyboard included, fits inside the window. The dive keeps the screen's centre
+  // in the middle of the window, and the base reaches further below it than the lid does
+  // above, so each side is measured from the screen's centre. Perspective makes the base
+  // much bigger than its layout box, so measuring the real pose beats a fixed CSS size.
+  const fitOpenPose = () => {
+    const savedIntroStyle = laptopIntro.getAttribute("style") || "";
+    const savedDiveStyle = laptopDive.getAttribute("style") || "";
+    // Measure without any dive zoom, in the final open pose: facing forward, lid open.
+    laptopDive.removeAttribute("style");
+    laptopIntro.style.setProperty("--laptop-yaw", "0deg");
+    laptopIntro.style.setProperty("--camera-angle", `${OPEN_CAMERA}deg`);
+    laptopIntro.style.setProperty("--lid-angle", "8deg");
+    laptopIntro.style.setProperty("--lid-lift", "-5vh");
+    const parts = laptopIntro.querySelectorAll(".lid-face, .deck, .deck-wall-front");
+    const stageRect = laptopStage.getBoundingClientRect();
+
+    // How far the laptop reaches from its screen's centre, as a share of the room available.
+    const overflowAt = (scale) => {
+      laptopIntro.style.setProperty("--laptop-scale", String(scale));
+      const screen = screenDisplay.getBoundingClientRect();
+      const centerX = screen.left + screen.width / 2;
+      const centerY = screen.top + screen.height / 2;
+      let ratio = 0;
+      parts.forEach((part) => {
+        const rect = part.getBoundingClientRect();
+        // Leave a 6% margin at the top and bottom and 3% at the sides.
+        ratio = Math.max(
+          ratio,
+          (centerY - rect.top) / (stageRect.height * 0.44),
+          (rect.bottom - centerY) / (stageRect.height * 0.44),
+          (centerX - rect.left) / (stageRect.width * 0.47),
+          (rect.right - centerX) / (stageRect.width * 0.47),
+        );
+      });
+      return ratio;
+    };
+
+    // Perspective is not linear, so shrink a few times until the laptop settles inside.
+    let scale = OPEN_SCALE_MAX;
+    for (let pass = 0; pass < 3; pass += 1) {
+      scale = Math.min(OPEN_SCALE_MAX, scale / Math.max(1, overflowAt(scale)));
+    }
+    openScale = scale;
+
+    // Put the live pose back; the next frame redraws it with the new size.
+    laptopIntro.setAttribute("style", savedIntroStyle);
+    laptopDive.setAttribute("style", savedDiveStyle);
     renderedProgress = -1;
+  };
+
+  window.addEventListener("scroll", requestLaptopUpdate, { passive: true });
+  // Refit after a real resize. Phones resize slightly when the address bar slides during a
+  // touch scroll; ignoring those small height changes keeps the animation steady.
+  let fittedWidth = window.innerWidth;
+  let fittedHeight = window.innerHeight;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth !== fittedWidth || Math.abs(window.innerHeight - fittedHeight) > 150) {
+      fittedWidth = window.innerWidth;
+      fittedHeight = window.innerHeight;
+      fitOpenPose();
+    }
+    renderedProgress = -1;
+    requestLaptopUpdate();
+  });
+  // Web fonts can change the key labels' size, so fit once more after they load.
+  document.fonts?.ready.then(() => {
+    fitOpenPose();
     requestLaptopUpdate();
   });
 
@@ -1440,6 +1511,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Start from the visitor's current scroll position instead of animating from zero.
+  fitOpenPose();
   currentProgress = readScrollProgress();
   targetProgress = currentProgress;
   updateTypewriterMotion();
