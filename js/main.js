@@ -1233,6 +1233,32 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Restore the screen window to normal page flow after the dive has passed.
+  // A copy of the homepage inside the 3D glass. It tilts with the lid, so while the lid opens
+  // the homepage always has the screen's exact shape. It is a still picture: inert, hidden
+  // from screen readers, and without the particle canvas. Once the lid is fully open, the
+  // real homepage layer (sharp, and the one the dive grows) fades in over it.
+  const screenHomepage = document.createElement("div");
+  screenHomepage.className = "screen-homepage";
+  screenHomepage.setAttribute("aria-hidden", "true");
+  screenHomepage.inert = true;
+  const homepageCopy = heroCanvas.cloneNode(true);
+  homepageCopy.querySelectorAll(".hero-particles").forEach((canvas) => canvas.remove());
+  // The copy takes its size from its own container, never from the live page's inline scale.
+  homepageCopy.style.removeProperty("--hero-fit-scale");
+  screenHomepage.append(homepageCopy);
+  screenDisplay.prepend(screenHomepage);
+
+  // Fit the copy inside the glass the same way the homepage layer is fitted later: the
+  // window-sized page, scaled down uniformly until it fits, centred, never stretched.
+  const fitScreenHomepage = () => {
+    const fit = Math.min(
+      screenDisplay.clientWidth / homepageCopy.offsetWidth,
+      screenDisplay.clientHeight / homepageCopy.offsetHeight,
+    );
+    screenHomepage.style.setProperty("--hero-fit-scale", String(fit));
+  };
+  fitScreenHomepage();
+
   // Four invisible points at the corners of the glass (top-left, top-right, bottom-right,
   // bottom-left). The screen is tilted in 3D, so its outline on the page is a slight
   // trapezoid; these points give that outline exactly, frame by frame.
@@ -1324,10 +1350,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return `${x + (boxCorners[index][0] - x) * square}px ${y + (boxCorners[index][1] - y) * square}px`;
     });
     heroFrame.style.clipPath = `polygon(${outline.join(", ")})`;
-    // The homepage appears only once the lid is fully open (46% of the intro) and the screen
-    // faces the viewer, and fades in quickly over the lit screen by 52%. While the lid is
-    // still moving, the 3D screen shows only its own glow, which always matches its shape.
-    heroFrame.style.opacity = String(progressBetween(progress, 0.46, 0.52));
+    // While the lid opens, the homepage copy inside the 3D glass is what shows. Once the lid
+    // is fully open (46% of the intro) and the screen faces the viewer, this sharp layer
+    // fades in over that copy by 49%. Both show the same fitted page, so nothing changes
+    // except that the dive can now grow this layer cleanly to full size.
+    heroFrame.style.opacity = String(progressBetween(progress, 0.46, 0.49));
     heroCanvas.style.setProperty("--hero-fit-scale", `${fitScale}`);
     // Fade the camera notch out over the middle of the dive, so it is gone before the
     // homepage fills the window. Both copies (on the glass and on the homepage layer) follow.
@@ -1426,8 +1453,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Step 3 (20-46%): open the lid, using smoothstep easing for gentle starts and stops.
     const openingProgress = progressBetween(progress, 0.2, 0.46);
     const opening = easeInOut(openingProgress);
-    // Power the display from 60% to 90% open, and reveal keys from 35% to 85%.
-    const screenPower = progressBetween(opening, 0.6, 0.9);
+    // The homepage on the glass brightens from very faint (10% open) to fully clear just
+    // before the lid is fully open. Keys light up from 35% to 85% open.
+    const screenPower = progressBetween(opening, 0.1, 0.95);
     const keyboardReveal = progressBetween(opening, 0.35, 0.85);
     // Fade the logo as the lid lifts. The desk glow begins halfway open and builds as the display powers on.
     const logoFade = progressBetween(progress, 0.22, 0.33);
@@ -1553,6 +1581,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fittedHeight = window.innerHeight;
       fitOpenPose();
     }
+    // The homepage copy is window-sized, so refit it inside the glass on every resize.
+    fitScreenHomepage();
     renderedProgress = -1;
     requestLaptopUpdate();
   });
