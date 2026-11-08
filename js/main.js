@@ -937,10 +937,22 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Buttons run the same commands as the keyboard input.
+    // On touch screens (pointer: coarse) a chip must not open the keyboard or move the page,
+    // so the input is only focused for desktop pointers, where typing straight on is handy.
+    const coarsePointer = window.matchMedia("(pointer: coarse)");
     terminal.querySelectorAll(".terminal-command").forEach((button) => {
+      // A tap fires a compatibility mousedown that would move focus onto the chip. Cancelling it
+      // keeps focus where it was; keyboard users can still Tab to the chips and press them.
+      button.addEventListener("mousedown", (event) => {
+        if (coarsePointer.matches) event.preventDefault();
+      });
       button.addEventListener("click", () => {
+        // runCommand writes the new lines and scrolls only the output box to show them.
         runCommand(button.dataset.command);
-        input.focus();
+        if (!coarsePointer.matches) {
+          // preventScroll keeps the page itself still while the cursor moves to the input.
+          input.focus({ preventScroll: true });
+        }
       });
     });
 

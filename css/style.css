@@ -2032,6 +2032,23 @@ a {
   box-shadow: inset 0 0 0 1px rgb(8 137 176 / 38%);
 }
 
+/* Touch screens. iOS zooms the whole page into any input whose text is smaller than 16px,
+   so the input gets exactly 16px. The prompt keeps its smaller size and sits on the same
+   text baseline, so the two still read as one line. Chips skip the double-tap zoom delay. */
+@media (pointer: coarse) {
+  .terminal-form {
+    align-items: baseline;
+  }
+
+  .terminal-form input {
+    font-size: 16px;
+  }
+
+  .terminal-command {
+    touch-action: manipulation;
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
