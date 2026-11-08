@@ -1,8 +1,10 @@
-// Load the saved theme before paint to prevent a flash of the wrong colors.
+// Light is the default theme. Only a saved "dark" choice switches the page to dark, and it
+// happens here, before the first paint, so there is no flash of the wrong colours.
+// A saved "light" choice, or none at all, keeps the light default.
 try {
   const savedTheme = localStorage.getItem("portfolio-theme");
-  if (savedTheme === "light") {
-    document.documentElement.dataset.theme = "light";
+  if (savedTheme === "dark") {
+    document.documentElement.dataset.theme = "dark";
   }
 } catch (error) {
   console.warn("Could not read the saved theme preference.", error);
@@ -15,9 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const initializeThemeToggles = () => {
     const themeToggles = document.querySelectorAll(".theme-toggle");
     const updateToggleLabels = () => {
-      const label = document.documentElement.dataset.theme === "light"
-        ? "Switch to dark mode"
-        : "Switch to light mode";
+      // The button names the theme it will switch to.
+      const label = document.documentElement.dataset.theme === "dark"
+        ? "Switch to light mode"
+        : "Switch to dark mode";
 
       themeToggles.forEach((themeToggle) => {
         themeToggle.setAttribute("aria-label", label);
@@ -28,10 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
     themeToggles.forEach((themeToggle) => {
       updateToggleLabels();
       themeToggle.addEventListener("click", () => {
-        const isLight = document.documentElement.dataset.theme !== "light";
+        // Light is the default, so dark mode is the only theme that needs the attribute.
+        const isDark = document.documentElement.dataset.theme !== "dark";
 
-        if (isLight) {
-          document.documentElement.dataset.theme = "light";
+        if (isDark) {
+          document.documentElement.dataset.theme = "dark";
         } else {
           delete document.documentElement.dataset.theme;
         }
@@ -39,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateToggleLabels();
 
         try {
-          localStorage.setItem("portfolio-theme", isLight ? "light" : "dark");
+          localStorage.setItem("portfolio-theme", isDark ? "dark" : "light");
         } catch (error) {
           console.warn("Could not save the theme preference.", error);
         }
@@ -102,8 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const toggle = document.createElement("button");
       toggle.className = "theme-toggle floating-theme-toggle";
       toggle.type = "button";
-      toggle.setAttribute("aria-label", "Switch to light mode");
-      toggle.setAttribute("title", "Switch to light mode");
+      toggle.setAttribute("aria-label", "Switch to dark mode");
+      toggle.setAttribute("title", "Switch to dark mode");
       toggle.innerHTML = themeIconMarkup;
       floatingNav.append(toggle);
       document.body.append(floatingNav);

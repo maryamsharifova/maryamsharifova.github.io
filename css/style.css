@@ -60,30 +60,31 @@
 }
 
 /* ===== Theme variables ===== */
-/* Dark colors are the defaults; the light theme overrides only what changes. */
+/* Light colours are the defaults, so a first visit (or a page without JavaScript) is light.
+   Dark mode overrides only what changes, when the root has data-theme="dark". */
 :root {
-  color-scheme: dark;
-  --color-page: #0b0b0c;
-  --color-surface: #171719;
-  --color-surface-hover: #222224;
-  --color-text: #f4f4f5;
-  --color-text-muted: #a1a1aa;
-  --color-border: #2d2d30;
+  color-scheme: light;
+  --color-page: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-hover: #eef2f4;
+  --color-text: #17191c;
+  --color-text-muted: #5e6871;
+  --color-border: #dce1e5;
   --color-navy: #0d1020;
   --color-ocean: #0b4f73;
   --color-teal: #0889b0;
   --color-blue: #1c9fd0;
-  --color-gradient-start: #f4f4f5;
-  --hero-background: #0b0b0c;
-  --hero-foreground: #f4f4f5;
-  --hero-copy-muted: rgb(231 235 239 / 72%);
-  --hero-line: rgb(255 255 255 / 9%);
-  --hero-nav-muted: rgb(244 244 245 / 72%);
-  --hero-grid-line: rgb(255 255 255 / 3%);
-  --portrait-label: rgb(185 226 240 / 82%);
-  --hero-primary-button: #f4f4f5;
-  --hero-primary-text: #101113;
-  --particle-color: rgb(190 214 224 / 45%);
+  --color-gradient-start: #0d1020;
+  --hero-background: #f7f8fa;
+  --hero-foreground: #17191c;
+  --hero-copy-muted: rgb(23 25 28 / 76%);
+  --hero-line: rgb(13 16 32 / 13%);
+  --hero-nav-muted: rgb(23 25 28 / 70%);
+  --hero-grid-line: rgb(13 16 32 / 5%);
+  --portrait-label: rgb(8 80 110 / 86%);
+  --hero-primary-button: #0d1020;
+  --hero-primary-text: #ffffff;
+  --particle-color: rgb(13 16 32 / 30%);
   /* Brushed aluminium: a mid-grey base that darkens toward one edge, a soft highlight,
      and a moving sheen band (see .back-face), instead of a near-white shell. */
   --laptop-edge: #a6abb0;
@@ -114,48 +115,45 @@
   --metal-logo: #7d858b;
   --metal-logo-glint: rgb(255 255 255 / 70%);
   --metal-logo-shadow: rgb(50 55 60 / 45%);
-  --desk-surface-center: #202224;
-  --desk-surface-edge: #0b0b0c;
-  --desk-shadow: rgb(0 0 0 / 22%);
+  --desk-surface-center: #d9dcdf;
+  --desk-surface-edge: #f7f8fa;
+  --desk-shadow: rgb(70 78 84 / 14%);
   --chrome-logo-highlight: #ffffff;
   --chrome-logo-light: #d9e0e4;
   --chrome-logo-mid: #68737a;
   --chrome-logo-shadow: #30383e;
   --screen-frame: #17181a;
   /* Outline color of the big AI and SEC letters beside the intro laptop. */
-  --detail-outline: rgb(232 236 240 / 46%);
+  --detail-outline: rgb(40 45 52 / 46%);
   --font-heading: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-label: "JetBrains Mono", monospace;
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
-  --color-page: #f7f8fa;
-  --color-surface: #ffffff;
-  --color-surface-hover: #eef2f4;
-  --color-text: #17191c;
-  --color-text-muted: #5e6871;
-  --color-border: #dce1e5;
-  --color-navy: #0d1020;
-  --color-ocean: #0b4f73;
-  --color-teal: #0889b0;
-  --color-blue: #1c9fd0;
-  --color-gradient-start: #0d1020;
-  --hero-background: #f7f8fa;
-  --hero-foreground: #17191c;
-  --hero-copy-muted: rgb(23 25 28 / 76%);
-  --hero-line: rgb(13 16 32 / 13%);
-  --hero-nav-muted: rgb(23 25 28 / 70%);
-  --hero-grid-line: rgb(13 16 32 / 5%);
-  --portrait-label: rgb(8 80 110 / 86%);
-  --hero-primary-button: #0d1020;
-  --hero-primary-text: #ffffff;
-  --particle-color: rgb(13 16 32 / 30%);
-  --desk-surface-center: #d9dcdf;
-  --desk-surface-edge: #f7f8fa;
-  --desk-shadow: rgb(70 78 84 / 14%);
-  --detail-outline: rgb(40 45 52 / 46%);
+/* Dark mode: the visitor switched to it with the theme button (saved in localStorage). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-page: #0b0b0c;
+  --color-surface: #171719;
+  --color-surface-hover: #222224;
+  --color-text: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-border: #2d2d30;
+  --color-gradient-start: #f4f4f5;
+  --hero-background: #0b0b0c;
+  --hero-foreground: #f4f4f5;
+  --hero-copy-muted: rgb(231 235 239 / 72%);
+  --hero-line: rgb(255 255 255 / 9%);
+  --hero-nav-muted: rgb(244 244 245 / 72%);
+  --hero-grid-line: rgb(255 255 255 / 3%);
+  --portrait-label: rgb(185 226 240 / 82%);
+  --hero-primary-button: #f4f4f5;
+  --hero-primary-text: #101113;
+  --particle-color: rgb(190 214 224 / 45%);
+  --desk-surface-center: #202224;
+  --desk-surface-edge: #0b0b0c;
+  --desk-shadow: rgb(0 0 0 / 22%);
+  --detail-outline: rgb(232 236 240 / 46%);
 }
 
 /* ===== Base styles ===== */
@@ -196,8 +194,8 @@ a {
   color: transparent;
 }
 
-:root:not([data-theme="light"]) .gradient-text {
-  /* Use a light first color so headings stay readable in dark mode. */
+:root[data-theme="dark"] .gradient-text {
+  /* Dark mode: start the gradient with a light colour so headings stay readable. */
   background-image: linear-gradient(110deg, var(--color-gradient-start) 4%, var(--color-ocean) 42%, var(--color-teal) 70%, var(--color-blue));
 }
 
@@ -233,12 +231,56 @@ a {
   display: none;
 }
 
-:root[data-theme="light"] .sun-icon {
+:root:not([data-theme="dark"]) .sun-icon {
   display: none;
 }
 
-:root[data-theme="light"] .moon-icon {
+:root:not([data-theme="dark"]) .moon-icon {
   display: block;
+}
+
+/* ===== Light-mode adjustments ===== */
+/* Light is the default theme, but a few parts were first designed on dark backgrounds.
+   These rules only apply when the page is not in dark mode, so dark mode is unchanged. */
+
+/* The bright cyan accent (#6fd0ea) is too faint as text on white, so text that uses it
+   switches to the deeper site teal. Bars, dots, and glows keep the bright cyan. */
+:root:not([data-theme="dark"]) :is(
+  .hero-eyebrow,
+  .hero-brand-mark,
+  .hero-page-nav > a:hover,
+  .hero-page-nav > a:focus-visible,
+  .visual-topline code,
+  .scan-status,
+  .circuit-power,
+  .circuit-input span,
+  .truth-table tr.is-current td,
+  .certificate-chip
+) {
+  color: var(--color-teal);
+}
+
+/* The floating nav becomes a light frosted pill, so it matches the page and its dark
+   theme icon stays visible. */
+:root:not([data-theme="dark"]) .floating-nav {
+  border-color: rgb(13 16 32 / 10%);
+  background: rgb(255 255 255 / 82%);
+  box-shadow: 0 0.7rem 2rem rgb(13 16 32 / 12%);
+}
+
+:root:not([data-theme="dark"]) .floating-nav > a {
+  color: rgb(23 25 28 / 68%);
+}
+
+:root:not([data-theme="dark"]) .floating-nav > a:hover,
+:root:not([data-theme="dark"]) .floating-nav > a[aria-current] {
+  background: rgb(13 16 32 / 7%);
+  color: #17191c;
+}
+
+:root:not([data-theme="dark"]) .floating-theme-toggle {
+  border-color: rgb(13 16 32 / 12%);
+  background: rgb(13 16 32 / 4%);
 }
 
 /* ===== Shared page layout ===== */
@@ -1093,7 +1135,7 @@ a {
   background-image: linear-gradient(105deg, #0b4f73, #0889b0 48%, #1c9fd0);
 }
 
-:root:not([data-theme="light"]) .hero-title .gradient-text {
+:root[data-theme="dark"] .hero-title .gradient-text {
   background-image: linear-gradient(105deg, #dce5eb, #0889b0 48%, #1c9fd0);
 }
 
@@ -2781,7 +2823,7 @@ a {
   background: rgb(18 72 140 / 22%);
 }
 
-:root[data-theme="light"] .toolkit-ai li {
+:root:not([data-theme="dark"]) .toolkit-ai li {
   background: rgb(18 72 140 / 12%);
   color: #12325f;
 }
@@ -2835,7 +2877,8 @@ a {
   background: rgb(255 255 255 / 12%);
 }
 
-:root[data-theme="light"] .pip {
+/* Light mode: only the empty pips get the light grey. Filled pips keep their blue gradient. */
+:root:not([data-theme="dark"]) .pip:not(.is-filled) {
   background: rgb(13 16 32 / 12%);
 }
 
@@ -3113,8 +3156,8 @@ a.contact-value:hover,
 
 /* A wider gradient so the colors slide across the heading on hover. */
 .talk-link.gradient-text,
-:root[data-theme="light"] .talk-link.gradient-text,
-:root:not([data-theme="light"]) .talk-link.gradient-text {
+:root:not([data-theme="dark"]) .talk-link.gradient-text,
+:root[data-theme="dark"] .talk-link.gradient-text {
   background-image: linear-gradient(
     100deg,
     var(--color-gradient-start) 0%,
@@ -3130,8 +3173,8 @@ a.contact-value:hover,
 }
 
 .talk-link.gradient-text:hover,
-:root[data-theme="light"] .talk-link.gradient-text:hover,
-:root:not([data-theme="light"]) .talk-link.gradient-text:hover {
+:root:not([data-theme="dark"]) .talk-link.gradient-text:hover,
+:root[data-theme="dark"] .talk-link.gradient-text:hover {
   background-position: 100% center;
 }
 
