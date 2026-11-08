@@ -61,13 +61,17 @@ document.addEventListener("DOMContentLoaded", () => {
       ["Contact", "contact.html"],
     ];
     const currentPage = window.location.pathname.split("/").pop() || "index.html";
+    // The long Home page holds every section, so its dots scroll there instead of opening pages.
+    const isLongHome = Boolean(document.querySelector(".home-section"));
+    const sectionIds = ["home", "about", "projects", "resume", "contact"];
 
-    pages.forEach(([label, href]) => {
+    pages.forEach(([label, href], index) => {
       const link = document.createElement("a");
-      link.href = href;
+      link.href = isLongHome ? `#${sectionIds[index]}` : href;
       link.setAttribute("aria-label", label);
       link.title = label;
-      if (currentPage === href) {
+      // On Home, the section observer marks the current dot while scrolling.
+      if (!isLongHome && currentPage === href) {
         link.setAttribute("aria-current", "page");
       }
       rail.append(link);
@@ -170,6 +174,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
   createSharedUi();
   initializeThemeToggles();
+
+  // On the long Home page, section links scroll smoothly and the nav follows the reader.
+  // The separate pages have no .home-section, so their links keep opening pages.
+  const initializeHomeNavigation = () => {
+    if (!document.querySelector(".home-section")) return;
+
+    const sections = ["home", "about", "projects", "resume", "contact"]
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    const findSection = (hash) => sections.find((section) => `#${section.id}` === hash);
+
+    // Glide to a section, or jump straight there when the visitor prefers less motion.
+    const scrollToSection = (section, behavior) => {
+      section.scrollIntoView({ behavior, block: "start" });
+    };
+
+    // One listener covers the floating nav, the hero's top bar and buttons, and the right-edge dots.
+    document.addEventListener("click", (event) => {
+      const link = event.target.closest('a[href^="#"]');
+      const section = link && findSection(link.getAttribute("href"));
+      if (!section) return;
+      event.preventDefault();
+      scrollToSection(section, reducedMotion.matches ? "auto" : "smooth");
+      // Keep the address bar in step without adding a history entry for every click.
+      history.replaceState(null, "", `#${section.id}`);
+    });
+
+    // Highlight the link for the section that crosses a thin band in the middle of the screen.
+    const navLinks = [...document.querySelectorAll(".floating-nav a, .page-rail a, .hero-page-nav a")];
+    const markCurrent = (id) => {
+      navLinks.forEach((link) => {
+        if (link.getAttribute("href") === `#${id}`) {
+          link.setAttribute("aria-current", "location");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    };
+
+    if ("IntersectionObserver" in window) {
+      const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) markCurrent(entry.target.id);
+        });
+      }, { rootMargin: "-45% 0px -54% 0px" });
+      sections.forEach((section) => sectionObserver.observe(section));
+    }
+
+    // A link such as index.html#projects lands on that section. The browser jumps there early,
+    // so line it up again once fonts and images have settled the layout. Reloads and the Back
+    // button keep the browser's own restored position instead.
+    const requestedSection = findSection(window.location.hash);
+    const navigationType = performance.getEntriesByType?.("navigation")[0]?.type;
+    if (requestedSection && navigationType !== "reload" && navigationType !== "back_forward") {
+      window.addEventListener("load", () => {
+        const fontsReady = document.fonts?.ready ?? Promise.resolve();
+        fontsReady.then(() => scrollToSection(requestedSection, "auto"));
+      }, { once: true });
+    }
+  };
+
+  initializeHomeNavigation();
 
   // Lift page content once it enters the viewport. Content already on screen stays visible.
   const initializeScrollReveals = () => {

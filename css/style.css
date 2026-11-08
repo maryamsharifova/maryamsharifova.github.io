@@ -1223,8 +1223,9 @@ a {
   text-decoration: none;
 }
 
+/* Any aria-current value: "page" on the separate pages, "location" for a section on Home. */
 .floating-nav > a:hover,
-.floating-nav > a[aria-current="page"] {
+.floating-nav > a[aria-current] {
   background: rgb(255 255 255 / 10%);
   color: #fff;
 }
@@ -1550,7 +1551,8 @@ a {
   transition: height 180ms ease, background-color 180ms ease, opacity 180ms ease, box-shadow 180ms ease;
 }
 
-.page-rail a[aria-current="page"] {
+/* The current page, or on Home the section being read, stretches into a lit bar. */
+.page-rail a[aria-current] {
   height: 1.5rem;
   background: #6fd0ea;
   box-shadow: 0 0 1rem rgb(111 208 234 / 65%);
