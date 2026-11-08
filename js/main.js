@@ -890,6 +890,13 @@ document.addEventListener("DOMContentLoaded", () => {
       output.scrollTop = output.scrollHeight;
     };
 
+    // Each project as a clickable line. A click opens it exactly like typing "open 1" to "open 6".
+    const listProjectsToOpen = () => {
+      projectNames.forEach((name, index) => {
+        writeLink(`open ${index + 1} · ${name}`, `projects.html#p${index + 1}`);
+      });
+    };
+
     const runCommand = (rawCommand) => {
       const commandText = rawCommand.trim();
       if (!commandText) return;
@@ -914,6 +921,14 @@ document.addEventListener("DOMContentLoaded", () => {
         projectNames.forEach((name, index) => {
           writeLink(`${index + 1}. ${name} · open ${index + 1}`, `projects.html#p${index + 1}`);
         });
+      } else if (command === "open") {
+        // The "open" chip (or a bare "open"): list the six projects as clickable lines.
+        writeLine("Pick a project to open:");
+        listProjectsToOpen();
+      } else if (/^open\s+1\s*[-–…]\s*6$/.test(command)) {
+        // Someone typed the "open 1-6" from the help text literally: explain it kindly.
+        writeLine("Try open 1, open 2 … open 6, or pick one below:");
+        listProjectsToOpen();
       } else if (/^open\s+\d+$/i.test(commandText)) {
         const projectNumber = Number.parseInt(commandText.split(/\s+/)[1], 10);
         if (projectNumber >= 1 && projectNumber <= projectNames.length) {

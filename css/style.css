@@ -2041,6 +2041,8 @@ a {
   cursor: pointer;
   font-family: var(--font-label);
   font-size: 0.7rem;
+  /* Keep multi-word commands such as "cat about.txt" on one line; whole chips wrap instead. */
+  white-space: nowrap;
   transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
 }
 
