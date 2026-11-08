@@ -564,6 +564,20 @@ a {
   box-shadow: inset 0 0 0 0.12cqi var(--screen-shadow);
 }
 
+/* The lit screen under the power layer. Its base is the homepage background in each theme,
+   with two soft glows, so the quick fade to the homepage has no grey haze in between. */
+.screen-glow {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at 28% 26%, rgb(8 137 176 / 20%), transparent 60%),
+    radial-gradient(ellipse at 76% 78%, rgb(28 159 208 / 14%), transparent 62%),
+    var(--hero-background);
+  pointer-events: none;
+}
+
 /* The black layer hides the glass until the lid is mostly open. */
 .screen-power-off {
   position: absolute;

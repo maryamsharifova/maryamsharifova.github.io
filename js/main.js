@@ -1233,10 +1233,22 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Restore the screen window to normal page flow after the dive has passed.
+  // Four invisible points at the corners of the glass (top-left, top-right, bottom-right,
+  // bottom-left). The screen is tilted in 3D, so its outline on the page is a slight
+  // trapezoid; these points give that outline exactly, frame by frame.
+  const screenCorners = [["0", "0"], ["100%", "0"], ["100%", "100%"], ["0", "100%"]].map(([left, top]) => {
+    const corner = document.createElement("span");
+    corner.setAttribute("aria-hidden", "true");
+    corner.style.cssText = `position:absolute;left:${left};top:${top};width:0;height:0;`;
+    screenDisplay.append(corner);
+    return corner;
+  });
+
   const showHeroInPage = () => {
     heroSection.classList.add("is-current");
     heroFrame.classList.remove("is-active", "is-fullscreen");
     heroFrame.style.removeProperty("position");
+    heroFrame.style.removeProperty("clip-path");
     heroFrame.style.removeProperty("left");
     heroFrame.style.removeProperty("top");
     heroFrame.style.removeProperty("width");
@@ -1252,7 +1264,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Measure the real screen and fit the undistorted hero inside its changing bounds.
-  const updateHeroScene = (progress, diveProgress, screenPower) => {
+  const updateHeroScene = (progress, diveProgress) => {
     const heroSectionTop = heroSection.getBoundingClientRect().top + window.scrollY;
 
     if (window.scrollY >= heroSectionTop) {
@@ -1300,8 +1312,22 @@ document.addEventListener("DOMContentLoaded", () => {
     heroFrame.style.width = `${alignedScreenRect.width}px`;
     heroFrame.style.height = `${alignedScreenRect.height}px`;
     heroFrame.style.borderRadius = `${radius}px`;
-    // The homepage fades in with the same progress that lifts the black power layer.
-    heroFrame.style.opacity = `${screenPower}`;
+    // Clip the flat homepage layer to the glass's real outline, so it never covers the bezel
+    // or spills past the laptop. During the dive the outline blends into the plain rectangle,
+    // so the switch to the full-size page at the end has nothing left to jump.
+    const square = progressBetween(diveProgress, 0.6, 1);
+    const boxCorners = [[0, 0], [alignedScreenRect.width, 0], [alignedScreenRect.width, alignedScreenRect.height], [0, alignedScreenRect.height]];
+    const outline = screenCorners.map((corner, index) => {
+      const point = corner.getBoundingClientRect();
+      const x = point.left - alignedScreenRect.left;
+      const y = point.top - alignedScreenRect.top;
+      return `${x + (boxCorners[index][0] - x) * square}px ${y + (boxCorners[index][1] - y) * square}px`;
+    });
+    heroFrame.style.clipPath = `polygon(${outline.join(", ")})`;
+    // The homepage appears only once the lid is fully open (46% of the intro) and the screen
+    // faces the viewer, and fades in quickly over the lit screen by 52%. While the lid is
+    // still moving, the 3D screen shows only its own glow, which always matches its shape.
+    heroFrame.style.opacity = String(progressBetween(progress, 0.46, 0.52));
     heroCanvas.style.setProperty("--hero-fit-scale", `${fitScale}`);
     // Fade the camera notch out over the middle of the dive, so it is gone before the
     // homepage fills the window. Both copies (on the glass and on the homepage layer) follow.
@@ -1318,6 +1344,7 @@ document.addEventListener("DOMContentLoaded", () => {
       heroFrame.style.removeProperty("height");
       heroFrame.style.removeProperty("border-radius");
       heroFrame.style.removeProperty("opacity");
+      heroFrame.style.removeProperty("clip-path");
       heroCanvas.style.removeProperty("--hero-fit-scale");
     }
   };
@@ -1410,7 +1437,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Once the intro is finished the laptop pose stops changing. Skip restyling its many
     // parts on every scroll of the long Home page, but still let the hero settle below.
     if (progress === renderedProgress) {
-      updateHeroScene(progress, diveProgress, screenPower);
+      updateHeroScene(progress, diveProgress);
       return;
     }
     renderedProgress = progress;
@@ -1448,7 +1475,7 @@ document.addEventListener("DOMContentLoaded", () => {
       playKeySequence();
     }
 
-    updateHeroScene(progress, diveProgress, screenPower);
+    updateHeroScene(progress, diveProgress);
 
     // Keep measuring the screen while the smoothed position catches the real scroll.
     if (Math.abs(targetProgress - currentProgress) >= 0.0005) {
