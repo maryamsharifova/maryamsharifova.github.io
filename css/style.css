@@ -3228,8 +3228,11 @@ a.contact-value:hover,
   width: var(--closing-design-width);
 }
 
-/* The thank-you screen covers the glass: dark in both themes, with soft teal (top-left) and
-   blue (bottom-right) glows. Text is sized in cqi, the glass's own width, so it fits. */
+/* The thank-you screen: a "soft aurora" on a bright screen. It is the laptop's own screen, so
+   it looks the same in light and dark mode. A pale, almost-white blue base carries three large,
+   very soft colour blobs that blend into each other: light teal top-left (::before), soft
+   periwinkle bottom-right (::after), and pale mint top-right (a background layer). All sizes are
+   in cqi, the glass's own width, so the design scales with the laptop. */
 .closing-screen {
   position: absolute;
   z-index: 2;
@@ -3238,16 +3241,62 @@ a.contact-value:hover,
   place-content: center;
   justify-items: center;
   gap: 3cqi;
+  overflow: hidden;
   border-radius: inherit;
+  /* The mint blob is a background layer larger than the screen; sliding its position makes it
+     drift. Under it, the pale blue base. */
   background:
-    radial-gradient(ellipse at 18% 20%, rgb(30 170 185 / 24%), transparent 58%),
-    radial-gradient(ellipse at 84% 82%, rgb(58 105 230 / 24%), transparent 58%),
-    #141417;
+    radial-gradient(circle at 78% 22%, rgb(178 236 210 / 70%), transparent 30%) 0 0 / 130% 130% no-repeat,
+    #f2f7fc;
+  animation: aurora-mint 23s ease-in-out infinite alternate;
+  /* Keep the blurred blobs blended inside this screen only. */
+  isolation: isolate;
 }
 
+/* Teal and periwinkle blobs: big blurred circles, behind the text. */
+.closing-screen::before,
+.closing-screen::after {
+  position: absolute;
+  z-index: -1;
+  width: 70cqi;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  content: "";
+  filter: blur(11cqi);
+  pointer-events: none;
+}
+
+.closing-screen::before {
+  top: -24cqi;
+  left: -18cqi;
+  background: rgb(120 212 214 / 62%);
+  animation: aurora-drift 19s ease-in-out infinite alternate;
+}
+
+.closing-screen::after {
+  right: -20cqi;
+  bottom: -30cqi;
+  background: rgb(150 162 242 / 55%);
+  animation: aurora-drift 26s ease-in-out infinite alternate-reverse;
+}
+
+/* A slow, small wander: a few percent of the screen over about twenty seconds. */
+@keyframes aurora-drift {
+  to {
+    transform: translate3d(7cqi, 4cqi, 0) scale(1.06);
+  }
+}
+
+@keyframes aurora-mint {
+  to {
+    background-position: 100% 60%, 0 0;
+  }
+}
+
+/* Large dark navy mark. */
 .closing-mark {
   margin: 0;
-  color: #ffffff;
+  color: #1b2a4a;
   font-family: var(--font-heading);
   font-size: 22cqi;
   font-weight: 700;
@@ -3255,15 +3304,25 @@ a.contact-value:hover,
   line-height: 0.9;
 }
 
+/* Small spaced-out mono capitals in a muted slate blue. */
 .closing-caption {
   margin: 0;
   /* Letter spacing also follows the last letter; matching left padding keeps it centred. */
   padding-left: 0.3em;
-  color: rgb(255 255 255 / 80%);
+  color: #5a6a86;
   font-family: var(--font-label);
   font-size: 3.3cqi;
   letter-spacing: 0.3em;
   white-space: nowrap;
+}
+
+/* For visitors who prefer less motion, the aurora stays still. */
+@media (prefers-reduced-motion: reduce) {
+  .closing-screen,
+  .closing-screen::before,
+  .closing-screen::after {
+    animation: none;
+  }
 }
 
 @media (max-width: 760px) {
