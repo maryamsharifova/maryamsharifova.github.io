@@ -1168,6 +1168,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
+  // Size of the closed laptop at the start of the intro, before it grows to the open size.
+  const CLOSED_SCALE = 0.46;
+
   // Keep animation inputs inside the 0-to-1 range.
   const clamp = (value) => Math.min(1, Math.max(0, value));
 
@@ -1335,18 +1338,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const progress = currentProgress;
-    // Sweep the logo's reflective highlight during the first 16% of the intro scroll.
-    const logoShimmerProgress = easeInOut(progressBetween(progress, 0, 0.16));
-    // Open the lid from 16% to 44%, using smoothstep easing for gentle starts and stops.
-    const openingProgress = progressBetween(progress, 0.16, 0.44);
+    // Step 1-2 (0-20%): the closed laptop turns to face the visitor while the logo shimmers.
+    const turn = easeInOut(progressBetween(progress, 0, 0.2));
+    // The scroll hint is gone within the first 2.5%. The greeting and side labels leave
+    // from 1% to 15%, so the screen is clear before the lid starts to move.
+    const cueFade = progressBetween(progress, 0, 0.025);
+    const introFade = easeInOut(progressBetween(progress, 0.01, 0.15));
+    // Step 3 (20-46%): open the lid, using smoothstep easing for gentle starts and stops.
+    const openingProgress = progressBetween(progress, 0.2, 0.46);
     const opening = easeInOut(openingProgress);
     // Power the display from 60% to 90% open, and reveal keys from 35% to 85%.
     const screenPower = progressBetween(opening, 0.6, 0.9);
     const keyboardReveal = progressBetween(opening, 0.35, 0.85);
-    // Fade the intro from 2% to 15% and the logo from 19% to 31%.
-    // The desk glow begins halfway open and builds as the display powers on.
-    const introFade = progressBetween(progress, 0.02, 0.15);
-    const logoFade = progressBetween(progress, 0.19, 0.31);
+    // Fade the logo as the lid lifts. The desk glow begins halfway open and builds as the display powers on.
+    const logoFade = progressBetween(progress, 0.22, 0.33);
     const deskGlow = progressBetween(opening, 0.5, 0.85);
     const diveProgress = easeInOut(progressBetween(progress, 0.58, 1));
 
@@ -1362,16 +1367,25 @@ document.addEventListener("DOMContentLoaded", () => {
       window.getComputedStyle(laptopIntro).getPropertyValue("--laptop-open-scale"),
     );
 
+    // Turn from 26 degrees to the side until the laptop faces the visitor.
+    laptopIntro.style.setProperty("--laptop-yaw", `${-26 * (1 - turn)}deg`);
     laptopIntro.style.setProperty("--camera-angle", `${-38 + 31 * opening}deg`);
-    laptopIntro.style.setProperty("--laptop-scale", `${0.52 + (laptopOpenScale - 0.52) * opening}`);
+    // Grow from the small closed size to the open size while the lid opens.
+    laptopIntro.style.setProperty("--laptop-scale", `${CLOSED_SCALE + (laptopOpenScale - CLOSED_SCALE) * opening}`);
     laptopIntro.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
-    // Lift the closed laptop between the greeting and cue, then lower it into the open framing.
+    // Keep the closed laptop a little above the centre, then lower it into the open framing.
     laptopIntro.style.setProperty("--lid-lift", `${-27 + 22 * opening}vh`);
     laptopIntro.style.setProperty("--screen-power", screenPower);
     laptopIntro.style.setProperty("--keyboard-reveal", keyboardReveal);
     laptopIntro.style.setProperty("--logo-opacity", `${1 - logoFade}`);
-    laptopIntro.style.setProperty("--logo-shimmer", `${100 - 220 * logoShimmerProgress}%`);
+    laptopIntro.style.setProperty("--logo-shimmer", `${100 - 220 * turn}%`);
+    // Slide the shine across the silver as the lid opens, so the metal catches the light.
+    laptopIntro.style.setProperty("--metal-sheen", `${28 + 44 * opening}%`);
+    // Greeting fades upward, side labels slide outward, and the scroll hint simply fades.
     laptopIntro.style.setProperty("--intro-opacity", `${1 - introFade}`);
+    laptopIntro.style.setProperty("--intro-shift", `${-5 * introFade}vh`);
+    laptopIntro.style.setProperty("--detail-shift", `${6 * introFade}vw`);
+    laptopIntro.style.setProperty("--cue-opacity", `${1 - cueFade}`);
     // Fade the desk and reflected screen glow away during the dive.
     laptopIntro.style.setProperty("--desk-glow-opacity", `${0.65 * deskGlow * (1 - diveProgress)}`);
 
