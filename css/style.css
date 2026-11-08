@@ -3120,20 +3120,26 @@ a.contact-value:hover,
 }
 
 /* ===== Closing laptop at the end of Contact ===== */
-/* A small open laptop seen slightly from above. It is an ordinary part of the page:
-   not clipped and not sticky. The script eases the lid shut as the page reaches its end. */
+/* A small open laptop seen from the front and slightly above, like the open Home laptop.
+   It is an ordinary part of the page: not clipped and not sticky. The script eases the lid
+   shut between the moment the whole laptop is on screen and the bottom of the page. */
 .closing-laptop {
-  --closing-width: min(400px, 76vw);
+  /* About a third of the content width on desktop. The 220px floor makes it about two
+     thirds of a phone's width, and 380px keeps it small on wide screens. */
+  --closing-width: clamp(220px, 33%, 380px);
   display: flex;
   justify-content: center;
-  margin-top: clamp(3rem, 8vw, 5rem);
-  /* The deck is drawn in 3D below the lid's layout box, so reserve its height here.
-     That keeps the whole laptop visible and clear of the footer line. */
-  padding-bottom: calc(var(--closing-width) * 0.36);
-  perspective: 1400px;
-  perspective-origin: 50% 40%;
+  margin-top: clamp(3.5rem, 9vw, 6rem);
+  /* The base is drawn in 3D below the lid's layout box, so reserve its depth here,
+     plus a little air so the front edge never touches anything below. */
+  padding-bottom: calc(var(--closing-width) * 0.22 + 1.5rem);
+  /* Scroll room below the laptop: the lid closes over this distance, so it can always
+     finish before the bottom of the page, and the laptop keeps clear space around it. */
+  margin-bottom: max(5rem, 16vh);
+  perspective: 1200px;
+  perspective-origin: 50% 35%;
   /* Open pose shared with the Home laptop rules. The script moves the lid, screen, and logo. */
-  --camera-angle: -20deg;
+  --camera-angle: -10deg;
   --laptop-yaw: 0deg;
   --laptop-scale: 1;
   --lid-lift: 0px;
@@ -3149,16 +3155,16 @@ a.contact-value:hover,
   width: var(--closing-width);
 }
 
-/* The screen stays dark in both themes, with a teal glow top-left and a blue glow bottom-right. */
+/* A dark screen in both themes, lit by a clear teal glow top-left and a blue glow bottom-right. */
 .closing-screen {
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 2.4cqi;
+  gap: 2.6cqi;
   background:
-    radial-gradient(circle at 0% 0%, rgb(8 137 176 / 55%), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgb(36 92 210 / 48%), transparent 55%),
-    #07090c;
+    radial-gradient(circle at 0% 0%, rgb(32 201 214 / 78%), rgb(32 201 214 / 22%) 32%, transparent 62%),
+    radial-gradient(circle at 100% 100%, rgb(60 118 255 / 72%), rgb(60 118 255 / 20%) 34%, transparent 64%),
+    #0c131c;
 }
 
 /* Sizes use cqi (the screen's width), so the text scales with the laptop. */
@@ -3166,10 +3172,12 @@ a.contact-value:hover,
   margin: 0;
   color: #ffffff;
   font-family: var(--font-heading);
-  font-size: 22cqi;
+  font-size: 24cqi;
   font-weight: 700;
   letter-spacing: -0.06em;
   line-height: 0.9;
+  /* A faint white halo keeps the mark bright against the coloured glows. */
+  text-shadow: 0 0 3cqi rgb(255 255 255 / 35%);
   opacity: var(--screen-power);
 }
 
@@ -3177,9 +3185,10 @@ a.contact-value:hover,
   margin: 0;
   /* Letter spacing also follows the last letter; matching padding on the left keeps it centred. */
   padding-left: 0.32em;
-  color: rgb(255 255 255 / 72%);
+  color: rgb(236 246 250 / 90%);
   font-family: var(--font-label);
-  font-size: 3.2cqi;
+  font-size: 3.4cqi;
+  font-weight: 500;
   letter-spacing: 0.32em;
   white-space: nowrap;
   opacity: var(--screen-power);

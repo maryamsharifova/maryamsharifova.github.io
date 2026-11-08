@@ -1041,26 +1041,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const progressBetween = (progress, start, end) => clamp((progress - start) / (end - start));
     const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
 
-    // 0 (open) until the laptop is in view, 1 (closed) at the very bottom of the page.
+    // 0 (open) until the whole laptop is on screen, 1 (closed) at the very bottom of the page.
     const readTarget = () => {
       const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       // Measure on the whole page, so it also works deep inside the long Home page.
       const bounds = section.getBoundingClientRect();
-      // Begin closing once the middle of the laptop reaches the bottom of the screen...
-      let start = bounds.top + window.scrollY + bounds.height / 2 - window.innerHeight;
+      // Begin closing once the bottom of the laptop, base included, reaches the bottom of the screen...
+      let start = bounds.bottom + window.scrollY - window.innerHeight;
       // ...but always leave at least a quarter of a screen of scrolling for the lid to close.
       start = Math.min(start, maxScroll - window.innerHeight * 0.25);
       return clamp((window.scrollY - start) / Math.max(1, maxScroll - start));
     };
 
-    // The lid swings from 8 degrees past upright down to flat. The screen dims and the
-    // keys darken near the end, and the MS logo on the outside appears as it shuts.
+    // The lid swings from 8 degrees past upright down to flat. The screen stays fully bright
+    // until the lid is more than halfway down, then dims; the keys darken and the MS logo on
+    // the outside appears only in the last part of the close.
     const renderClosingLaptop = () => {
       const opening = 1 - easeInOut(currentProgress);
       section.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
-      section.style.setProperty("--screen-power", String(progressBetween(opening, 0.45, 0.82)));
-      section.style.setProperty("--keyboard-reveal", String(progressBetween(opening, 0.22, 0.72)));
-      section.style.setProperty("--logo-opacity", String(1 - progressBetween(opening, 0.18, 0.5)));
+      section.style.setProperty("--screen-power", String(progressBetween(opening, 0.12, 0.45)));
+      section.style.setProperty("--keyboard-reveal", String(progressBetween(opening, 0.08, 0.4)));
+      section.style.setProperty("--logo-opacity", String(1 - progressBetween(opening, 0.04, 0.3)));
       // The shine drifts across the silver as the lid moves, like on the Home laptop.
       section.style.setProperty("--metal-sheen", `${28 + 32 * opening}%`);
     };
