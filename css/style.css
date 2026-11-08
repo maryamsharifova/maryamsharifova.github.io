@@ -249,6 +249,32 @@ a {
   padding-block: clamp(5rem, 16vh, 10rem);
 }
 
+/* ===== Home: one long page with every section after the hero ===== */
+/* One shared gap above and below each section, so the page flows evenly from hero to footer.
+   The 4.5rem minimum keeps a section heading clear of the floating nav pill. */
+.home-intro-page {
+  --home-section-space: clamp(4.5rem, 10vh, 7rem);
+}
+
+/* Two classes outrank each page's own padding (.about-page, .resume-page, ...) at every width. */
+.home-intro-page .home-section {
+  padding-block: var(--home-section-space);
+}
+
+/* Projects is a full-screen pinned stage whose panel already has a matching top gap.
+   Extra padding outside it would only add empty scroll before and after the pin. */
+.home-intro-page .projects-page.home-section {
+  padding-block: 0;
+}
+
+/* Without the sideways track (phones, reduced motion) Projects is an ordinary section,
+   so its panel takes the same shared gap as the others. */
+@media (max-width: 860px), (prefers-reduced-motion: reduce) {
+  .home-intro-page .projects-pin {
+    padding-block: var(--home-section-space);
+  }
+}
+
 /* ===== Home intro and scroll-driven 3D laptop ===== */
 .laptop-intro {
   height: 420vh;

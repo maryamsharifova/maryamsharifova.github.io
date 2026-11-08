@@ -8,7 +8,7 @@ Design ideas and prompts were planned with Claude; the code was built with GitHu
 
 ## Pages
 
-- **Home** (`index.html`) — scroll-driven laptop introduction. The lid opens, the lock screen powers on, and the view glides into the portfolio hero.
+- **Home** (`index.html`) — scroll-driven laptop introduction. The lid opens, the lock screen powers on, and the view glides into the portfolio hero. Below the hero, the same About, Projects, Resume, and Contact content follows on one long page.
 - **About** (`about.html`) — short biography, skills, and a browser-only terminal with a fixed set of commands.
 - **Projects** (`projects.html`) — six case studies. On a wide screen the cards pin and slide sideways. Each one opens in a macOS-style window.
 - **Resume** (`resume.html`) — a game-style player card, a mission timeline, certifications, and languages. The PDF resume is in `assets/`.

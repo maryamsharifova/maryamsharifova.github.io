@@ -234,7 +234,529 @@
           </div>
         </div>
       </section>
+
+      <!-- ===== About: the same content as about.html, so its styles and scripts apply unchanged. ===== -->
+      <section id="about" class="page-content about-page home-section">
+        <!-- Intro heading sets the theme for the biography below. -->
+        <section class="page-intro about-intro" aria-labelledby="about-title">
+          <p class="eyebrow" data-reveal>01 · ABOUT</p>
+          <h2 class="page-title gradient-text" id="about-title" data-reveal>Student, intern, builder.</h2>
+        </section>
+
+        <!-- Bio and skill chips use the full content width. -->
+        <section class="about-overview" aria-label="About Maryam">
+          <div class="about-copy" data-reveal>
+            <p>I study Computer Engineering at ADA University, and I'm not there just to pass courses. I use every class, team project and lab session to build skills I can actually use, from wiring circuits to programming robots.</p>
+            <p>Most of my days are spent in the company's security operation at RAM Holding: data-loss alerts, insider-risk cases and log investigations.</p>
+            <h2 class="about-section-title">Skills I use</h2>
+            <ul class="skill-list" aria-label="Skills">
+              <li>Python</li>
+              <li>REST APIs</li>
+              <li>LLM deployment</li>
+              <li>RAG</li>
+              <li>MCP</li>
+              <li>Hugging Face</li>
+              <li>FFmpeg</li>
+              <li>SIEM</li>
+              <li>DLP</li>
+              <li>HTML &amp; CSS</li>
+              <li>Flutter</li>
+              <li>SQL</li>
+              <li>Git</li>
+              <li>Linux</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- The terminal safely simulates portfolio commands in the browser. -->
+        <section class="terminal-card" aria-labelledby="terminal-title" data-reveal>
+          <div class="terminal-header">
+            <div class="terminal-window-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <h2 id="terminal-title">maryam@portfolio: ~</h2>
+            <span class="terminal-hint">try a command</span>
+          </div>
+          <div class="terminal-shortcuts" role="group" aria-label="Example terminal commands">
+            <button class="terminal-command" type="button" data-command="help">help</button>
+            <button class="terminal-command" type="button" data-command="whoami">whoami</button>
+            <button class="terminal-command" type="button" data-command="skills">skills</button>
+            <button class="terminal-command" type="button" data-command="projects">projects</button>
+            <button class="terminal-command" type="button" data-command="experience">experience</button>
+            <button class="terminal-command" type="button" data-command="contact">contact</button>
+            <button class="terminal-command" type="button" data-command="clear">clear</button>
+          </div>
+          <div class="terminal-output" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
+            <p class="terminal-welcome">Welcome to Maryam's portfolio terminal. Type <strong>help</strong> to explore.</p>
+          </div>
+          <form class="terminal-form" autocomplete="off">
+            <label class="sr-only" for="terminal-input">Enter a portfolio command</label>
+            <span aria-hidden="true">maryam@portfolio:~$</span>
+            <input id="terminal-input" name="command" type="text" spellcheck="false" autocapitalize="off" autocomplete="off">
+          </form>
+        </section>
+      </section>
+
+      <!-- ===== Projects: the same content as projects.html, so its styles and scripts apply unchanged. ===== -->
+      <section id="projects" class="projects-page home-section">
+        <section class="projects-track" aria-labelledby="projects-title">
+          <div class="projects-pin">
+            <div class="projects-track-heading">
+              <div>
+                <p class="eyebrow">02 · PROJECTS</p>
+                <h2 class="page-title gradient-text" id="projects-title">Things I built.</h2>
+              </div>
+              <div class="project-progress" aria-label="Project 1 of 6">
+                <span class="project-progress-count">01 ——— 06</span>
+                <span class="project-progress-bar"><span></span></span>
+              </div>
+            </div>
+            <!-- The JavaScript track translates this row as the page scrolls. -->
+            <div class="project-list">
+          <article class="project-card" id="p1" tabindex="0" aria-label="Open details for Speech-to-text API for Azerbaijani">
+            <div class="project-copy">
+              <p class="project-label">01 / SPEECH</p>
+              <h2>Speech-to-text API for Azerbaijani</h2>
+              <p>I benchmarked five Hugging Face models (SeamlessM4T v2, Whisper variants and Meta MMS) on a real Azerbaijani phone call in WAV and MP4. SeamlessM4T v2 was the most accurate. I wrapped it in a Python REST endpoint that converts audio with FFmpeg and returns JSON transcripts, and traced API-versus-script differences to missing decoding parameters.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Python</li><li>Hugging Face</li><li>REST API</li><li>FFmpeg</li><li>Azerbaijani</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual visual-waveform">
+              <div class="visual-topline"><span>CALL TRANSCRIPT</span><code>{"lang":"az","status":"ok"}</code></div>
+              <div class="waveform-bars" aria-hidden="true"></div>
+              <div class="waveform-time"><span>00:18.4</span><span>00:42.0</span></div>
+            </figure>
+          </article>
+
+          <article class="project-card" id="p2" tabindex="0" aria-label="Open details for Local LLM chatbot">
+            <div class="project-copy">
+              <p class="project-label">02 / LOCAL AI</p>
+              <h2>Local LLM chatbot</h2>
+              <p>I run a Llama model on my own machine with LM Studio, connected to Telegram, WhatsApp and MCP, and embedded it as a chatbot on a website I built.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Llama</li><li>LM Studio</li><li>MCP</li><li>Telegram</li><li>WhatsApp</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual project-screenshot">
+            </figure>
+          </article>
+
+          <article class="project-card" id="p3" tabindex="0" aria-label="Open details for Plant-health vision for Agrohub">
+            <div class="project-copy">
+              <p class="project-label">03 / VISION</p>
+              <h2>Plant-health vision for Agrohub</h2>
+              <p>For Agrohub, an agritech app for farmers, I compared more than ten plant-health APIs including Kindwise, Plantix and Agrio, and recommended Kindwise. Tested on crops grown in Azerbaijan, it identified the crop and its diseases from a single photo, with confidence scores and treatment advice in JSON.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Computer vision</li><li>Kindwise</li><li>Python</li><li>Agrohub</li><li>JSON</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual visual-plant">
+              <div class="visual-topline"><span>LEAF HEALTH SCAN</span><span class="scan-status">ANALYSING</span></div>
+              <svg class="plant-scan" viewBox="0 0 520 310" role="img" aria-label="A green leaf with brown spots being scanned">
+                <defs>
+                  <linearGradient id="leaf-fill" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0" stop-color="#9ed76c"/>
+                    <stop offset="1" stop-color="#327b47"/>
+                  </linearGradient>
+                </defs>
+                <path class="leaf-shape" d="M96 252C78 128 170 49 397 42c-3 196-104 245-236 218-28-6-49-9-65-8Z" fill="url(#leaf-fill)"/>
+                <path d="M98 254C181 187 268 121 392 48M179 187l-14-67m63 34-1-68m40 47 30-58m-55 129 63 8m-111 34 71 24" fill="none" stroke="#d4eaa7" stroke-opacity=".72" stroke-width="4"/>
+                <g fill="#85543c">
+                  <ellipse cx="187" cy="147" rx="11" ry="7"/><ellipse cx="276" cy="106" rx="9" ry="7"/>
+                  <ellipse cx="307" cy="177" rx="13" ry="8"/><ellipse cx="236" cy="218" rx="10" ry="7"/>
+                  <ellipse cx="354" cy="126" rx="8" ry="6"/>
+                </g>
+                <rect x="174" y="106" width="154" height="118" rx="5" fill="none" stroke="#ff78ae" stroke-width="3"/>
+              </svg>
+              <span class="detection-tag">leaf spot · 0.91</span>
+              <span class="plant-scan-line" aria-hidden="true"></span>
+            </figure>
+          </article>
+
+          <article class="project-card" id="p4" tabindex="0" aria-label="Open details for Logic gates">
+            <div class="project-copy">
+              <p class="project-label">04 / PROJECT 1</p>
+              <h2>Logic gates</h2>
+              <p>With my team, we built three basic logic gates, AND, OR and NOT, on a breadboard, using transistors, resistors, push buttons and LEDs. A simple project, but it showed how computers are built from tiny switches.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Transistors</li><li>Breadboard</li><li>AND / OR / NOT</li><li>Team project</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual visual-circuit" data-circuit>
+              <div class="visual-topline"><span>LIVE LOGIC CIRCUIT</span><span class="circuit-power">● POWERED</span></div>
+              <div class="circuit-controls">
+                <button type="button" class="circuit-input" data-input="a" aria-pressed="false">A <span>0</span></button>
+                <label class="sr-only" for="gate-select">Choose a logic gate</label>
+                <select id="gate-select" class="gate-select" aria-label="Logic gate">
+                  <option value="AND">AND</option>
+                  <option value="OR">OR</option>
+                  <option value="NOT">NOT</option>
+                </select>
+                <button type="button" class="circuit-input" data-input="b" aria-pressed="false">B <span>0</span></button>
+                <div class="circuit-led"><span></span><b>OUT</b><strong>0</strong></div>
+              </div>
+              <div class="truth-table-wrap">
+                <table class="truth-table">
+                  <thead><tr><th>A</th><th data-b-column>B</th><th>OUT</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </figure>
+          </article>
+
+          <article class="project-card" id="p5" tabindex="0" aria-label="Open details for Hour of AI">
+            <div class="project-copy">
+              <p class="project-label">05 / PROJECT 2</p>
+              <h2>Hour of AI</h2>
+              <p>With my team, I taught a one-hour AI and coding lesson at an education center for children who rarely get to use computers. We used Microsoft MakeCode so every child could snap blocks together and see their own program run. Everyone left with a certificate.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Microsoft MakeCode</li><li>AI education</li><li>Teaching</li><li>Team project</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual visual-code">
+              <div class="visual-topline"><span>MAKECODE / ON START</span><span class="code-play-dot"></span></div>
+              <div class="code-block block-start">on start</div>
+              <div class="code-block block-repeat">repeat 4 times</div>
+              <div class="code-block block-icon">show icon <b>★</b></div>
+              <div class="code-block block-say">say "Hello, AI!"</div>
+              <div class="certificate-chip">✓ Certificate earned</div>
+            </figure>
+          </article>
+
+          <article class="project-card" id="p6" tabindex="0" aria-label="Open details for Line-following robot with LEGO EV3">
+            <div class="project-copy">
+              <p class="project-label">06 / PROJECT 3</p>
+              <h2>Line-following robot with LEGO EV3</h2>
+              <p>A team project in ADA's MakerSpace: we programmed a LEGO Mindstorms EV3 robot to find and follow a predefined line on its own, in MakeCode with Blocks and JavaScript, using the gyro sensor for accurate turns.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>LEGO Mindstorms EV3</li><li>MakeCode</li><li>Gyro sensor</li><li>JavaScript</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual visual-robot">
+              <div class="visual-topline"><span>ADA MAKERSPACE</span><code>gyro: 0° → 90°</code></div>
+              <svg class="robot-track" viewBox="0 0 520 300" role="img" aria-label="A small EV3 robot following a curving track">
+                <path id="robot-track-path" d="M105 228C62 201 78 102 161 89c85-13 110 79 183 64 77-16 57-95 12-106-44-11-95 16-82 70 13 54 94 88 168 39C475 210 166 293 105 228Z"/>
+                <path class="robot-track-dash" d="M105 228C62 201 78 102 161 89c85-13 110 79 183 64 77-16 57-95 12-106-44-11-95 16-82 70 13 54 94 88 168 39C475 210 166 293 105 228Z"/>
+                <!-- Reduced-motion visitors get a stationary robot on the track. -->
+                <g class="ev3-robot-static" transform="translate(105 228)" aria-hidden="true">
+                  <rect x="-22" y="-16" width="44" height="32" rx="6" fill="#353c40" stroke="#8bd3e3" stroke-width="2"/>
+                  <rect x="-27" y="-12" width="6" height="12" rx="2" fill="#141719"/>
+                  <rect x="21" y="-12" width="6" height="12" rx="2" fill="#141719"/>
+                  <circle cx="0" cy="0" r="7" fill="#f3a650"/>
+                  <path d="M0-12 8 0 0 12" fill="none" stroke="#6fd0ea" stroke-width="2"/>
+                </g>
+                <g class="ev3-robot">
+                  <rect x="-22" y="-16" width="44" height="32" rx="6" fill="#353c40" stroke="#8bd3e3" stroke-width="2"/>
+                  <rect x="-27" y="-12" width="6" height="12" rx="2" fill="#141719"/>
+                  <rect x="21" y="-12" width="6" height="12" rx="2" fill="#141719"/>
+                  <circle cx="0" cy="0" r="7" fill="#f3a650"/>
+                  <path d="M0-12 8 0 0 12" fill="none" stroke="#6fd0ea" stroke-width="2"/>
+                  <animateMotion dur="10s" repeatCount="indefinite" rotate="auto">
+                    <mpath href="#robot-track-path"/>
+                  </animateMotion>
+                </g>
+              </svg>
+            </figure>
+          </article>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===== Resume: the same content as resume.html, so its styles and scripts apply unchanged. ===== -->
+      <section id="resume" class="page-content resume-page home-section">
+        <!-- Section label, split heading, and a single link to the PDF resume. -->
+        <section class="page-intro resume-intro" aria-labelledby="resume-title">
+          <p class="eyebrow" data-reveal>03 · RESUME</p>
+          <h2 class="page-title" id="resume-title" data-reveal>Experience &amp; <span class="gradient-text">education.</span></h2>
+          <a class="resume-open" href="assets/Maryam_Sharifova_CV.pdf" target="_blank" rel="noopener" data-reveal data-magnetic>
+            <!-- Small document mark sits in front of the button label. -->
+            <svg class="resume-doc-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path d="M7 3.5h7.2L19 8.3V20.5H7V3.5Z"></path>
+              <path d="M14.1 3.8V8.6H19"></path>
+              <path d="M9.6 12.6h5.2M9.6 16h5.2"></path>
+            </svg>
+            Open my resume <span aria-hidden="true">↗</span>
+          </a>
+        </section>
+
+        <!-- Wide player card: avatar, toolkits, and skill pips. -->
+        <section class="player-card" aria-label="Player profile" data-reveal>
+          <div class="player-avatar" aria-hidden="true">MS</div>
+          <div class="player-identity">
+            <h2>Maryam Sharifova</h2>
+            <p class="player-class">CLASS · AI &amp; SECURITY ENGINEER · BAKU</p>
+            <p class="toolkit-label">Security toolkit</p>
+            <ul class="toolkit toolkit-security">
+              <li>DLP</li>
+              <li>SIEM</li>
+              <li>FortiAnalyzer</li>
+              <li>Palo Alto</li>
+              <li>LibreNMS</li>
+              <li>Insider risk</li>
+            </ul>
+            <p class="toolkit-label">AI toolkit</p>
+            <ul class="toolkit toolkit-ai">
+              <li>LM Studio</li>
+              <li>Llama</li>
+              <li>Hugging Face</li>
+              <li>MCP</li>
+              <li>Whisper</li>
+              <li>RAG</li>
+            </ul>
+          </div>
+          <!-- Each row is a name, five pips, and a rank. Filled pips match the level. -->
+          <ul class="skill-meters">
+            <li>
+              <span class="skill-name">HTML &amp; CSS</span>
+              <span class="skill-pips" aria-label="HTML and CSS, proficient, 4 of 5">
+                <span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip"></span>
+              </span>
+              <span class="skill-rank">PROFICIENT</span>
+            </li>
+            <li>
+              <span class="skill-name">Python</span>
+              <span class="skill-pips" aria-label="Python, intermediate, 3 of 5">
+                <span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip"></span><span class="pip"></span>
+              </span>
+              <span class="skill-rank">INTERMEDIATE</span>
+            </li>
+            <li>
+              <span class="skill-name">Flutter &amp; Dart</span>
+              <span class="skill-pips" aria-label="Flutter and Dart, intermediate, 3 of 5">
+                <span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip"></span><span class="pip"></span>
+              </span>
+              <span class="skill-rank">INTERMEDIATE</span>
+            </li>
+            <li>
+              <span class="skill-name">JavaScript</span>
+              <span class="skill-pips" aria-label="JavaScript, beginner, 2 of 5">
+                <span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+              </span>
+              <span class="skill-rank">BEGINNER</span>
+            </li>
+            <li>
+              <span class="skill-name">SQL</span>
+              <span class="skill-pips" aria-label="SQL, beginner, 2 of 5">
+                <span class="pip is-filled"></span><span class="pip is-filled"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+              </span>
+              <span class="skill-rank">BEGINNER</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Missions draw a timeline on the left; certifications stack on the right. -->
+        <div class="resume-columns">
+          <section class="missions" aria-labelledby="missions-title">
+            <h2 id="missions-title">Missions</h2>
+            <ol class="quest-timeline">
+              <li class="quest">
+                <span class="quest-node" aria-hidden="true"></span>
+                <p class="quest-status">IN PROGRESS</p>
+                <p class="quest-kind">MAIN QUEST</p>
+                <h3>BSc Computer Engineering</h3>
+                <p class="quest-meta">ADA UNIVERSITY · EXPECTED 2030</p>
+              </li>
+              <li class="quest">
+                <span class="quest-node" aria-hidden="true"></span>
+                <p class="quest-status">IN PROGRESS</p>
+                <h3>AI &amp; Cybersecurity Intern</h3>
+                <p class="quest-meta">RAM HOLDING · BAKU · JULY 2026 – PRESENT</p>
+                <ul class="quest-notes">
+                  <li>Triage company DLP alerts and analyse where, how, and by whom sensitive data is used.</li>
+                  <li>Review insider-risk scenarios, including wrong recipients, open links, and excessive permissions, and propose alert-configuration improvements.</li>
+                  <li>Investigate SIEM events by pivoting into FortiAnalyzer and Palo Alto logs and tracing activity through source and destination IDs.</li>
+                  <li>Monitor server and network-device resources in LibreNMS and escalate alerts through Telegram and email.</li>
+                  <li>Create IT and business training content, including an infographic on the path from rule-based systems to autonomous AI agents.</li>
+                </ul>
+              </li>
+              <li class="quest">
+                <span class="quest-node" aria-hidden="true"></span>
+                <p class="quest-status quest-status-done">COMPLETED</p>
+                <h3>Independent AI projects</h3>
+                <p class="quest-meta">2026</p>
+                <ul class="quest-notes">
+                  <li>Local LLM chatbot with Telegram, WhatsApp and MCP integrations.</li>
+                  <li>Speech-to-text REST API and model benchmark for Azerbaijani.</li>
+                  <li>Plant-health computer-vision research for Agrohub.</li>
+                </ul>
+              </li>
+            </ol>
+          </section>
+
+          <section class="cert-column" aria-labelledby="cert-title">
+            <h2 id="cert-title">Certifications</h2>
+            <article class="cert-card">
+              <p class="cert-score gradient-text">7.5</p>
+              <p class="cert-detail">IELTS · English language test</p>
+            </article>
+            <article class="cert-card">
+              <p class="cert-score gradient-text">1510</p>
+              <p class="cert-detail">SAT · College Board</p>
+            </article>
+            <article class="language-card">
+              <h3>Languages</h3>
+              <ul>
+                <li><span>Azerbaijani</span><strong>NATIVE</strong></li>
+                <li><span>English · Turkish</span><strong>FLUENT</strong></li>
+                <li><span>Russian</span><strong>UPPER-INT</strong></li>
+              </ul>
+            </article>
+          </section>
+        </div>
+      </section>
+
+      <!-- ===== Contact: the same content as contact.html, so its styles and scripts apply unchanged. ===== -->
+      <section id="contact" class="page-content contact-page home-section">
+        <!-- The heading links to LinkedIn. The gradient shifts when the pointer is over it. -->
+        <section class="page-intro contact-intro" aria-labelledby="contact-title">
+          <p class="eyebrow" data-reveal>04 · CONTACT</p>
+          <h2 class="page-title" id="contact-title" data-reveal>
+            <a class="talk-link gradient-text" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener">Let's talk.</a>
+          </h2>
+          <div class="contact-links" data-reveal>
+            <a class="contact-link contact-link-primary" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a>
+            <a class="contact-link" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+          </div>
+        </section>
+
+        <!-- Contact options are limited to public profiles, location, and the CV. -->
+        <section class="contact-grid" aria-label="Contact details">
+          <a class="contact-card spotlight-card" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener" data-reveal>
+            <span class="contact-card-icon" aria-hidden="true">in</span>
+            <p class="eyebrow">LINKEDIN</p>
+            <span class="contact-value">Maryam Sharifova</span>
+            <span class="contact-card-note">Professional profile <span aria-hidden="true">↗</span></span>
+          </a>
+          <a class="contact-card spotlight-card" href="https://github.com/maryamsharifova" target="_blank" rel="noopener" data-reveal>
+            <span class="contact-card-icon" aria-hidden="true">GH</span>
+            <p class="eyebrow">GITHUB</p>
+            <span class="contact-value">maryamsharifova</span>
+            <span class="contact-card-note">Code and experiments <span aria-hidden="true">↗</span></span>
+          </a>
+          <article class="contact-card contact-location spotlight-card" data-reveal>
+            <span class="contact-card-icon" aria-hidden="true">⌖</span>
+            <p class="eyebrow">LOCATION</p>
+            <span class="contact-value">Baku, Azerbaijan</span>
+            <span class="contact-card-note">Based in Baku · AZ</span>
+          </article>
+          <a class="contact-card spotlight-card" href="assets/Maryam_Sharifova_CV.pdf" target="_blank" rel="noopener" data-reveal>
+            <span class="contact-card-icon" aria-hidden="true">CV</span>
+            <p class="eyebrow">RESUME</p>
+            <span class="contact-value">Maryam Sharifova</span>
+            <span class="contact-card-note">Open the full CV <span aria-hidden="true">↗</span></span>
+          </a>
+        </section>
+
+        <!-- Scroll room for the lid. The stage below clips the laptop so the base stays off the page. -->
+        <div class="thanks-scroll">
+          <section class="thanks-stage" aria-label="Thanks for visiting">
+            <div class="laptop thanks-laptop">
+              <div class="lid">
+                <div class="lid-face screen-face">
+                  <div class="screen-display">
+                    <!-- One sentence, centred. The lid still closes over it at the bottom of the page. -->
+                    <div class="thanks-screen">
+                      <p class="thanks-sentence">Thanks for visiting.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="lid-face back-face">
+                  <span class="lid-logo" aria-hidden="true">MS</span>
+                </div>
+              </div>
+              <div class="deck">
+                <!-- Same dark key rows as the home laptop, scaled down with the deck. -->
+                <div class="keyboard" aria-hidden="true">
+                  <div class="key-row key-row-function">
+                    <span class="key key-escape">esc</span>
+                    <span class="key">F1</span><span class="key">F2</span><span class="key">F3</span><span class="key">F4</span>
+                    <span class="key">F5</span><span class="key">F6</span><span class="key">F7</span><span class="key">F8</span>
+                    <span class="key">F9</span><span class="key">F10</span><span class="key">F11</span><span class="key">F12</span>
+                  </div>
+                  <div class="key-row">
+                    <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span>
+                    <span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span>
+                    <span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span>
+                    <span class="key key-wide">delete</span>
+                  </div>
+                  <div class="key-row">
+                    <span class="key key-wide">tab</span>
+                    <span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span>
+                    <span class="key">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span>
+                    <span class="key">O</span><span class="key">P</span><span class="key">[</span>
+                    <span class="key key-enter">return</span>
+                  </div>
+                  <div class="key-row">
+                    <span class="key key-shift">caps</span>
+                    <span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span>
+                    <span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span>
+                    <span class="key">L</span><span class="key">;</span>
+                    <span class="key key-shift">shift</span>
+                  </div>
+                  <div class="key-row">
+                    <span class="key key-shift">shift</span>
+                    <span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span>
+                    <span class="key">B</span><span class="key">N</span><span class="key">M</span>
+                    <span class="key">,</span><span class="key">.</span>
+                    <span class="key key-shift">shift</span>
+                  </div>
+                  <div class="key-row key-row-bottom">
+                    <span class="key key-modifier">fn</span>
+                    <span class="key key-modifier">ctrl</span>
+                    <span class="key key-modifier">opt</span>
+                    <span class="key key-space"></span>
+                    <span class="key key-modifier">opt</span>
+                    <span class="key key-modifier">cmd</span>
+                    <span class="key key-arrow">←</span>
+                    <span class="key key-arrow">↓</span>
+                    <span class="key key-arrow">↑</span>
+                    <span class="key key-arrow">→</span>
+                  </div>
+                </div>
+                <div class="trackpad" aria-hidden="true"></div>
+                <span class="deck-wall deck-wall-front"></span>
+                <span class="deck-wall deck-wall-left"></span>
+                <span class="deck-wall deck-wall-right"></span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
     </main>
+
+    <!-- macOS-style project window presents the visual and project highlights. -->
+    <dialog class="project-dialog" aria-labelledby="project-dialog-title">
+      <div class="project-window">
+        <div class="project-window-titlebar">
+          <div class="window-controls">
+            <button class="project-dialog-close" type="button" aria-label="Close project details"></button>
+            <span class="window-dot window-dot-yellow" aria-hidden="true"></span>
+            <span class="window-dot window-dot-green" aria-hidden="true"></span>
+          </div>
+          <code class="project-window-path"></code>
+          <span class="window-titlebar-spacer" aria-hidden="true"></span>
+        </div>
+        <div class="project-window-content">
+          <div class="project-window-visual"></div>
+          <div class="project-window-details">
+            <p class="project-dialog-label"></p>
+            <h2 id="project-dialog-title"></h2>
+            <p class="project-dialog-description"></p>
+            <h3>Highlights</h3>
+            <ul class="project-dialog-highlights"></ul>
+            <ul class="project-dialog-tags" aria-label="Project technologies"></ul>
+          </div>
+        </div>
+      </div>
+    </dialog>
 
     <!-- A floating navigation pill appears after the hero settles into the page. -->
     <nav class="floating-nav" aria-label="Main navigation">

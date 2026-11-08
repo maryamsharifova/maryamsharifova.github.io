@@ -302,7 +302,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const updateTrackTarget = () => {
       if (!horizontalTrackEnabled) return;
-      targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
+      // Measure the track's page position on every scroll. On the long Home page, content
+      // above it (fonts, photos) can finish loading later and move it down.
+      trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
+      const nextProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
+      // Above or below the track nothing moves, so skip the frame instead of redrawing the same row.
+      if (nextProgress === targetProgress && displayedProgress === targetProgress) return;
+      targetProgress = nextProgress;
       if (!trackAnimationFrame) trackAnimationFrame = window.requestAnimationFrame(animateHorizontalTrack);
     };
 
@@ -310,6 +316,19 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("scroll", updateTrackTarget, { passive: true });
     window.addEventListener("resize", updateHorizontalTrack);
     reducedMotion.addEventListener?.("change", updateHorizontalTrack);
+
+    // Re-measure when the page's height changes (late fonts, project photos, or the
+    // About terminal's content on the Home page). One update per frame is enough.
+    if ("ResizeObserver" in window) {
+      let pageResizeFrame = 0;
+      new ResizeObserver(() => {
+        if (pageResizeFrame) return;
+        pageResizeFrame = window.requestAnimationFrame(() => {
+          pageResizeFrame = 0;
+          updateHorizontalTrack();
+        });
+      }).observe(document.body);
+    }
 
     // Generate a varied waveform without relying on an external image or library.
     projectPage.querySelectorAll(".waveform-bars").forEach((waveform) => {
@@ -920,7 +939,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const requestTimelineUpdate = () => {
-      targetProgress = readTarget();
+      const nextProgress = readTarget();
+      // Away from the timeline the line is already empty or full, so there is nothing to redraw.
+      if (nextProgress === targetProgress && currentProgress === targetProgress) return;
+      targetProgress = nextProgress;
       if (!animationFrame) animationFrame = window.requestAnimationFrame(animateTimeline);
     };
 
@@ -956,7 +978,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // 0 while the laptop is still ahead, 1 at the very bottom of the page.
     const readTarget = () => {
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      return clamp((window.scrollY - section.offsetTop) / Math.max(1, maxScroll - section.offsetTop));
+      // Use the position on the whole page, not offsetTop, so it stays right when Contact
+      // sits deep inside the long Home page instead of directly in <main>.
+      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+      return clamp((window.scrollY - sectionTop) / Math.max(1, maxScroll - sectionTop));
     };
 
     const renderThanksLaptop = () => {
@@ -978,7 +1003,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const requestThanksUpdate = () => {
-      targetProgress = readTarget();
+      const nextProgress = readTarget();
+      // Until Contact is reached the lid stays open, so higher sections skip this work.
+      if (nextProgress === targetProgress && currentProgress === targetProgress) return;
+      targetProgress = nextProgress;
       if (!animationFrame) animationFrame = window.requestAnimationFrame(animateThanksLaptop);
     };
 
@@ -1021,6 +1049,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let animationFrame = 0;
   let currentProgress = 0;
   let targetProgress = 0;
+  // The intro progress last drawn on the laptop; -1 means nothing has been drawn yet.
+  let renderedProgress = -1;
   let diveScale = 1;
   let diveX = 0;
   let diveY = 0;
@@ -1253,6 +1283,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const logoFade = progressBetween(progress, 0.19, 0.31);
     const deskGlow = progressBetween(opening, 0.5, 0.85);
     const diveProgress = easeInOut(progressBetween(progress, 0.58, 1));
+
+    // Once the intro is finished the laptop pose stops changing. Skip restyling its many
+    // parts on every scroll of the long Home page, but still let the hero settle below.
+    if (progress === renderedProgress) {
+      updateHeroScene(progress, diveProgress, screenPower);
+      return;
+    }
+    renderedProgress = progress;
+
     const laptopOpenScale = Number.parseFloat(
       window.getComputedStyle(laptopIntro).getPropertyValue("--laptop-open-scale"),
     );
@@ -1296,7 +1335,11 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.addEventListener("scroll", requestLaptopUpdate, { passive: true });
-  window.addEventListener("resize", requestLaptopUpdate);
+  // A resize can change the laptop's open size, so redraw it even if the progress is the same.
+  window.addEventListener("resize", () => {
+    renderedProgress = -1;
+    requestLaptopUpdate();
+  });
 
   // Recheck both animations whenever the visitor changes motion preferences.
   if (typeof reducedMotion.addEventListener === "function") {
