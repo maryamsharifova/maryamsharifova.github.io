@@ -1053,32 +1053,42 @@ document.addEventListener("DOMContentLoaded", () => {
     let targetProgress = 0;
     let animationFrame = 0;
     const clamp = (value) => Math.min(1, Math.max(0, value));
-    const progressBetween = (progress, start, end) => clamp((progress - start) / (end - start));
     const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
 
-    // 0 (open) until the whole laptop is on screen, 1 (closed) at the very bottom of the page.
+    // Build the unlabelled keys. Each number is a key's width in 28ths of a row, so every
+    // row adds up to 28: function row, number row, tab row, caps row, shift row, space row.
+    const keyboard = section.querySelector(".cl-keyboard");
+    const keyRows = [
+      Array(14).fill(2),
+      [3, ...Array(11).fill(2), 3],
+      [4, ...Array(10).fill(2), 4],
+      [5, ...Array(9).fill(2), 5],
+      [3, 3, 3, 10, 3, 2, 2, 2],
+    ];
+    keyRows.flat().forEach((width) => {
+      const key = document.createElement("span");
+      key.style.gridColumn = `span ${width}`;
+      keyboard.append(key);
+    });
+
+    // 0 (open) while the laptop comes into view; 1 (closed) once it has moved about half a
+    // screen further up. If the page ends sooner, it is fully closed at the very bottom.
     const readTarget = () => {
       const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       // Measure on the whole page, so it also works deep inside the long Home page.
       const bounds = section.getBoundingClientRect();
-      // Begin closing once the bottom of the laptop, base included, reaches the bottom of the screen...
-      let start = bounds.bottom + window.scrollY - window.innerHeight;
-      // ...but always leave at least a quarter of a screen of scrolling for the lid to close.
-      start = Math.min(start, maxScroll - window.innerHeight * 0.25);
-      return clamp((window.scrollY - start) / Math.max(1, maxScroll - start));
+      // Begin once the bottom of the laptop, base included, reaches the bottom of the screen.
+      const start = Math.min(bounds.bottom + window.scrollY - window.innerHeight, maxScroll - 1);
+      const end = Math.min(start + window.innerHeight * 0.5, maxScroll);
+      return clamp((window.scrollY - start) / Math.max(1, end - start));
     };
 
-    // The lid swings from 8 degrees past upright down to flat. The screen stays fully bright
-    // until the lid is more than halfway down, then dims; the keys darken and the MS logo on
-    // the outside appears only in the last part of the close.
+    // The lid swings from 10 degrees past upright down onto the base, and the shine on its
+    // back slides a little as it moves.
     const renderClosingLaptop = () => {
       const opening = 1 - easeInOut(currentProgress);
-      section.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
-      section.style.setProperty("--screen-power", String(progressBetween(opening, 0.12, 0.45)));
-      section.style.setProperty("--keyboard-reveal", String(progressBetween(opening, 0.08, 0.4)));
-      section.style.setProperty("--logo-opacity", String(1 - progressBetween(opening, 0.04, 0.3)));
-      // The shine drifts across the silver as the lid moves, like on the Home laptop.
-      section.style.setProperty("--metal-sheen", `${28 + 32 * opening}%`);
+      section.style.setProperty("--cl-lid-angle", `${-90 + 100 * opening}deg`);
+      section.style.setProperty("--cl-sheen", `${70 - 40 * opening}%`);
     };
 
     const animateClosingLaptop = () => {
