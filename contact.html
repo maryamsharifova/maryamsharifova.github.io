@@ -56,80 +56,77 @@
         </a>
       </section>
 
-      <!-- Scroll room for the lid. The stage below clips the laptop so the base stays off the page. -->
-      <div class="thanks-scroll">
-        <section class="thanks-stage" aria-label="Thanks for visiting">
-          <div class="laptop thanks-laptop">
-            <div class="lid">
-              <div class="lid-face screen-face">
-                <div class="screen-display">
-                  <!-- One sentence, centred. The lid still closes over it at the bottom of the page. -->
-                  <div class="thanks-screen">
-                    <p class="thanks-sentence">Thanks for visiting.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="lid-face back-face">
-                <span class="lid-logo" aria-hidden="true">MS</span>
+      <!-- A small laptop at the end of the page. It sits in the normal flow; scrolling past it closes the lid. -->
+      <section class="closing-laptop" aria-label="Thanks for visiting">
+        <div class="laptop closing-laptop-device">
+          <div class="lid">
+            <div class="lid-face screen-face">
+              <!-- Dark screen with a teal and a blue corner glow, the MS mark, and a short thank-you. -->
+              <div class="screen-display closing-screen">
+                <p class="closing-mark">MS</p>
+                <p class="closing-caption">THANKS FOR VISITING</p>
               </div>
             </div>
-            <div class="deck">
-              <!-- Same dark key rows as the home laptop, scaled down with the deck. -->
-              <div class="keyboard" aria-hidden="true">
-                <div class="key-row key-row-function">
-                  <span class="key key-escape">esc</span>
-                  <span class="key">F1</span><span class="key">F2</span><span class="key">F3</span><span class="key">F4</span>
-                  <span class="key">F5</span><span class="key">F6</span><span class="key">F7</span><span class="key">F8</span>
-                  <span class="key">F9</span><span class="key">F10</span><span class="key">F11</span><span class="key">F12</span>
-                </div>
-                <div class="key-row">
-                  <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span>
-                  <span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span>
-                  <span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span>
-                  <span class="key key-wide">delete</span>
-                </div>
-                <div class="key-row">
-                  <span class="key key-wide">tab</span>
-                  <span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span>
-                  <span class="key">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span>
-                  <span class="key">O</span><span class="key">P</span><span class="key">[</span>
-                  <span class="key key-enter">return</span>
-                </div>
-                <div class="key-row">
-                  <span class="key key-shift">caps</span>
-                  <span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span>
-                  <span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span>
-                  <span class="key">L</span><span class="key">;</span>
-                  <span class="key key-shift">shift</span>
-                </div>
-                <div class="key-row">
-                  <span class="key key-shift">shift</span>
-                  <span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span>
-                  <span class="key">B</span><span class="key">N</span><span class="key">M</span>
-                  <span class="key">,</span><span class="key">.</span>
-                  <span class="key key-shift">shift</span>
-                </div>
-                <div class="key-row key-row-bottom">
-                  <span class="key key-modifier">fn</span>
-                  <span class="key key-modifier">ctrl</span>
-                  <span class="key key-modifier">opt</span>
-                  <span class="key key-space"></span>
-                  <span class="key key-modifier">opt</span>
-                  <span class="key key-modifier">cmd</span>
-                  <span class="key key-arrow">←</span>
-                  <span class="key key-arrow">↓</span>
-                  <span class="key key-arrow">↑</span>
-                  <span class="key key-arrow">→</span>
-                </div>
-              </div>
-              <div class="trackpad" aria-hidden="true"></div>
-              <span class="deck-wall deck-wall-front"></span>
-              <span class="deck-wall deck-wall-left"></span>
-              <span class="deck-wall deck-wall-right"></span>
+            <div class="lid-face back-face">
+              <span class="lid-logo" aria-hidden="true">MS</span>
             </div>
           </div>
-        </section>
-      </div>
+          <div class="deck">
+            <!-- Same dark key rows as the Home laptop, scaled down with the deck. -->
+            <div class="keyboard" aria-hidden="true">
+              <div class="key-row key-row-function">
+                <span class="key key-escape">esc</span>
+                <span class="key">F1</span><span class="key">F2</span><span class="key">F3</span><span class="key">F4</span>
+                <span class="key">F5</span><span class="key">F6</span><span class="key">F7</span><span class="key">F8</span>
+                <span class="key">F9</span><span class="key">F10</span><span class="key">F11</span><span class="key">F12</span>
+              </div>
+              <div class="key-row">
+                <span class="key">~</span><span class="key">1</span><span class="key">2</span><span class="key">3</span>
+                <span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span>
+                <span class="key">8</span><span class="key">9</span><span class="key">0</span><span class="key">-</span>
+                <span class="key key-wide">delete</span>
+              </div>
+              <div class="key-row">
+                <span class="key key-wide">tab</span>
+                <span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span>
+                <span class="key">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span>
+                <span class="key">O</span><span class="key">P</span><span class="key">[</span>
+                <span class="key key-enter">return</span>
+              </div>
+              <div class="key-row">
+                <span class="key key-shift">caps</span>
+                <span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span>
+                <span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span>
+                <span class="key">L</span><span class="key">;</span>
+                <span class="key key-shift">shift</span>
+              </div>
+              <div class="key-row">
+                <span class="key key-shift">shift</span>
+                <span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span>
+                <span class="key">B</span><span class="key">N</span><span class="key">M</span>
+                <span class="key">,</span><span class="key">.</span>
+                <span class="key key-shift">shift</span>
+              </div>
+              <div class="key-row key-row-bottom">
+                <span class="key key-modifier">fn</span>
+                <span class="key key-modifier">ctrl</span>
+                <span class="key key-modifier">opt</span>
+                <span class="key key-space"></span>
+                <span class="key key-modifier">opt</span>
+                <span class="key key-modifier">cmd</span>
+                <span class="key key-arrow">←</span>
+                <span class="key key-arrow">↓</span>
+                <span class="key key-arrow">↑</span>
+                <span class="key key-arrow">→</span>
+              </div>
+            </div>
+            <div class="trackpad" aria-hidden="true"></div>
+            <span class="deck-wall deck-wall-front"></span>
+            <span class="deck-wall deck-wall-left"></span>
+            <span class="deck-wall deck-wall-right"></span>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->

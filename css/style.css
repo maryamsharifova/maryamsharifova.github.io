@@ -119,11 +119,6 @@
   --screen-frame: #17181a;
   --screen-shadow: rgb(255 255 255 / 12%);
   --screen-black: #08090b;
-  --thanks-screen: #0b0f14;
-  --thanks-blob-a: rgb(8 137 176 / 55%);
-  --thanks-blob-b: rgb(28 159 208 / 35%);
-  --thanks-text-glow: rgb(28 159 208 / 45%);
-  --thanks-text-gradient: linear-gradient(110deg, #eef6fa, #6fd0ea, #1c9fd0);
   /* Outline color of the big AI and SEC letters beside the intro laptop. */
   --detail-outline: rgb(232 236 240 / 46%);
   --font-heading: "Space Grotesk", sans-serif;
@@ -157,11 +152,6 @@
   --desk-surface-center: #d9dcdf;
   --desk-surface-edge: #f7f8fa;
   --desk-shadow: rgb(70 78 84 / 14%);
-  --thanks-screen: #f3f7fa;
-  --thanks-blob-a: rgb(8 137 176 / 28%);
-  --thanks-blob-b: rgb(28 159 208 / 22%);
-  --thanks-text-glow: rgb(28 159 208 / 30%);
-  --thanks-text-gradient: linear-gradient(110deg, #0b4f73, #0889b0, #1c9fd0);
   --detail-outline: rgb(40 45 52 / 46%);
 }
 
@@ -3106,26 +3096,21 @@ a.contact-value:hover,
   transform: translate(2px, -2px);
 }
 
-/* Extra height is the scroll that closes the lid. The laptop itself stays at the bottom. */
-.thanks-scroll {
-  height: calc(52vh + clamp(16rem, 42vw, 26rem));
-  margin-top: clamp(1.5rem, 4vw, 3rem);
-}
-
-/* A short window above the footer. The deck continues below the clip, behind the footer line. */
-.thanks-stage {
-  position: sticky;
-  bottom: 0;
-  height: clamp(16rem, 42vw, 26rem);
+/* ===== Closing laptop at the end of Contact ===== */
+/* A small open laptop seen slightly from above. It is an ordinary part of the page:
+   not clipped and not sticky. The script eases the lid shut as the page reaches its end. */
+.closing-laptop {
+  --closing-width: min(400px, 76vw);
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-  overflow: clip;
-  padding-bottom: clamp(2.6rem, 7vw, 4.5rem);
-  perspective: 900px;
-  perspective-origin: 50% 100%;
-  /* Open pose. Scroll script eases these toward a closed lid. */
-  --camera-angle: -28deg;
+  margin-top: clamp(3rem, 8vw, 5rem);
+  /* The deck is drawn in 3D below the lid's layout box, so reserve its height here.
+     That keeps the whole laptop visible and clear of the footer line. */
+  padding-bottom: calc(var(--closing-width) * 0.36);
+  perspective: 1400px;
+  perspective-origin: 50% 40%;
+  /* Open pose shared with the Home laptop rules. The script moves the lid, screen, and logo. */
+  --camera-angle: -20deg;
   --laptop-yaw: 0deg;
   --laptop-scale: 1;
   --lid-lift: 0px;
@@ -3134,75 +3119,47 @@ a.contact-value:hover,
   --keyboard-reveal: 1;
   --logo-opacity: 0;
   --logo-shimmer: -20%;
+  --metal-sheen: 60%;
 }
 
-.thanks-stage .laptop {
-  width: min(520px, 70vw);
+.closing-laptop .laptop {
+  width: var(--closing-width);
 }
 
-.thanks-screen {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* The screen stays dark in both themes, with a teal glow top-left and a blue glow bottom-right. */
+.closing-screen {
   display: grid;
-  place-items: center;
-  overflow: hidden;
-  background: var(--thanks-screen);
-  opacity: var(--screen-power, 1);
-  isolation: isolate;
+  place-content: center;
+  justify-items: center;
+  gap: 2.4cqi;
+  background:
+    radial-gradient(circle at 0% 0%, rgb(8 137 176 / 55%), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgb(36 92 210 / 48%), transparent 55%),
+    #07090c;
 }
 
-/* Two soft lights drift behind the sentence. Their size follows the screen. */
-.thanks-screen::before,
-.thanks-screen::after {
-  position: absolute;
-  width: 78cqi;
-  height: 78cqi;
-  border-radius: 50%;
-  content: "";
-  filter: blur(16cqi);
-  pointer-events: none;
-}
-
-.thanks-screen::before {
-  top: -18cqi;
-  left: -14cqi;
-  background: var(--thanks-blob-a);
-  animation: thanks-drift 9s ease-in-out infinite alternate;
-}
-
-.thanks-screen::after {
-  right: -16cqi;
-  bottom: -22cqi;
-  background: var(--thanks-blob-b);
-  animation: thanks-drift 11s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes thanks-drift {
-  to {
-    transform: translate3d(14cqi, 9cqi, 0);
-  }
-}
-
-/* Sized in cqi so the sentence stays one line at about two thirds of the screen. */
-.thanks-sentence {
-  position: relative;
-  z-index: 1;
+/* Sizes use cqi (the screen's width), so the text scales with the laptop. */
+.closing-mark {
   margin: 0;
-  background: var(--thanks-text-gradient);
-  background-clip: text;
-  color: transparent;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, "Segoe UI", sans-serif;
-  font-size: 6.15cqi;
-  font-weight: 500;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 22cqi;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  opacity: var(--screen-power);
+}
+
+.closing-caption {
+  margin: 0;
+  /* Letter spacing also follows the last letter; matching padding on the left keeps it centred. */
+  padding-left: 0.32em;
+  color: rgb(255 255 255 / 72%);
+  font-family: var(--font-label);
+  font-size: 3.2cqi;
+  letter-spacing: 0.32em;
   white-space: nowrap;
-  filter: drop-shadow(0 0 1.8cqi var(--thanks-text-glow));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  opacity: var(--screen-power);
 }
 
 @media (max-width: 760px) {
@@ -3230,15 +3187,6 @@ a.contact-value:hover,
     font-size: clamp(3.4rem, 16vw, 4.6rem);
   }
 
-  .thanks-scroll {
-    height: calc(40vh + 18rem);
-  }
-
-  .thanks-stage {
-    height: 18rem;
-    padding-bottom: 2.4rem;
-  }
-
   .contact-card {
     min-height: 13rem;
   }
@@ -3252,11 +3200,6 @@ a.contact-value:hover,
   .talk-link.gradient-text,
   .contact-link > span {
     transition: none;
-  }
-
-  .thanks-screen::before,
-  .thanks-screen::after {
-    animation: none;
   }
 }
 

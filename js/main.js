@@ -239,8 +239,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Lift page content once it enters the viewport. Content already on screen stays visible.
   const initializeScrollReveals = () => {
-    // Skip the closing laptop. A transform or blur on that section would break its sticky pin.
-    const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *:not(.thanks-scroll)"));
+    // Skip the closing laptop: its lid is already animated by scrolling, and a fade on it
+    // would flatten the 3D laptop while it plays.
+    const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *:not(.closing-laptop)"));
     document.querySelectorAll("[data-reveal], .page-content > * > [data-reveal]").forEach((item) => revealItems.add(item));
 
     const revealGroups = new Map();
@@ -1028,12 +1029,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeQuestTimeline();
 
-  // Close the contact laptop with the same 10% glide as the home intro.
-  const initializeThanksLaptop = () => {
-    const section = document.querySelector(".thanks-scroll");
+  // Close the small laptop at the end of Contact with the same 10% glide as the Home intro.
+  const initializeClosingLaptop = () => {
+    const section = document.querySelector(".closing-laptop");
     if (!section) return;
 
-    const stage = section.querySelector(".thanks-stage");
     let currentProgress = 0;
     let targetProgress = 0;
     let animationFrame = 0;
@@ -1041,55 +1041,64 @@ document.addEventListener("DOMContentLoaded", () => {
     const progressBetween = (progress, start, end) => clamp((progress - start) / (end - start));
     const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
 
-    // 0 while the laptop is still ahead, 1 at the very bottom of the page.
+    // 0 (open) until the laptop is in view, 1 (closed) at the very bottom of the page.
     const readTarget = () => {
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      // Use the position on the whole page, not offsetTop, so it stays right when Contact
-      // sits deep inside the long Home page instead of directly in <main>.
-      const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-      return clamp((window.scrollY - sectionTop) / Math.max(1, maxScroll - sectionTop));
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      // Measure on the whole page, so it also works deep inside the long Home page.
+      const bounds = section.getBoundingClientRect();
+      // Begin closing once the middle of the laptop reaches the bottom of the screen...
+      let start = bounds.top + window.scrollY + bounds.height / 2 - window.innerHeight;
+      // ...but always leave at least a quarter of a screen of scrolling for the lid to close.
+      start = Math.min(start, maxScroll - window.innerHeight * 0.25);
+      return clamp((window.scrollY - start) / Math.max(1, maxScroll - start));
     };
 
-    const renderThanksLaptop = () => {
+    // The lid swings from 8 degrees past upright down to flat. The screen dims and the
+    // keys darken near the end, and the MS logo on the outside appears as it shuts.
+    const renderClosingLaptop = () => {
       const opening = 1 - easeInOut(currentProgress);
-      stage.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
-      stage.style.setProperty("--screen-power", String(progressBetween(opening, 0.45, 0.82)));
-      stage.style.setProperty("--keyboard-reveal", String(progressBetween(opening, 0.22, 0.72)));
-      stage.style.setProperty("--logo-opacity", String(1 - progressBetween(opening, 0.18, 0.5)));
+      section.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
+      section.style.setProperty("--screen-power", String(progressBetween(opening, 0.45, 0.82)));
+      section.style.setProperty("--keyboard-reveal", String(progressBetween(opening, 0.22, 0.72)));
+      section.style.setProperty("--logo-opacity", String(1 - progressBetween(opening, 0.18, 0.5)));
+      // The shine drifts across the silver as the lid moves, like on the Home laptop.
+      section.style.setProperty("--metal-sheen", `${28 + 32 * opening}%`);
     };
 
-    const animateThanksLaptop = () => {
+    const animateClosingLaptop = () => {
       animationFrame = 0;
+      // Move 10% of the remaining distance each frame so the lid glides.
       currentProgress += (targetProgress - currentProgress) * (reducedMotion.matches ? 1 : 0.1);
       if (Math.abs(targetProgress - currentProgress) < 0.001) currentProgress = targetProgress;
-      renderThanksLaptop();
+      renderClosingLaptop();
       if (currentProgress !== targetProgress) {
-        animationFrame = window.requestAnimationFrame(animateThanksLaptop);
+        animationFrame = window.requestAnimationFrame(animateClosingLaptop);
       }
     };
 
-    const requestThanksUpdate = () => {
+    const requestClosingUpdate = () => {
       const nextProgress = readTarget();
       // Until Contact is reached the lid stays open, so higher sections skip this work.
       if (nextProgress === targetProgress && currentProgress === targetProgress) return;
       targetProgress = nextProgress;
-      if (!animationFrame) animationFrame = window.requestAnimationFrame(animateThanksLaptop);
+      if (!animationFrame) animationFrame = window.requestAnimationFrame(animateClosingLaptop);
     };
 
-    window.addEventListener("scroll", requestThanksUpdate, { passive: true });
-    window.addEventListener("resize", requestThanksUpdate);
+    window.addEventListener("scroll", requestClosingUpdate, { passive: true });
+    window.addEventListener("resize", requestClosingUpdate);
     if (typeof reducedMotion.addEventListener === "function") {
-      reducedMotion.addEventListener("change", requestThanksUpdate);
+      reducedMotion.addEventListener("change", requestClosingUpdate);
     } else {
-      reducedMotion.addListener(requestThanksUpdate);
+      reducedMotion.addListener(requestClosingUpdate);
     }
 
+    // Start from the current scroll position instead of animating from open.
     currentProgress = readTarget();
     targetProgress = currentProgress;
-    renderThanksLaptop();
+    renderClosingLaptop();
   };
 
-  initializeThanksLaptop();
+  initializeClosingLaptop();
 
 
   const laptopIntro = document.querySelector(".laptop-intro");
