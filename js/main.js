@@ -255,7 +255,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     revealGroups.forEach((siblings) => {
       siblings.forEach((item, index) => {
-        item.style.setProperty("--reveal-delay", `${index * 120}ms`);
+        // A small stagger between siblings; kept short so nothing waits long to appear.
+        item.style.setProperty("--reveal-delay", `${Math.min(index, 4) * 60}ms`);
       });
     });
 
@@ -288,7 +289,9 @@ document.addEventListener("DOMContentLoaded", () => {
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12 });
+    // Reveal as soon as any part of an element comes within 15% of a screen below the
+    // bottom edge, so the fade has already started by the time it scrolls into view.
+    }, { threshold: 0, rootMargin: "0px 0px 15% 0px" });
     revealItems.forEach((item) => observer.observe(item));
     reducedMotion.addEventListener?.("change", () => {
       if (reducedMotion.matches) {
@@ -1364,7 +1367,10 @@ document.addEventListener("DOMContentLoaded", () => {
     targetProgress = readScrollProgress();
     // Move 10% of the remaining distance each frame so scroll changes glide.
     currentProgress += (targetProgress - currentProgress) * (reducedMotion.matches ? 1 : 0.1);
-    if (Math.abs(targetProgress - currentProgress) < 0.0005) {
+    // Once the hero has reached the top of the window it is the real page, so finish the
+    // dive at once rather than letting the glide lag behind a fast scroll. The dive's easing
+    // is almost flat at its end, so this last step is not visible.
+    if (Math.abs(targetProgress - currentProgress) < 0.0005 || heroSection.getBoundingClientRect().top <= 0) {
       currentProgress = targetProgress;
     }
 

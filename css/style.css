@@ -855,7 +855,15 @@ a {
   position: relative;
   min-height: 100vh;
   min-height: 100svh;
-  background: var(--hero-background);
+  /* Overlap the intro's last screen. The laptop animation finishes one screen before the
+     intro section ends, and that screen used to be a dead stretch where the finished hero
+     sat pinned while nothing moved. Pulling the hero up by one screen makes it take over
+     exactly when the dive ends, so scrolling runs straight on into About. */
+  margin-top: -100vh;
+  margin-top: -100svh;
+  /* No background of its own: while the intro still runs, this section slides up over the
+     laptop stage and must stay see-through. Once it is the real page, its hero frame
+     (absolutely filling it) paints the hero background. */
 }
 
 .portfolio-hero-section.is-current .portfolio-hero-frame {
@@ -1529,12 +1537,13 @@ a {
 }
 
 /* ===== Part 2: shared scroll reveals, spotlights, navigation, and toasts ===== */
+/* Short and quick, so content is already visible as it scrolls in, never a dark empty screen. */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(16px);
   transition:
-    opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
