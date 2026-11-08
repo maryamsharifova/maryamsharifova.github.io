@@ -73,11 +73,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage = window.location.pathname.split("/").pop() || "index.html";
     // The long Home page holds every section, so its dots scroll there instead of opening pages.
     const isLongHome = Boolean(document.querySelector(".home-section"));
-    const sectionIds = ["home", "about", "projects", "resume", "contact"];
+    // The right-edge dots: every page, plus the Security lab, which is a section on Home and at
+    // the end of projects.html (it has no page of its own, so it is not in the nav pill).
+    // Each entry is [label, link on the separate pages, section id on Home].
+    const railLinks = [
+      ["Home", "index.html", "home"],
+      ["About", "about.html", "about"],
+      ["Projects", "projects.html", "projects"],
+      ["Security lab", "projects.html#lab", "lab"],
+      ["Resume", "resume.html", "resume"],
+      ["Contact", "contact.html", "contact"],
+    ];
 
-    pages.forEach(([label, href], index) => {
+    railLinks.forEach(([label, href, sectionId]) => {
       const link = document.createElement("a");
-      link.href = isLongHome ? `#${sectionIds[index]}` : href;
+      link.href = isLongHome ? `#${sectionId}` : href;
       link.setAttribute("aria-label", label);
       link.title = label;
       // On Home, the section observer marks the current dot while scrolling.
@@ -190,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const initializeHomeNavigation = () => {
     if (!document.querySelector(".home-section")) return;
 
-    const sections = ["home", "about", "projects", "resume", "contact"]
+    const sections = ["home", "about", "projects", "lab", "resume", "contact"]
       .map((id) => document.getElementById(id))
       .filter(Boolean);
     const findSection = (hash) => sections.find((section) => `#${section.id}` === hash);
@@ -1156,6 +1166,303 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   initializeClosingLaptop();
+
+  // ===== Security lab: "Phishing or legit?" =====
+  // One invented email at a time. The visitor answers Phishing or Legit, sees whether that was
+  // right and why, and gets a score and a rank after the last one. Runs on Home and projects.html.
+  const initializeSecurityLab = () => {
+    const game = document.querySelector(".lab-game");
+    if (!game) return;
+
+    // Each body is a list of paragraphs. A paragraph is plain text, or a link written as
+    // { link: "visible text", href: "where it really goes" }. Every name, address and link is
+    // made up; the links are never opened, only shown in the status bar.
+    const emails = [
+      {
+        answer: "phishing",
+        name: "IT Support",
+        address: "it-support@ada-edu-az.com",
+        subject: "Your password expires today",
+        body: [
+          "Dear student,",
+          "Your university account password expires today at 17:00. To keep access to your email and courses, confirm your current password now:",
+          { link: "Confirm my password", href: "https://ada-portal-reset.com/confirm" },
+          "Accounts that are not confirmed today will be locked.",
+          "IT Support Team",
+        ],
+        clue: "The sender is ada-edu-az.com instead of ada.edu.az, the link goes to ada-portal-reset.com, and the urgency plus a request for your password are classic phishing signs.",
+      },
+      {
+        answer: "legit",
+        name: "Library",
+        address: "library@ada.edu.az",
+        subject: "Reminder: book due on Friday",
+        body: [
+          "Hello,",
+          "“Computer Networks” is due back on Friday. If you need more time, you can renew it once from your account:",
+          { link: "View my library account", href: "https://library.ada.edu.az/account" },
+          "Have a good week,\nADA Library",
+        ],
+        clue: "It comes from the real ada.edu.az domain, the link stays on library.ada.edu.az, and there is no urgency and no request for a password.",
+      },
+      {
+        answer: "phishing",
+        name: "CloudBox",
+        address: "no-reply@cloudb0x.com",
+        subject: "Anar shared “Invoice_Nov.pdf” with you",
+        body: [
+          "Anar shared a file with you: Invoice_Nov.pdf (248 KB).",
+          "To view it, sign in with your email address and your email password.",
+          { link: "Open document", href: "https://cloudb0x-share.net/view?file=Invoice_Nov.pdf" },
+        ],
+        clue: "“cloudb0x” has a zero in place of the letter o, the link goes to cloudb0x-share.net, and a file-sharing service never needs your email password.",
+      },
+      {
+        answer: "legit",
+        name: "DevHub",
+        address: "noreply@devhub.com",
+        subject: "New sign-in from Chrome on Windows",
+        body: [
+          "We noticed a new sign-in to your DevHub account.",
+          "Browser: Chrome on Windows\nLocation: Baku, Azerbaijan\nTime: today at 09:14",
+          "If this was you, there is nothing to do. If it was not, change your password in your account settings.",
+        ],
+        clue: "It only informs you, has no link and asks for nothing, which is exactly how real security notices look.",
+      },
+      {
+        answer: "phishing",
+        name: "Rector's Office",
+        address: "rector.office@gmail.com",
+        subject: "Urgent and confidential",
+        body: [
+          "Are you available? I am in a meeting and cannot take calls.",
+          "I need you to buy five 100 AZN gift cards for a partner event today. Reply with the card codes and keep this between us until I announce it.",
+          "Rector",
+        ],
+        clue: "An official office writing from a free Gmail address, asking for gift cards and for secrecy, is CEO fraud.",
+      },
+      {
+        answer: "phishing",
+        name: "AzPost Delivery",
+        address: "info@azpost-parcel.info",
+        subject: "Your parcel is on hold",
+        body: [
+          "Your parcel AZ-48213 could not be delivered because a fee of 1.20 AZN has not been paid.",
+          "Pay within 24 hours or the parcel will be returned to the sender:",
+          { link: "Pay 1.20 AZN", href: "https://bit.ly/3azPst" },
+        ],
+        clue: "A tiny fee, a 24-hour deadline and a shortened bit.ly link that hides the real address are the usual parcel-scam pattern.",
+      },
+    ];
+
+    const dotList = game.querySelector(".lab-dots");
+    const count = game.querySelector(".lab-count");
+    const mailWindow = game.querySelector(".mail-window");
+    const avatar = game.querySelector(".mail-avatar");
+    const senderName = game.querySelector(".mail-name");
+    const senderAddress = game.querySelector(".mail-address");
+    const subject = game.querySelector(".mail-subject");
+    const body = game.querySelector(".mail-body");
+    const status = game.querySelector(".mail-status");
+    const answers = game.querySelector(".lab-answers");
+    const feedback = game.querySelector(".lab-feedback");
+    const feedbackTitle = game.querySelector(".lab-feedback-title");
+    const feedbackText = game.querySelector(".lab-feedback-text");
+    const nextButton = game.querySelector(".lab-next");
+    const result = game.querySelector(".lab-result");
+    const score = game.querySelector(".lab-score");
+    const rank = game.querySelector(".lab-rank");
+    const resultText = game.querySelector(".lab-result-text");
+    const restartButton = game.querySelector(".lab-restart");
+    const announcer = game.querySelector(".lab-announcer");
+
+    let current = 0;
+    // One entry per answered email: true for correct, false for wrong.
+    let results = [];
+
+    // One progress dot per email.
+    const dots = emails.map(() => {
+      const dot = document.createElement("li");
+      dotList.append(dot);
+      return dot;
+    });
+
+    // Green for right, red for wrong, teal for the email on screen, plain for the rest.
+    const updateProgress = () => {
+      dots.forEach((dot, index) => {
+        dot.className = "";
+        if (index < results.length) dot.classList.add(results[index] ? "is-correct" : "is-wrong");
+        else if (index === current) dot.classList.add("is-current");
+      });
+      count.textContent = `${Math.min(current + 1, emails.length)} / ${emails.length}`;
+    };
+
+    // The status bar at the bottom of the mail window, like a browser's link preview.
+    const statusHint = "Hover over or tap a link to see where it goes.";
+    const showDestination = (href) => {
+      status.replaceChildren();
+      const label = document.createElement("span");
+      label.className = "mail-status-label";
+      label.textContent = "Link goes to";
+      const url = document.createElement("code");
+      url.textContent = href;
+      status.append(label, " ", url);
+      status.classList.add("is-showing");
+    };
+    const resetStatus = () => {
+      // After the last answer `current` is one past the list, so stay on the last email.
+      const email = emails[Math.min(current, emails.length - 1)];
+      status.textContent = email.body.some((part) => typeof part === "object")
+        ? statusHint
+        : "This email has no links.";
+      status.classList.remove("is-showing");
+    };
+
+    // Build one link. It is a button, not a real link, so the made-up address can never be
+    // opened: hovering, keyboard focus and a tap (or click) only show where it would go.
+    const createMailLink = ({ link, href }) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "mail-link";
+      button.textContent = link;
+      button.setAttribute("aria-label", `${link} (shows where this link goes)`);
+      button.addEventListener("pointerenter", () => showDestination(href));
+      button.addEventListener("focus", () => showDestination(href));
+      button.addEventListener("click", () => showDestination(href));
+      // A mouse leaving clears the bar. After a tap the address stays until something else is
+      // tapped or focused, so it can be read on a phone.
+      button.addEventListener("pointerleave", (event) => {
+        if (event.pointerType === "mouse" && document.activeElement !== button) resetStatus();
+      });
+      button.addEventListener("blur", resetStatus);
+      return button;
+    };
+
+    // Put the current email in the mail window.
+    const showEmail = () => {
+      const email = emails[current];
+      // Initials of the sender's name, such as "IT" or "RO".
+      avatar.textContent = email.name.split(/\s+/).map((word) => word[0]).join("").slice(0, 2).toUpperCase();
+      senderName.textContent = email.name;
+      senderAddress.textContent = `<${email.address}>`;
+      subject.textContent = email.subject;
+      body.replaceChildren(...email.body.map((part) => {
+        const paragraph = document.createElement("p");
+        if (typeof part === "object") {
+          paragraph.className = "mail-link-line";
+          paragraph.append(createMailLink(part));
+        } else {
+          paragraph.textContent = part;
+        }
+        return paragraph;
+      }));
+      resetStatus();
+      updateProgress();
+    };
+
+    // Check an answer, colour its dot and explain the clues.
+    const answer = (choice) => {
+      const email = emails[current];
+      const correct = choice === email.answer;
+      results.push(correct);
+      updateProgress();
+
+      const verdict = email.answer === "phishing" ? "This one is phishing." : "This one is legit.";
+      feedback.classList.toggle("is-correct", correct);
+      feedback.classList.toggle("is-wrong", !correct);
+      feedbackTitle.textContent = correct ? "Correct." : "Not quite.";
+      feedbackText.textContent = `${verdict} ${email.clue}`;
+      const isLast = current === emails.length - 1;
+      nextButton.firstChild.textContent = isLast ? "See my score " : "Next email ";
+
+      answers.hidden = true;
+      feedback.hidden = false;
+      announcer.textContent = `${feedbackTitle.textContent} ${feedbackText.textContent}`;
+      // The answer buttons just disappeared, so keep keyboard focus on the way forward.
+      nextButton.focus({ preventScroll: true });
+    };
+
+    // After the last email: the score, a rank and an encouraging line.
+    const showResult = () => {
+      const correctCount = results.filter(Boolean).length;
+      score.textContent = `${correctCount} / ${emails.length}`;
+      if (correctCount === emails.length) {
+        rank.textContent = "SOC analyst";
+        resultText.textContent = "A perfect inbox: every fake caught and every real email trusted.";
+      } else if (correctCount >= 4) {
+        rank.textContent = "Security-aware";
+        resultText.textContent = "Nicely done. Keep checking the sender's domain and where each link really goes.";
+      } else {
+        rank.textContent = "Phish bait, try again";
+        resultText.textContent = "Every analyst starts here. Slow down, read the sender's address and check links before you click.";
+      }
+      result.classList.toggle("is-perfect", correctCount === emails.length);
+
+      mailWindow.hidden = true;
+      feedback.hidden = true;
+      result.hidden = false;
+      count.textContent = `${emails.length} / ${emails.length}`;
+      announcer.textContent = `Your score: ${score.textContent}. Rank: ${rank.textContent}. ${resultText.textContent}`;
+      score.focus({ preventScroll: true });
+    };
+
+    // On a phone the feedback sits below a tall card, so after "Next" the card's top can be
+    // above the screen. Scroll the game back into view only when it is out of place.
+    const bringGameIntoView = () => {
+      const top = game.getBoundingClientRect().top;
+      if (top < 0 || top > window.innerHeight * 0.5) {
+        game.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" });
+      }
+    };
+
+    const nextEmail = () => {
+      current += 1;
+      if (current >= emails.length) {
+        showResult();
+        bringGameIntoView();
+        return;
+      }
+      feedback.hidden = true;
+      answers.hidden = false;
+      showEmail();
+      bringGameIntoView();
+      // Start the new email from its subject, so screen readers read it from the top.
+      subject.focus({ preventScroll: true });
+    };
+
+    const restart = () => {
+      current = 0;
+      results = [];
+      result.hidden = true;
+      mailWindow.hidden = false;
+      answers.hidden = false;
+      announcer.textContent = "";
+      showEmail();
+      bringGameIntoView();
+      subject.focus({ preventScroll: true });
+    };
+
+    answers.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-answer]");
+      if (button) answer(button.dataset.answer);
+    });
+    nextButton.addEventListener("click", nextEmail);
+    restartButton.addEventListener("click", restart);
+
+    showEmail();
+
+    // On projects.html a link such as projects.html#lab (the right-edge dot on the other pages)
+    // can land too high, because the sideways project track only gets its full height once the
+    // script has run. Line the lab up again once the layout has settled.
+    if (window.location.hash === "#lab" && !document.querySelector(".home-section")) {
+      window.addEventListener("load", () => {
+        const fontsReady = document.fonts?.ready ?? Promise.resolve();
+        fontsReady.then(() => document.getElementById("lab")?.scrollIntoView({ block: "start" }));
+      }, { once: true });
+    }
+  };
+
+  initializeSecurityLab();
 
 
   const laptopIntro = document.querySelector(".laptop-intro");

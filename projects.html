@@ -216,6 +216,85 @@
           </div>
         </div>
       </section>
+
+      <!-- ===== Security lab: the "Phishing or legit?" game. The same markup is on index.html and
+           projects.html; main.js (initializeSecurityLab) fills in the emails and runs the game. ===== -->
+      <section id="lab" class="page-content lab-page" aria-labelledby="lab-title">
+        <!-- Section label, heading and the one-line instructions, like the other sections. -->
+        <div class="page-intro lab-intro">
+          <p class="eyebrow" data-reveal>03 · SECURITY LAB</p>
+          <h2 class="page-title" id="lab-title" data-reveal>Phishing or <span class="gradient-text">legit?</span></h2>
+          <p class="lab-lead" data-reveal>Can you spot the fake emails? Hover over or tap the links to see where they really go.</p>
+        </div>
+
+        <div class="lab-game" data-reveal>
+          <!-- Progress: one dot per email (green right, red wrong, teal current) and a counter. -->
+          <div class="lab-topline">
+            <p class="lab-kicker">TRAINING INBOX</p>
+            <div class="lab-progress">
+              <ol class="lab-dots" aria-hidden="true"></ol>
+              <span class="lab-count">1 / 6</span>
+            </div>
+          </div>
+
+          <!-- The email being judged, in a small mail window. Its contents come from main.js. -->
+          <article class="mail-window" aria-labelledby="mail-subject">
+            <div class="mail-titlebar" aria-hidden="true">
+              <span class="mail-dot mail-dot-red"></span>
+              <span class="mail-dot mail-dot-yellow"></span>
+              <span class="mail-dot mail-dot-green"></span>
+              <span class="mail-app">Inbox</span>
+            </div>
+            <header class="mail-head">
+              <span class="mail-avatar" aria-hidden="true"></span>
+              <div class="mail-meta">
+                <p class="mail-from"><span class="sr-only">From: </span><strong class="mail-name"></strong> <span class="mail-address"></span></p>
+                <h3 class="mail-subject" id="mail-subject" tabindex="-1"></h3>
+              </div>
+            </header>
+            <div class="mail-body"></div>
+            <!-- Like a browser's status bar: shows where a hovered, focused or tapped link really goes. -->
+            <p class="mail-status" aria-live="polite"></p>
+          </article>
+
+          <!-- The two answers. They hide while the feedback is showing. -->
+          <div class="lab-answers" role="group" aria-label="Is this email phishing or legit?">
+            <button class="lab-answer lab-answer-phishing" type="button" data-answer="phishing">
+              <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3.5 2.8 19.5h18.4L12 3.5Z"></path>
+                <path d="M12 10v4.2M12 17h.01"></path>
+              </svg>
+              Phishing
+            </button>
+            <button class="lab-answer lab-answer-legit" type="button" data-answer="legit">
+              <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="8.5"></circle>
+                <path d="m8.3 12.2 2.5 2.5 4.9-5.2"></path>
+              </svg>
+              Legit
+            </button>
+          </div>
+
+          <!-- Feedback after each answer: right or wrong, what it was, the clues, then the next email. -->
+          <div class="lab-feedback" hidden>
+            <p class="lab-feedback-title"></p>
+            <p class="lab-feedback-text"></p>
+            <button class="lab-next" type="button">Next email <span aria-hidden="true">→</span></button>
+          </div>
+
+          <!-- The final score, a rank and a way to play again. -->
+          <div class="lab-result" hidden>
+            <p class="lab-result-label">YOUR SCORE</p>
+            <p class="lab-score" tabindex="-1"></p>
+            <p class="lab-rank"></p>
+            <p class="lab-result-text"></p>
+            <button class="lab-restart" type="button">Play again <span aria-hidden="true">↻</span></button>
+          </div>
+
+          <!-- Screen readers hear each result here; the boxes above toggle hidden, which is not reliably announced. -->
+          <p class="sr-only lab-announcer" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </section>
     </main>
 
     <!-- Shared footer links to the portfolio repository. -->
