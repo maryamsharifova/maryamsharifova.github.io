@@ -1055,40 +1055,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const clamp = (value) => Math.min(1, Math.max(0, value));
     const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
 
-    // Build the unlabelled keys. Each number is a key's width in 28ths of a row, so every
-    // row adds up to 28: function row, number row, tab row, caps row, shift row, space row.
-    const keyboard = section.querySelector(".cl-keyboard");
-    const keyRows = [
-      Array(14).fill(2),
-      [3, ...Array(11).fill(2), 3],
-      [4, ...Array(10).fill(2), 4],
-      [5, ...Array(9).fill(2), 5],
-      [3, 3, 3, 10, 3, 2, 2, 2],
-    ];
-    keyRows.flat().forEach((width) => {
-      const key = document.createElement("span");
-      key.style.gridColumn = `span ${width}`;
-      keyboard.append(key);
-    });
+    // Draw the lid at most 370px wide (70% of the window on phones). With the base widening a
+    // little toward the viewer, the whole laptop stays around 420px on desktop.
+    const sizeClosingLaptop = () => {
+      const designWidth = Number.parseFloat(getComputedStyle(section).getPropertyValue("--closing-design-width")) || 900;
+      section.style.setProperty("--closing-scale", String(Math.min(370, window.innerWidth * 0.7) / designWidth));
+    };
+    sizeClosingLaptop();
 
-    // 0 (open) while the laptop comes into view; 1 (closed) once it has moved about half a
-    // screen further up. If the page ends sooner, it is fully closed at the very bottom.
+    // 0 (open) until the whole laptop is on screen, 1 (closed) at the very bottom of the page.
     const readTarget = () => {
       const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       // Measure on the whole page, so it also works deep inside the long Home page.
       const bounds = section.getBoundingClientRect();
-      // Begin once the bottom of the laptop, base included, reaches the bottom of the screen.
-      const start = Math.min(bounds.bottom + window.scrollY - window.innerHeight, maxScroll - 1);
-      const end = Math.min(start + window.innerHeight * 0.5, maxScroll);
-      return clamp((window.scrollY - start) / Math.max(1, end - start));
+      // Begin once the bottom of the laptop, base included, reaches the bottom of the screen,
+      // but always leave at least a quarter of a screen of scrolling for the lid to close.
+      const start = Math.min(bounds.bottom + window.scrollY - window.innerHeight, maxScroll - window.innerHeight * 0.25);
+      return clamp((window.scrollY - start) / Math.max(1, maxScroll - start));
     };
 
-    // The lid swings from 10 degrees past upright down onto the base, and the shine on its
-    // back slides a little as it moves.
+    // The lid swings from 10 degrees past upright down onto the base, and the shine on the
+    // shared silver slides a little as it moves, like on the intro laptop.
     const renderClosingLaptop = () => {
       const opening = 1 - easeInOut(currentProgress);
-      section.style.setProperty("--cl-lid-angle", `${-90 + 100 * opening}deg`);
-      section.style.setProperty("--cl-sheen", `${70 - 40 * opening}%`);
+      section.style.setProperty("--lid-angle", `${-90 + 100 * opening}deg`);
+      section.style.setProperty("--metal-sheen", `${70 - 40 * opening}%`);
     };
 
     const animateClosingLaptop = () => {
@@ -1111,7 +1102,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.addEventListener("scroll", requestClosingUpdate, { passive: true });
-    window.addEventListener("resize", requestClosingUpdate);
+    // A new window width changes the laptop's size, so rescale it before re-reading the scroll.
+    window.addEventListener("resize", () => {
+      sizeClosingLaptop();
+      requestClosingUpdate();
+    });
     if (typeof reducedMotion.addEventListener === "function") {
       reducedMotion.addEventListener("change", requestClosingUpdate);
     } else {

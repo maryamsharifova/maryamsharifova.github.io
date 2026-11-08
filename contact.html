@@ -56,30 +56,118 @@
         </a>
       </section>
 
-      <!-- Closing laptop: a small laptop drawn in 3D with CSS. It sits in the normal page flow,
-           and scrolling past it closes the lid. Its keys are added by main.js. -->
+      <!-- Closing laptop: the same laptop parts and classes as the Home intro laptop, built at the
+           intro's size and scaled down as one piece. It sits in the normal page flow, and the lid
+           closes as the page reaches its end. -->
       <section class="closing-laptop" aria-label="Thanks for visiting">
-        <div class="cl-laptop">
-          <!-- Base: the flat top with keyboard and trackpad; the walls and hinge give it thickness. -->
-          <div class="cl-base" aria-hidden="true">
-            <span class="cl-hinge"></span>
-            <div class="cl-keyboard"></div>
-            <span class="cl-trackpad"></span>
-            <span class="cl-wall cl-wall-front"><span class="cl-thumb"></span></span>
-            <span class="cl-wall cl-wall-left"></span>
-            <span class="cl-wall cl-wall-right"></span>
-          </div>
-          <!-- Lid: bezel and screen on the front, grained silver with the MS logo on the back. -->
-          <div class="cl-lid">
-            <div class="cl-lid-front">
-              <div class="cl-screen">
-                <p class="cl-mark">MS</p>
-                <p class="cl-caption">THANKS FOR VISITING</p>
+        <div class="closing-laptop-scaler">
+          <div class="laptop">
+            <div class="lid">
+              <div class="lid-face screen-face">
+                <div class="screen-display">
+                  <span class="screen-notch" aria-hidden="true"></span>
+                  <!-- The thank-you screen: dark in both themes, with soft teal and blue glows. -->
+                  <div class="closing-screen">
+                    <p class="closing-mark">MS</p>
+                    <p class="closing-caption">THANKS FOR VISITING</p>
+                  </div>
+                </div>
               </div>
-              <span class="cl-notch" aria-hidden="true"></span>
+              <div class="lid-face back-face">
+                <span class="lid-logo" aria-hidden="true">MS</span>
+              </div>
             </div>
-            <div class="cl-lid-back" aria-hidden="true">
-              <span class="cl-logo">MS</span>
+            <div class="deck">
+              <div class="keyboard" aria-hidden="true">
+                <div class="key-row key-row-function">
+                  <span class="key key-escape">esc</span>
+                  <span class="key">F1</span>
+                  <span class="key">F2</span>
+                  <span class="key">F3</span>
+                  <span class="key">F4</span>
+                  <span class="key">F5</span>
+                  <span class="key">F6</span>
+                  <span class="key">F7</span>
+                  <span class="key">F8</span>
+                  <span class="key">F9</span>
+                  <span class="key">F10</span>
+                  <span class="key">F11</span>
+                  <span class="key">F12</span>
+                </div>
+                <div class="key-row">
+                  <span class="key">~</span>
+                  <span class="key">1</span>
+                  <span class="key">2</span>
+                  <span class="key">3</span>
+                  <span class="key">4</span>
+                  <span class="key">5</span>
+                  <span class="key">6</span>
+                  <span class="key">7</span>
+                  <span class="key">8</span>
+                  <span class="key">9</span>
+                  <span class="key">0</span>
+                  <span class="key">-</span>
+                  <span class="key key-wide">delete</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-wide">tab</span>
+                  <span class="key">Q</span>
+                  <span class="key">W</span>
+                  <span class="key">E</span>
+                  <span class="key">R</span>
+                  <span class="key">T</span>
+                  <span class="key">Y</span>
+                  <span class="key">U</span>
+                  <span class="key">I</span>
+                  <span class="key">O</span>
+                  <span class="key">P</span>
+                  <span class="key">[</span>
+                  <span class="key key-enter">return</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-shift">caps</span>
+                  <span class="key">A</span>
+                  <span class="key">S</span>
+                  <span class="key">D</span>
+                  <span class="key">F</span>
+                  <span class="key">G</span>
+                  <span class="key">H</span>
+                  <span class="key">J</span>
+                  <span class="key">K</span>
+                  <span class="key">L</span>
+                  <span class="key">;</span>
+                  <span class="key key-shift">shift</span>
+                </div>
+                <div class="key-row">
+                  <span class="key key-shift">shift</span>
+                  <span class="key">Z</span>
+                  <span class="key">X</span>
+                  <span class="key">C</span>
+                  <span class="key">V</span>
+                  <span class="key">B</span>
+                  <span class="key">N</span>
+                  <span class="key">M</span>
+                  <span class="key">,</span>
+                  <span class="key">.</span>
+                  <span class="key key-shift">shift</span>
+                </div>
+                <div class="key-row key-row-bottom">
+                  <span class="key key-modifier">fn</span>
+                  <span class="key key-modifier">ctrl</span>
+                  <span class="key key-modifier">opt</span>
+                  <span class="key key-space"></span>
+                  <span class="key key-modifier">opt</span>
+                  <span class="key key-modifier">cmd</span>
+                  <span class="key key-arrow">←</span>
+                  <span class="key key-arrow">↓</span>
+                  <span class="key key-arrow">↑</span>
+                  <span class="key key-arrow">→</span>
+                </div>
+              </div>
+              <div class="trackpad" aria-hidden="true"></div>
+              <span class="deck-wall deck-wall-front"></span>
+              <span class="deck-wall deck-wall-left"></span>
+              <span class="deck-wall deck-wall-right"></span>
             </div>
           </div>
         </div>

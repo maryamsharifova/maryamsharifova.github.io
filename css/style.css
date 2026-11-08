@@ -3177,202 +3177,75 @@ a.contact-value:hover,
 }
 
 /* ===== Closing laptop at the end of Contact ===== */
-/* A small laptop on a desk, seen from the front and about 20 degrees above, drawn in 3D.
-   Every size is a share of --cw (the laptop's width), so the whole thing scales together.
-   It has its own parts and colours; it does not use the Home intro laptop's styles. */
+/* The same laptop as the Home intro: it uses the intro's classes (.laptop, .lid, .screen-face,
+   .screen-display, .screen-notch, .back-face, .lid-logo, .deck, .keyboard, .key, .trackpad,
+   .deck-wall), so any change to those applies to both laptops. Only its pose, its size, and
+   its thank-you screen are set here.
+
+   It is built at the intro's full size (--closing-design-width) and the wrapper scales the
+   whole 3D object down evenly, depth included. That keeps every detail (corner radii, key gaps,
+   wall thickness) in the same proportions as the big laptop. main.js sets --closing-scale so
+   the lid is at most 370px wide (70% of the window on phones); the whole laptop, with its
+   base widening toward the viewer, is then about 420px on desktop. */
 .closing-laptop {
-  /* At most 420px on desktop, about 78% of the screen width on phones. */
-  --cw: min(420px, 78vw);
-  /* Base thickness and corner radius. */
-  --cl-wall: calc(var(--cw) * 0.032);
-  --cl-radius: calc(var(--cw) * 0.03);
-  /* Open pose; the script eases the lid shut and shifts its shine. */
-  --cl-lid-angle: 10deg;
-  --cl-sheen: 30%;
-  display: flex;
-  justify-content: center;
-  margin-top: clamp(3.5rem, 9vw, 6rem);
-  /* The base is drawn below the lid's layout box, coming toward the viewer, so its depth is
-     reserved here. That keeps the whole base, front edge included, on the page. */
-  padding-bottom: calc(var(--cw) * 0.3 + var(--cl-wall) * 2 + 1rem);
-  /* Scroll room so the lid can always finish closing. */
-  margin-bottom: max(5rem, 16vh);
-  /* A gentle perspective: the base narrows toward the back like a real laptop on a desk. */
-  perspective: 1100px;
-  perspective-origin: 50% 30%;
-}
-
-/* The laptop's layout box is the lid. Tilting it back 20 degrees shows the base from above. */
-.cl-laptop {
+  --closing-design-width: 900px;
+  --closing-scale: 0.46;
   position: relative;
-  width: var(--cw);
-  aspect-ratio: 1 / 0.62;
-  transform: rotateX(-20deg);
-  transform-style: preserve-3d;
+  /* Room for the drawn laptop: the lid plus the base below it, seen slightly from above. */
+  height: calc(var(--closing-design-width) * var(--closing-scale) * 1.02);
+  margin-top: clamp(3.5rem, 9vw, 6rem);
+  /* Scroll room below, so the lid can always finish closing before the page ends. */
+  margin-bottom: max(5rem, 16vh);
+  /* A gentle perspective for the small laptop, seen from in front and a little above. */
+  perspective: 1800px;
+  perspective-origin: 50% 25%;
+  /* Pose for the shared laptop parts. The script eases --lid-angle shut and moves the shine. */
+  --camera-angle: -20deg;
+  --laptop-yaw: 0deg;
+  --laptop-scale: 1;
+  --lid-lift: 0px;
+  --lid-angle: 10deg;
+  --keyboard-reveal: 1;
+  --logo-opacity: 1;
+  --logo-shimmer: 30%;
+  --metal-sheen: 30%;
 }
 
-/* ----- Base ----- */
-/* Hangs from the hinge line (the lid's bottom edge) and is turned flat toward the viewer.
-   Smooth darker aluminium, lighter at the back, with a thin light rim along its edges. */
-.cl-base {
+/* Holds the full-size laptop, centred, and scales it as one piece from its top edge. */
+.closing-laptop-scaler {
   position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  height: calc(var(--cw) * 0.6);
-  border-radius: var(--cl-radius);
-  /* Smooth gradient with the same barely visible grain as the lid. */
-  background: var(--metal-grain), linear-gradient(180deg, #8d8f97, #6c6e75);
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 18%),
-    inset 0 1px 0 rgb(255 255 255 / 30%);
-  transform: rotateX(90deg);
-  transform-origin: 50% 0%;
-  transform-style: preserve-3d;
-}
-
-/* Dark hinge strip along the back, just in front of the lid. */
-.cl-hinge {
-  position: absolute;
-  top: 0;
-  left: 14%;
-  right: 14%;
-  height: 3.5%;
-  border-radius: 0 0 calc(var(--cw) * 0.008) calc(var(--cw) * 0.008);
-  background: linear-gradient(180deg, #16171b, #2a2b30);
-}
-
-/* Keyboard well with very dark, unlabelled keys (added by main.js), and no glow. */
-.cl-keyboard {
-  position: absolute;
-  top: 10%;
-  left: 8%;
-  right: 8%;
-  height: 44%;
-  display: grid;
-  /* Rows are measured in 28ths, so wide keys (tab, caps, shift, space) can span more. */
-  grid-template-columns: repeat(28, 1fr);
-  grid-auto-rows: 1fr;
-  gap: calc(var(--cw) * 0.0045);
-  padding: calc(var(--cw) * 0.012);
-  border-radius: calc(var(--cw) * 0.014);
-  background: #2a2b31;
-  box-shadow: inset 0 1px 2px rgb(0 0 0 / 45%);
-}
-
-.cl-keyboard > span {
-  border-radius: calc(var(--cw) * 0.004);
-  background: #111114;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
-}
-
-/* Trackpad: a touch lighter than the base around it, with a subtle border. */
-.cl-trackpad {
-  position: absolute;
-  top: 61%;
-  left: 31%;
-  width: 38%;
-  height: 30%;
-  border: 1px solid rgb(30 31 36 / 28%);
-  border-radius: calc(var(--cw) * 0.014);
-  background: linear-gradient(180deg, #858790, #767880);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 16%);
-}
-
-/* Thickness: walls hang straight down from the front and side edges of the base,
-   in slightly lighter metal than its top. */
-.cl-wall {
-  position: absolute;
-  display: block;
-}
-
-/* Full width with rounded ends, so it meets the side walls cleanly at the front corners. */
-.cl-wall-front {
-  top: 100%;
-  left: 0;
-  right: 0;
-  height: var(--cl-wall);
-  border-radius: 0 0 var(--cl-radius) var(--cl-radius);
-  background: linear-gradient(180deg, #a1a3aa, #7c7e85);
-  transform: rotateX(-90deg);
-  transform-origin: 50% 0%;
-}
-
-/* Small thumb notch in the middle of the front edge, for opening the lid. */
-.cl-thumb {
-  position: absolute;
-  top: 0;
+  top: calc(var(--closing-design-width) * var(--closing-scale) * 0.04);
   left: 50%;
-  width: 11%;
-  height: 55%;
-  border-radius: 0 0 999px 999px;
-  background: linear-gradient(180deg, #5d5f66, #74767d);
-  transform: translateX(-50%);
-}
-
-.cl-wall-left,
-.cl-wall-right {
-  /* Run to the front edge so they join the front wall instead of stopping short. */
-  top: calc(var(--cl-radius) * 0.6);
-  bottom: 0;
-  width: var(--cl-wall);
-  background: linear-gradient(180deg, #8e9097, #7c7e85);
-}
-
-.cl-wall-left {
-  left: 0;
-  transform: rotateY(90deg);
-  transform-origin: 0% 50%;
-}
-
-.cl-wall-right {
-  right: 0;
-  transform: rotateY(-90deg);
-  transform-origin: 100% 50%;
-}
-
-/* ----- Lid ----- */
-/* Turns on its bottom edge: about 10 degrees past upright when open, flat on the base when shut. */
-.cl-lid {
-  position: absolute;
-  inset: 0;
-  transform: rotateX(var(--cl-lid-angle));
-  transform-origin: 50% 100%;
+  width: var(--closing-design-width);
+  margin-left: calc(var(--closing-design-width) / -2);
+  transform: scale3d(var(--closing-scale), var(--closing-scale), var(--closing-scale));
+  transform-origin: 50% 0;
   transform-style: preserve-3d;
 }
 
-/* Front: a thin near-black bezel with rounded corners. */
-.cl-lid-front {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--cl-radius);
-  background: #0a0a0d;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
-  backface-visibility: hidden;
-  transform: translateZ(1px);
+/* The intro laptop's width follows the window; this one keeps its full design width. */
+.closing-laptop .laptop {
+  width: var(--closing-design-width);
 }
 
-/* Screen: #141417 with two equally soft glows, teal top-left and blue bottom-right.
-   A very thin dark-grey rim separates it from the bezel. */
-.cl-screen {
+/* The thank-you screen covers the glass: dark in both themes, with soft teal (top-left) and
+   blue (bottom-right) glows. Text is sized in cqi, the glass's own width, so it fits. */
+.closing-screen {
   position: absolute;
-  inset: 4.6% 3.4% 5% 3.4%;
+  z-index: 2;
+  inset: 0;
   display: grid;
   place-content: center;
   justify-items: center;
   gap: 3cqi;
-  overflow: hidden;
-  border-radius: calc(var(--cw) * 0.008);
+  border-radius: inherit;
   background:
     radial-gradient(ellipse at 18% 20%, rgb(30 170 185 / 24%), transparent 58%),
     radial-gradient(ellipse at 84% 82%, rgb(58 105 230 / 24%), transparent 58%),
     #141417;
-  box-shadow: 0 0 0 1px #2b2c32;
-  /* Text below is sized against the screen's own width. */
-  container-type: inline-size;
 }
 
-.cl-mark {
+.closing-mark {
   margin: 0;
   color: #ffffff;
   font-family: var(--font-heading);
@@ -3382,7 +3255,7 @@ a.contact-value:hover,
   line-height: 0.9;
 }
 
-.cl-caption {
+.closing-caption {
   margin: 0;
   /* Letter spacing also follows the last letter; matching left padding keeps it centred. */
   padding-left: 0.3em;
@@ -3391,55 +3264,6 @@ a.contact-value:hover,
   font-size: 3.3cqi;
   letter-spacing: 0.3em;
   white-space: nowrap;
-}
-
-/* The notch belongs to the bezel: a small black tab hanging into the top of the screen. */
-.cl-notch {
-  position: absolute;
-  top: calc(4.6% - 1px);
-  left: 50%;
-  width: 11%;
-  height: 3.6%;
-  border-radius: 0 0 calc(var(--cw) * 0.008) calc(var(--cw) * 0.008);
-  background: #0a0a0d;
-  transform: translateX(-50%);
-}
-
-/* Back: a smooth darker silver gradient with the shared fine grain and a sheen that shifts as the lid closes. */
-.cl-lid-back {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--cl-radius);
-  background:
-    linear-gradient(
-      115deg,
-      transparent calc(var(--cl-sheen) - 22%),
-      rgb(255 255 255 / 16%) var(--cl-sheen),
-      transparent calc(var(--cl-sheen) + 22%)
-    ),
-    var(--metal-grain),
-    linear-gradient(160deg, #9a9ea5, #7d8188);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 20%);
-  backface-visibility: hidden;
-  /* Turned to face outward and set 3px behind the screen, which is the lid's thickness. */
-  transform: rotateY(180deg) translateZ(3px);
-}
-
-/* Small shiny MS logo. Turned half a circle so it reads the right way up once the lid is shut. */
-.cl-logo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  /* Bright silver with a white glint, so it stands out from the darker lid. */
-  background: linear-gradient(105deg, #c4cad0 15%, #f4f6f8 45%, #ffffff 52%, #b9c0c6 75%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  font-family: var(--font-heading);
-  font-size: calc(var(--cw) * 0.075);
-  font-weight: 700;
-  letter-spacing: -0.06em;
-  transform: translate(-50%, -50%) rotate(180deg);
 }
 
 @media (max-width: 760px) {
