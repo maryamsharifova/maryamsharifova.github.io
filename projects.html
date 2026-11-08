@@ -57,7 +57,38 @@
             </ul>
             <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
           </div>
-          <figure class="project-visual project-screenshot">
+          <!-- Connections map: the local Llama model in the middle, linked to the four places it
+               answers from. Dashes flow from the centre outward like messages being sent. -->
+          <figure class="project-visual visual-network">
+            <svg class="network-map" viewBox="0 0 520 300" role="img" aria-label="Local Llama model connected to Telegram, WhatsApp, MCP tools and a website">
+              <title>Local Llama model connected to Telegram, WhatsApp, MCP tools and a website</title>
+              <!-- Lines first, so the boxes sit on top of their ends. Each path runs from the centre out. -->
+              <path class="network-link" d="M260 150 L92 54"/>
+              <path class="network-link" d="M260 150 L428 54"/>
+              <path class="network-link" d="M260 150 L92 246"/>
+              <path class="network-link" d="M260 150 L428 246"/>
+              <g class="network-node">
+                <rect x="36" y="34" width="112" height="40" rx="10"/>
+                <text x="92" y="54">Telegram</text>
+              </g>
+              <g class="network-node">
+                <rect x="372" y="34" width="112" height="40" rx="10"/>
+                <text x="428" y="54">WhatsApp</text>
+              </g>
+              <g class="network-node">
+                <rect x="36" y="226" width="112" height="40" rx="10"/>
+                <text x="92" y="246">MCP tools</text>
+              </g>
+              <g class="network-node">
+                <rect x="372" y="226" width="112" height="40" rx="10"/>
+                <text x="428" y="246">Website</text>
+              </g>
+              <g class="network-hub">
+                <rect x="186" y="116" width="148" height="68" rx="14"/>
+                <text class="network-hub-title" x="260" y="143">Llama</text>
+                <text class="network-hub-note" x="260" y="166">LM Studio · local</text>
+              </g>
+            </svg>
           </figure>
         </article>
 

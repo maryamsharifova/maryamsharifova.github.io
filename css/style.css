@@ -2360,11 +2360,81 @@ a {
   font-size: 0.62rem;
 }
 
-/* ===== Chatbot screenshot panel ===== */
-.project-screenshot {
-  display: grid;
-  place-items: center;
-  background: #101214;
+/* ===== Local LLM connections map ===== */
+/* A calm, light panel with a faint teal glow in light mode; dark mode gets a deeper panel
+   through the same theme variables. The SVG scales as one vector drawing, so it stays sharp
+   and centred at every size. */
+.visual-network {
+  /* Space kept clear around the drawing on every side. */
+  --network-gap: clamp(0.8rem, 2.5vw, 1.6rem);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgb(8 137 176 / 10%), transparent 65%),
+    var(--color-page);
+}
+
+/* The drawing is given the whole area minus the gap, in both directions. Its viewBox then
+   scales it down to fit the smaller side and centres it, whatever shape the area has
+   (tall on desktop, short and wide on tablets, the project window). */
+.network-map {
+  position: absolute;
+  top: var(--network-gap);
+  left: var(--network-gap);
+  width: calc(100% - var(--network-gap) * 2);
+  height: calc(100% - var(--network-gap) * 2);
+}
+
+/* Thin dashed links in the site teal. The dashes move along each path, which runs from the
+   centre outward, so they look like messages travelling out to each app. */
+.network-link {
+  fill: none;
+  stroke: var(--color-teal);
+  stroke-width: 1.6;
+  stroke-dasharray: 5 7;
+  stroke-linecap: round;
+  opacity: 0.75;
+  animation: network-flow 1.8s linear infinite;
+}
+
+@keyframes network-flow {
+  to { stroke-dashoffset: -24; }
+}
+
+/* The four apps: small boxes in the card surface colour with a thin border. */
+.network-node rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.2;
+}
+
+.network-node text,
+.network-hub text {
+  dominant-baseline: central;
+  text-anchor: middle;
+  font-family: var(--font-body);
+}
+
+.network-node text {
+  fill: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* The model in the middle: a teal box with white text. */
+.network-hub rect {
+  fill: var(--color-teal);
+  filter: drop-shadow(0 6px 14px rgb(8 137 176 / 28%));
+}
+
+.network-hub-title {
+  fill: #ffffff;
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.network-hub-note {
+  fill: rgb(255 255 255 / 82%);
+  font-family: var(--font-label);
+  font-size: 11px;
 }
 
 /* ===== Plant-health scan panel ===== */
@@ -2656,7 +2726,8 @@ a {
   .plant-scan-line,
   .project-card.is-revealed .code-block,
   .project-card.is-revealed .certificate-chip,
-  .robot-track-dash {
+  .robot-track-dash,
+  .network-link {
     animation: none;
   }
 
@@ -3570,19 +3641,6 @@ a.contact-value:hover,
 
 .project-visual .project-photo {
   display: block;
-}
-
-.project-screenshot::before {
-  position: absolute;
-  inset: 12%;
-  border: 1px solid rgb(111 208 234 / 22%);
-  border-radius: 0.6rem;
-  background:
-    linear-gradient(90deg, transparent 0 15%, rgb(111 208 234 / 12%) 15% 16%, transparent 16%),
-    linear-gradient(180deg, rgb(255 255 255 / 5%) 0 14%, transparent 14% 24%, rgb(111 208 234 / 12%) 24% 26%, transparent 26% 57%, rgb(255 255 255 / 6%) 57% 59%, transparent 59%),
-    linear-gradient(135deg, #171d21, #101214);
-  box-shadow: inset 0 0 2rem rgb(8 137 176 / 12%);
-  content: "";
 }
 
 .projects-page:not(.has-horizontal-scroll) .projects-pin {
