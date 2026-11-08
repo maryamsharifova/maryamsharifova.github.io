@@ -1676,6 +1676,8 @@ document.addEventListener("DOMContentLoaded", () => {
     heroFrame.style.removeProperty("height");
     heroFrame.style.removeProperty("border-radius");
     heroFrame.style.removeProperty("opacity");
+    // Nothing from the intro is left on the real page: no fit scale and no notch fade value.
+    heroFrame.style.removeProperty("--notch-opacity");
     heroCanvas.style.removeProperty("--hero-fit-scale");
     // Reveal the nav after a short scroll while leaving room at the page bottom.
     floatingNav.classList.toggle(
@@ -1688,7 +1690,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const updateHeroScene = (progress, diveProgress) => {
     const heroSectionTop = heroSection.getBoundingClientRect().top + window.scrollY;
 
-    if (window.scrollY >= heroSectionTop) {
+    // The hero's top can fall between two pixels (the intro is 420svh tall), while the scroll
+    // position is rounded to whole pixels. Allow one pixel, so landing exactly on the hero
+    // (with the Home link, say) always gives the real page and never the intro's last frame.
+    if (window.scrollY >= heroSectionTop - 1) {
       showHeroInPage();
       return;
     }
@@ -1838,7 +1843,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Once the hero has reached the top of the window it is the real page, so finish the
     // dive at once rather than letting the glide lag behind a fast scroll. The dive's easing
     // is almost flat at its end, so this last step is not visible.
-    if (Math.abs(targetProgress - currentProgress) < 0.0005 || heroSection.getBoundingClientRect().top <= 0) {
+    if (Math.abs(targetProgress - currentProgress) < 0.0005 || heroSection.getBoundingClientRect().top <= 1) {
       currentProgress = targetProgress;
     }
 

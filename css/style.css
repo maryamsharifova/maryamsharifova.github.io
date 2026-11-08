@@ -310,6 +310,15 @@ a {
   padding-block: var(--home-section-space);
 }
 
+/* About follows the full-screen hero, not another section. Between two sections the gap from
+   the last line of one to the label of the next is two section spaces (bottom padding plus
+   top padding). The hero's last line is its corner labels, --hero-footer-bottom above its
+   edge, so About's top padding is two spaces minus that distance: the same gap as everywhere
+   else, on desktop and on phones in both orientations. */
+.home-intro-page .portfolio-hero-section + .home-section {
+  padding-top: calc(var(--home-section-space) * 2 - var(--hero-footer-bottom));
+}
+
 /* Projects is a full-screen pinned stage whose panel already has a matching top gap.
    Extra padding outside it would only add empty scroll before and after the pin. */
 .home-intro-page .projects-page.home-section {
@@ -1001,6 +1010,24 @@ a {
   isolation: isolate;
 }
 
+/* Soft fade at the bottom of the hero, so it melts into the page instead of ending on a line.
+   The grid, glows (.hero-atmosphere, z-index -1) and network dots (.hero-particles, z-index 0)
+   would otherwise stop at a hard edge right above About. This layer comes after them at the
+   same level as the dots, and below the text, photo and buttons (z-index 1), so only the
+   background fades. It ends in the hero's own background colour, which is the page colour in
+   both themes, so nothing marks where the hero stops. The fade covers the last quarter. */
+.portfolio-hero::after {
+  position: absolute;
+  z-index: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 26%;
+  background: linear-gradient(to bottom, transparent, var(--hero-background) 92%);
+  content: "";
+  pointer-events: none;
+}
+
 .portfolio-hero-frame.is-fullscreen {
   position: fixed;
   inset: 0;
@@ -1331,11 +1358,17 @@ a {
   transform: translateX(-50%);
 }
 
+/* How far the corner labels sit above the hero's bottom edge. About's top spacing on Home is
+   worked out from it (see .home-intro-page), so the two always agree. */
+:root {
+  --hero-footer-bottom: 1.5rem;
+}
+
 .hero-footer {
   position: absolute;
   /* Inside the same 150svh-wide middle as the top bar. */
   right: max(4vw, (100% - 150svh) / 2);
-  bottom: 1.5rem;
+  bottom: var(--hero-footer-bottom);
   left: max(4vw, (100% - 150svh) / 2);
   display: flex;
   justify-content: space-between;
@@ -1482,9 +1515,12 @@ a {
     font-size: 0.82rem;
   }
 
+  :root {
+    --hero-footer-bottom: 0.7rem;
+  }
+
   .hero-footer {
     right: 1.2rem;
-    bottom: 0.7rem;
     left: 1.2rem;
     font-size: 0.56rem;
   }
@@ -1606,9 +1642,12 @@ a {
     font-size: 0.78rem;
   }
 
+  :root {
+    --hero-footer-bottom: 0.5rem;
+  }
+
   .hero-footer {
     right: max(1.5rem, env(safe-area-inset-right, 0px), (100% - 150svh) / 2);
-    bottom: 0.5rem;
     left: max(1.5rem, env(safe-area-inset-left, 0px), (100% - 150svh) / 2);
     font-size: 0.55rem;
   }
@@ -2016,9 +2055,15 @@ a {
 }
 
 .hero-topbar,
-.hero-main,
-.hero-footer {
+.hero-main {
   position: relative;
+  z-index: 1;
+}
+
+/* The corner labels keep their absolute position (see .hero-footer above), so they always sit
+   at the hero's bottom edge, at the same distance (--hero-footer-bottom) on every screen.
+   Before, a shared position: relative here moved them up to wherever the content ended. */
+.hero-footer {
   z-index: 1;
 }
 
