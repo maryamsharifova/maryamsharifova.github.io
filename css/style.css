@@ -838,16 +838,49 @@ a {
   transition: none;
 }
 
+/* Camera notch: an eighth of the screen's width, short, black in both themes, with rounded
+   bottom corners and a tiny camera lens in the middle. Sizes are percentages of the screen
+   it sits on, so the same rule fits the big intro laptop, the closing laptop, and phones. */
 .screen-notch {
   position: absolute;
   z-index: 4;
   top: 0;
   left: 50%;
-  width: 16cqi;
-  height: 1cqi;
-  border-radius: 0 0 0.6cqi 0.6cqi;
-  background: var(--screen-black);
+  width: 12.5%;
+  /* Eight times wider than tall. */
+  aspect-ratio: 8 / 1;
+  /* Rounded bottom corners: 10% of the width across, 80% of the height down. */
+  border-radius: 0 0 10% 10% / 0 0 80% 80%;
+  background: #000000;
   transform: translateX(-50%);
+  /* The dive fades it out as the screen grows to fill the window. */
+  opacity: var(--notch-opacity, 1);
+  pointer-events: none;
+}
+
+/* The camera lens: a dark dot with a faint blue glint, centred in the notch. */
+.screen-notch::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #3a5566 0 22%, #121a22 48%, #05080b);
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+/* The copy on the homepage layer only shows while that layer is shrunk into the laptop screen.
+   It sits above every part of the homepage, and it is removed as soon as the homepage fills the
+   window or becomes the real page, so it never covers the page or the navigation. */
+.hero-frame-notch {
+  z-index: 30;
+  display: none;
+}
+
+.portfolio-hero-frame.is-active:not(.is-fullscreen) .hero-frame-notch {
+  display: block;
 }
 
 /* ===== Homepage hero: full-screen canvas and laptop-screen window ===== */

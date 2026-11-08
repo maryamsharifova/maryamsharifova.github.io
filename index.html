@@ -57,7 +57,8 @@
               <!-- The lit screen faces forward when the lid is open. -->
               <div class="lid-face screen-face">
                 <div class="screen-display">
-                  <span class="screen-notch"></span>
+                  <!-- Camera notch at the top of the glass. -->
+                  <span class="screen-notch" aria-hidden="true"></span>
                   <!-- The black layer fades as the lid opens and the homepage appears on the glass. -->
                   <span class="screen-power-off" aria-hidden="true"></span>
                 </div>
@@ -232,6 +233,9 @@
               <span>BAKU · AZ</span>
             </div>
           </div>
+          <!-- The same notch drawn on top of the homepage while it sits inside the laptop screen.
+               The homepage layer covers the screen's own notch, so this copy keeps it visible. -->
+          <span class="screen-notch hero-frame-notch" aria-hidden="true"></span>
         </div>
       </section>
 
@@ -662,6 +666,7 @@
               <div class="lid-face screen-face">
                 <!-- Dark screen with a teal and a blue corner glow, the MS mark, and a short thank-you. -->
                 <div class="screen-display closing-screen">
+                  <span class="screen-notch" aria-hidden="true"></span>
                   <p class="closing-mark">MS</p>
                   <p class="closing-caption">THANKS FOR VISITING</p>
                 </div>

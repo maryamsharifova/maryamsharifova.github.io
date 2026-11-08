@@ -1293,6 +1293,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // The homepage fades in with the same progress that lifts the black power layer.
     heroFrame.style.opacity = `${screenPower}`;
     heroCanvas.style.setProperty("--hero-fit-scale", `${fitScale}`);
+    // Fade the camera notch out over the middle of the dive, so it is gone before the
+    // homepage fills the window. Both copies (on the glass and on the homepage layer) follow.
+    const notchOpacity = String(1 - progressBetween(diveProgress, 0.15, 0.7));
+    heroFrame.style.setProperty("--notch-opacity", notchOpacity);
+    laptopIntro.style.setProperty("--notch-opacity", notchOpacity);
 
     // At the last intro frame, remove the hero mask and canvas transform completely.
     if (progress >= 0.999) {
