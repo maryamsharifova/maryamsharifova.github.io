@@ -1,8 +1,14 @@
+// Where the visitor's theme choice is stored. The name changed when light became the
+// default: choices saved under the old name were made while dark was the default, so they
+// are forgotten once and every visitor starts in light mode.
+const THEME_KEY = "portfolio-theme-v2";
+
 // Light is the default theme. Only a saved "dark" choice switches the page to dark, and it
 // happens here, before the first paint, so there is no flash of the wrong colours.
 // A saved "light" choice, or none at all, keeps the light default.
 try {
-  const savedTheme = localStorage.getItem("portfolio-theme");
+  localStorage.removeItem("portfolio-theme");
+  const savedTheme = localStorage.getItem(THEME_KEY);
   if (savedTheme === "dark") {
     document.documentElement.dataset.theme = "dark";
   }
@@ -43,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateToggleLabels();
 
         try {
-          localStorage.setItem("portfolio-theme", isDark ? "dark" : "light");
+          localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
         } catch (error) {
           console.warn("Could not save the theme preference.", error);
         }
