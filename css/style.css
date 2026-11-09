@@ -61,9 +61,13 @@
 
 /* ===== Theme variables ===== */
 /* Light colours are the defaults, so a first visit (or a page without JavaScript) is light.
-   Dark mode overrides only what changes, when the root has data-theme="dark". */
+   Dark mode overrides only what changes, when the root has data-theme="dark".
+   "only light" also tells the browser not to darken the page by itself. Without it, browsers
+   with an automatic dark mode (Chrome's "Auto Dark Mode for Web Contents", Edge, Samsung
+   Internet, Opera) repaint this light page dark for visitors whose system is dark, even in a
+   private window. Only the theme button (data-theme="dark", below) makes the site dark. */
 :root {
-  color-scheme: light;
+  color-scheme: only light;
   --color-page: #f7f8fa;
   --color-surface: #ffffff;
   --color-surface-hover: #eef2f4;
