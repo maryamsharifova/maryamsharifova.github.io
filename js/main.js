@@ -64,27 +64,27 @@ document.addEventListener("DOMContentLoaded", () => {
     rail.className = "page-rail";
     rail.setAttribute("aria-label", "Page shortcuts");
     // Links in the floating nav on the separate pages. The Security lab has no page of its own:
-    // it is a section at the end of projects.html (and on Home, whose nav is in index.html).
+    // it is a section at the end of resume.html (and on Home, whose nav is in index.html).
     const pages = [
       ["Home", "index.html"],
       ["About", "about.html"],
       ["Projects", "projects.html"],
-      ["Lab", "projects.html#lab"],
       ["Resume", "resume.html"],
+      ["Lab", "resume.html#lab"],
       ["Contact", "contact.html"],
     ];
     const currentPage = window.location.pathname.split("/").pop() || "index.html";
     // The long Home page holds every section, so its dots scroll there instead of opening pages.
     const isLongHome = Boolean(document.querySelector(".home-section"));
     // The right-edge dots: every page, plus the Security lab, which is a section on Home and at
-    // the end of projects.html (it has no page of its own, so it is not in the nav pill).
+    // the end of resume.html.
     // Each entry is [label, link on the separate pages, section id on Home].
     const railLinks = [
       ["Home", "index.html", "home"],
       ["About", "about.html", "about"],
       ["Projects", "projects.html", "projects"],
-      ["Security lab", "projects.html#lab", "lab"],
       ["Resume", "resume.html", "resume"],
+      ["Security lab", "resume.html#lab", "lab"],
       ["Contact", "contact.html", "contact"],
     ];
 
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const initializeHomeNavigation = () => {
     if (!document.querySelector(".home-section")) return;
 
-    const sections = ["home", "about", "projects", "lab", "resume", "contact"]
+    const sections = ["home", "about", "projects", "resume", "lab", "contact"]
       .map((id) => document.getElementById(id))
       .filter(Boolean);
     const findSection = (hash) => sections.find((section) => `#${section.id}` === hash);
@@ -1172,7 +1172,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Security lab: "Phishing or legit?" =====
   // One invented email at a time. The visitor answers Phishing or Legit, sees whether that was
-  // right and why, and gets a score and a rank after the last one. Runs on Home and projects.html.
+  // right and why, and gets a score and a rank after the last one. Runs on Home and resume.html.
   const initializeSecurityLab = () => {
     const game = document.querySelector(".lab-game");
     if (!game) return;
@@ -1454,13 +1454,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showEmail();
 
-    // On projects.html a link such as projects.html#lab (the right-edge dot on the other pages)
-    // can land too high, because the sideways project track only gets its full height once the
-    // script has run. Line the lab up again once the layout has settled.
+    // The rest is for resume.html, where the lab is a section at the end of the page.
+    // (Home handles its own section links and highlighting.)
     const labSection = document.getElementById("lab");
-    const onProjectsPage = labSection && !document.querySelector(".home-section");
-    if (!onProjectsPage) return;
+    const onResumePage = labSection && !document.querySelector(".home-section");
+    if (!onResumePage) return;
 
+    // A link such as resume.html#lab (the nav's "Lab" link and the right-edge dot on the other
+    // pages) can land a little off while fonts and the photo are still loading. Line the lab up
+    // again once the layout has settled.
     if (window.location.hash === "#lab") {
       window.addEventListener("load", () => {
         const fontsReady = document.fonts?.ready ?? Promise.resolve();
@@ -1468,27 +1470,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }, { once: true });
     }
 
-    // On projects.html the nav's "Lab" link and the "Security lab" dot point to this same page,
-    // so glide down to the lab instead of jumping. (Home handles its own section links.)
+    // On resume.html the nav's "Lab" link and the "Security lab" dot point to this same page,
+    // so glide down to the lab instead of jumping.
     document.addEventListener("click", (event) => {
-      const link = event.target.closest('a[href="projects.html#lab"]');
+      const link = event.target.closest('a[href="resume.html#lab"]');
       if (!link) return;
       event.preventDefault();
       labSection.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" });
       history.replaceState(null, "", "#lab");
     });
 
-    // Light up "Lab" instead of "Projects" (in the nav and the dots) while the lab is the part
+    // Light up "Lab" instead of "Resume" (in the nav and the dots) while the lab is the part
     // being read, using the same thin band across the middle of the screen as Home.
     if ("IntersectionObserver" in window) {
-      const projectLinks = [...document.querySelectorAll('.floating-nav a[href="projects.html"], .page-rail a[href="projects.html"]')];
-      const labLinks = [...document.querySelectorAll('.floating-nav a[href="projects.html#lab"], .page-rail a[href="projects.html#lab"]')];
+      const resumeLinks = [...document.querySelectorAll('.floating-nav a[href="resume.html"], .page-rail a[href="resume.html"]')];
+      const labLinks = [...document.querySelectorAll('.floating-nav a[href="resume.html#lab"], .page-rail a[href="resume.html#lab"]')];
       const markReading = (inLab) => {
-        projectLinks.forEach((link) => (inLab ? link.removeAttribute("aria-current") : link.setAttribute("aria-current", "page")));
+        resumeLinks.forEach((link) => (inLab ? link.removeAttribute("aria-current") : link.setAttribute("aria-current", "page")));
         labLinks.forEach((link) => (inLab ? link.setAttribute("aria-current", "location") : link.removeAttribute("aria-current")));
       };
       new IntersectionObserver((entries) => {
-        // The band is either inside the lab or above it, in the project track.
+        // The band is either inside the lab or above it, in the resume.
         entries.forEach((entry) => markReading(entry.isIntersecting || entry.boundingClientRect.top < 0));
       }, { rootMargin: "-45% 0px -54% 0px" }).observe(labSection);
     }

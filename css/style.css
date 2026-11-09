@@ -3566,11 +3566,9 @@ a.contact-value:hover,
   width: var(--closing-design-width);
 }
 
-/* The thank-you screen: a "soft aurora" on a bright screen. It is the laptop's own screen, so
-   it looks the same in light and dark mode. A pale, almost-white blue base carries three large,
-   very soft colour blobs that blend into each other: light teal top-left (::before), soft
-   periwinkle bottom-right (::after), and pale mint top-right (a background layer). All sizes are
-   in cqi, the glass's own width, so the design scales with the laptop. */
+/* The thank-you screen. It is the laptop's own screen, so it looks the same in light and dark
+   mode: a clean, plain, very light background with one soft aurora glow behind the text only.
+   All sizes are in cqi, the glass's own width, so the design scales with the laptop. */
 .closing-screen {
   position: absolute;
   z-index: 2;
@@ -3582,53 +3580,41 @@ a.contact-value:hover,
   gap: 2.2cqi;
   overflow: hidden;
   border-radius: inherit;
-  /* The mint blob is a background layer larger than the screen; sliding its position makes it
-     drift. Under it, the pale blue base. */
-  background:
-    radial-gradient(circle at 78% 22%, rgb(178 236 210 / 70%), transparent 30%) 0 0 / 130% 130% no-repeat,
-    #f2f7fc;
-  animation: aurora-mint 23s ease-in-out infinite alternate;
-  /* Keep the blurred blobs blended inside this screen only. */
+  /* Plain, very light, with a faint cool tint so it does not read as stark white. */
+  background: #f7fafd;
+  /* Keep the blurred glow blended inside this screen only. */
   isolation: isolate;
 }
 
-/* Teal and periwinkle blobs: big blurred circles, behind the text. */
-.closing-screen::before,
-.closing-screen::after {
+/* The aurora glow: one wide, soft oval centred behind "MS" and "THANKS FOR VISITING", about the
+   size of that text block (the caption is about 50cqi wide, the pair about 22cqi tall). Inside
+   it, light teal on the left blends into soft periwinkle on the right with a hint of mint at the
+   top. Each colour fades to transparent before the oval's edge, and the blur softens it further,
+   so it melts into the plain background with no edge anywhere. */
+.closing-screen::before {
   position: absolute;
   z-index: -1;
-  width: 70cqi;
-  aspect-ratio: 1;
+  top: 50%;
+  left: 50%;
+  width: 62cqi;
+  height: 32cqi;
   border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 34% 52%, rgb(120 212 214 / 70%), transparent 62%),
+    radial-gradient(ellipse at 68% 56%, rgb(150 162 242 / 62%), transparent 60%),
+    radial-gradient(ellipse at 55% 26%, rgb(178 236 210 / 60%), transparent 55%);
   content: "";
-  filter: blur(11cqi);
+  filter: blur(5cqi);
   pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: aurora-drift 22s ease-in-out infinite alternate;
 }
 
-.closing-screen::before {
-  top: -24cqi;
-  left: -18cqi;
-  background: rgb(120 212 214 / 62%);
-  animation: aurora-drift 19s ease-in-out infinite alternate;
-}
-
-.closing-screen::after {
-  right: -20cqi;
-  bottom: -30cqi;
-  background: rgb(150 162 242 / 55%);
-  animation: aurora-drift 26s ease-in-out infinite alternate-reverse;
-}
-
-/* A slow, small wander: a few percent of the screen over about twenty seconds. */
+/* A very slow, small wander around the centre: a few percent of the screen over about twenty
+   seconds, always staying behind the text. */
 @keyframes aurora-drift {
   to {
-    transform: translate3d(7cqi, 4cqi, 0) scale(1.06);
-  }
-}
-
-@keyframes aurora-mint {
-  to {
-    background-position: 100% 60%, 0 0;
+    transform: translate(calc(-50% + 3cqi), calc(-50% - 1.5cqi)) scale(1.06);
   }
 }
 
@@ -3656,11 +3642,9 @@ a.contact-value:hover,
   white-space: nowrap;
 }
 
-/* For visitors who prefer less motion, the aurora stays still. */
+/* For visitors who prefer less motion, the aurora glow stays still. */
 @media (prefers-reduced-motion: reduce) {
-  .closing-screen,
-  .closing-screen::before,
-  .closing-screen::after {
+  .closing-screen::before {
     animation: none;
   }
 }
@@ -4169,6 +4153,13 @@ body.project-dialog-open {
 .lab-page {
   width: min(100% - 3rem, 76rem);
   padding-block: clamp(4rem, 10vh, 7rem);
+}
+
+/* On resume.html the lab is the last part of the resume page, whose <main> already sets the
+   width, side margins and bottom space, so here it only adds the gap above its heading. */
+.resume-page > .lab-page {
+  width: auto;
+  padding-bottom: 0;
 }
 
 .lab-intro .eyebrow {
