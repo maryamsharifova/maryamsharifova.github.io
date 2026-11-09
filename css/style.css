@@ -624,20 +624,15 @@ a {
 }
 
 /* The homepage copy on the glass. It brightens from very faint to fully clear as the lid
-   opens (--screen-power). Around the fitted page it shows the same background and grid as
-   the homepage layer used later in the dive, so the hand-over between the two is seamless. */
+   opens (--screen-power). Around the fitted page it shows the same plain background as the
+   homepage layer used later in the dive, so the hand-over between the two is seamless. */
 .screen-homepage {
   position: absolute;
   z-index: 2;
   inset: 0;
   overflow: hidden;
   border-radius: inherit;
-  background-color: var(--hero-background);
-  background-image:
-    linear-gradient(var(--hero-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hero-grid-line) 1px, transparent 1px);
-  background-size: calc(42px * var(--hero-fit-scale, 1)) calc(42px * var(--hero-fit-scale, 1));
-  background-position: center;
+  background: var(--hero-background);
   opacity: var(--screen-power);
   pointer-events: none;
 }
@@ -993,14 +988,18 @@ a {
   visibility: hidden;
 }
 
-/* The same viewport-sized hero is uniformly scaled into the measured screen. */
+/* The same hero, always laid out at the real hero's full size, is uniformly scaled into the
+   measured screen. main.js sets --hero-page-width and --hero-page-height to the hero section's
+   size (the window without its scrollbar); the vw and svh values are only the fallback before
+   the script runs. */
 .portfolio-hero {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100vw;
+  width: var(--hero-page-width, 100vw);
   height: 100vh;
-  height: 100svh;
+  height: var(--hero-page-height, 100svh);
   overflow: hidden;
   background: var(--hero-background);
   color: var(--hero-foreground);
@@ -1028,9 +1027,14 @@ a {
   pointer-events: none;
 }
 
+/* The last frame of the dive: the homepage at scale 1, placed exactly where the real hero sits
+   (the hero section's box, measured by main.js), so swapping to the real page moves nothing. */
 .portfolio-hero-frame.is-fullscreen {
   position: fixed;
   inset: 0;
+  inset: 0 auto auto var(--hero-page-left, 0px);
+  width: var(--hero-page-width, 100%);
+  height: var(--hero-page-height, 100%);
   border-radius: 0 !important;
   overflow: visible;
   opacity: 1;
@@ -1047,13 +1051,10 @@ a {
 
 .portfolio-hero-frame.is-active {
   visibility: visible;
-  /* Bands around the unstretched hero use the same background and grid. */
-  background-color: var(--hero-background);
-  background-image:
-    linear-gradient(var(--hero-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hero-grid-line) 1px, transparent 1px);
-  background-size: calc(42px * var(--hero-fit-scale, 1)) calc(42px * var(--hero-fit-scale, 1));
-  background-position: center;
+  /* Where the window's shape differs from the screen's, the fitted homepage leaves a margin on
+     two sides of the glass. It is the homepage's plain background colour: the hero's grid and
+     glows already fade out towards its edges, so a plain margin continues it with no border. */
+  background: var(--hero-background);
 }
 
 .hero-atmosphere {
@@ -1072,11 +1073,11 @@ a {
 }
 
 /* The brand and links sit on one clean row at the top of the hero.
-   During the intro the window-sized hero is scaled to fill the laptop glass (16:10), and on a
-   wider window its left and right edges are cropped (main.js, coverScale). Keeping the top
-   bar, content and corner labels within 150svh of width (the glass's shape at this height,
-   with a small margin) means nothing important is ever cropped. On most screens the other
-   limits are smaller anyway; it matters on wide, short windows such as phones on their side. */
+   The top bar, content and corner labels stay within 150svh of width, about the laptop
+   screen's 16:10 shape at this height. On wide, short windows (phones on their side, ultrawide
+   monitors) this keeps the hero one compact block in the middle instead of spreading to the far
+   edges, and it looks the same on the laptop screen during the intro. On most screens the other
+   limits are smaller anyway. */
 .hero-topbar {
   position: relative;
   z-index: 1;
@@ -1553,13 +1554,6 @@ a {
    size tied to the height (svh) so the whole hero fits in one screen. This comes after the
    phone rules above, so it also wins on a 667px-wide phone. */
 @media (orientation: landscape) and (max-height: 540px) {
-  /* During the intro the hero is a fixed layer over the whole window, outside the padded body,
-     so there it keeps its own distance from the camera notch. Once it is part of the page the
-     body's padding does this instead. */
-  .portfolio-hero-frame:is(.is-active, .is-fullscreen) .portfolio-hero {
-    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
-  }
-
   .hero-topbar {
     width: min(100% - 3rem, 1280px, 150svh);
     min-height: 3.2rem;

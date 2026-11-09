@@ -1628,23 +1628,51 @@ document.addEventListener("DOMContentLoaded", () => {
   screenHomepage.append(homepageCopy);
   screenDisplay.prepend(screenHomepage);
 
-  // How much to scale the window-sized homepage so it fills the visible part of the glass:
-  // uniformly (never stretched), centred, and with no empty bands at the sides or top and
-  // bottom. The glass's shape (16:10) rarely matches the window's (a wide monitor, a phone on
-  // its side or upright), so the page is scaled until it covers the glass and the overflow is
-  // cropped evenly from both edges. During the dive the glass grows past the window; only the
-  // part inside the window is visible, so each side is capped at the window. When the glass
-  // covers the whole window this gives exactly 1, the real page size, so the switch to the
-  // full-size homepage at the end of the dive has nothing to jump.
-  const coverScale = (glassWidth, glassHeight, pageWidth, pageHeight) => Math.max(
-    Math.min(glassWidth / pageWidth, 1),
-    Math.min(glassHeight / pageHeight, 1),
+  // How much to scale the homepage so it fits inside the glass. The homepage is always laid
+  // out at the real window size (100vw by 100svh, exactly like the real hero), never smaller,
+  // and then only scaled uniformly, so it is never stretched and its text wraps exactly as on
+  // the real page. "Fit inside" means the larger of the two ratios decides: the page fills the
+  // glass exactly in one direction and is centred in the other.
+  //
+  // During the dive this is worked out again on every frame from the glass's current size, so
+  // the homepage grows in step with the screen the whole way. The dive ends at the zoom where
+  // the glass just covers the window (finalScale in updateHeroScene), and at that size this
+  // ratio is exactly 1: the homepage on the screen is then the real hero at its real size, and
+  // the switch to the real page changes nothing.
+  //
+  // Where the window's shape differs from the glass's 16:10 (a phone, a very wide monitor), the
+  // page leaves a margin on two sides of the glass. That margin is painted in the homepage's own
+  // background colour (.screen-homepage, .portfolio-hero-frame.is-active), so it reads as part
+  // of the page. (An earlier version scaled the page to cover the glass instead; it reached
+  // full size early on such windows and then stood still while the screen kept zooming.)
+  const fitScale = (glassWidth, glassHeight, pageWidth, pageHeight) => Math.min(
+    glassWidth / pageWidth,
+    glassHeight / pageHeight,
   );
+
+  // The real hero's size and place on the page: the hero section's box. It is the window
+  // without the scrollbar (100vw would include it, which made the scaled homepage 17px wider
+  // than the real one on Windows) and inside the notch padding on phones held sideways.
+  // Both homepage layers are laid out at exactly this size (style.css reads these values), and
+  // the full-screen layer at the end of the dive sits exactly here, so the hand-over to the
+  // real page is the same picture at the same place.
+  let heroPageWidth = 0;
+  let heroPageHeight = 0;
+  const measureHeroPage = () => {
+    const box = heroSection.getBoundingClientRect();
+    heroPageWidth = box.width;
+    heroPageHeight = box.height;
+    const root = document.documentElement.style;
+    root.setProperty("--hero-page-width", `${box.width}px`);
+    root.setProperty("--hero-page-height", `${box.height}px`);
+    root.setProperty("--hero-page-left", `${box.left}px`);
+  };
+  measureHeroPage();
 
   // Fit the copy inside the glass the same way the homepage layer is fitted later, so the
   // hand-over between the two (when the lid is fully open) shows the identical picture.
   const fitScreenHomepage = () => {
-    const fit = coverScale(
+    const fit = fitScale(
       screenDisplay.clientWidth,
       screenDisplay.clientHeight,
       homepageCopy.offsetWidth,
@@ -1714,9 +1742,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseCenterY = centerY + (
       screenRect.top + screenRect.height / 2 - centerY - diveY
     ) / diveScale;
+    // The zoom at the end of the dive: the glass just covers the real hero's area (the window
+    // without its scrollbar). At that size the fit below is exactly 1.
     const finalScale = Math.max(
-      window.innerWidth / (screenRect.width / diveScale),
-      window.innerHeight / (screenRect.height / diveScale),
+      heroPageWidth / (screenRect.width / diveScale),
+      heroPageHeight / (screenRect.height / diveScale),
     );
     diveScale = 1 + (finalScale - 1) * diveProgress;
     diveX = centerX - (centerX + (baseCenterX - centerX) * diveScale);
@@ -1727,14 +1757,16 @@ document.addEventListener("DOMContentLoaded", () => {
     laptopDive.style.setProperty("--dive-x", `${diveX}px`);
     laptopDive.style.setProperty("--dive-y", `${diveY}px`);
 
-    // Measure again after zooming so the clipped hero matches this exact frame.
+    // Measure again after zooming, so the homepage is fitted to the glass's size in this exact
+    // frame and grows with it on every frame of the dive.
     const alignedScreenRect = screenDisplay.getBoundingClientRect();
-    const fitScale = coverScale(
+    // Never above 1: rounding at the very last frame must not make the page a hair too big.
+    const heroScale = Math.min(1, fitScale(
       alignedScreenRect.width,
       alignedScreenRect.height,
-      window.innerWidth,
-      window.innerHeight,
-    );
+      heroPageWidth,
+      heroPageHeight,
+    ));
     const radius = Math.min(alignedScreenRect.width * 0.012, alignedScreenRect.height * 0.024);
 
     heroFrame.style.left = `${alignedScreenRect.left}px`;
@@ -1759,7 +1791,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // fades in over that copy by 49%. Both show the same fitted page, so nothing changes
     // except that the dive can now grow this layer cleanly to full size.
     heroFrame.style.opacity = String(progressBetween(progress, 0.46, 0.49));
-    heroCanvas.style.setProperty("--hero-fit-scale", `${fitScale}`);
+    heroCanvas.style.setProperty("--hero-fit-scale", `${heroScale}`);
     // Fade the camera notch out over the middle of the dive, so it is gone before the
     // homepage fills the window. Both copies (on the glass and on the homepage layer) follow.
     const notchOpacity = String(1 - progressBetween(diveProgress, 0.15, 0.7));
@@ -2031,6 +2063,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let fittedWidth = window.innerWidth;
   let fittedHeight = window.innerHeight;
   window.addEventListener("resize", () => {
+    // The real hero's size comes first: the homepage layers and the dive's end zoom use it.
+    measureHeroPage();
     if (window.innerWidth !== fittedWidth || Math.abs(window.innerHeight - fittedHeight) > 150) {
       fittedWidth = window.innerWidth;
       fittedHeight = window.innerHeight;
