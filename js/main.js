@@ -934,7 +934,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       if (command === "help") {
-        writeLine("Commands: help, whoami, skills, projects, open 1-6, experience, education, languages, contact, resume, ls, cat about.txt, date, clear");
+        writeLine("Commands: help, whoami, skills, projects, open 1-6, experience, education, languages, contact, resume, lab, ls, cat about.txt, date, clear");
       } else if (command === "whoami" || command === "cat about.txt") {
         writeLine(whoAmI);
       } else if (command === "skills") {
@@ -969,6 +969,11 @@ document.addEventListener("DOMContentLoaded", () => {
         writeLink("GitHub: github.com/maryamsharifova", "https://github.com/maryamsharifova");
       } else if (command === "resume") {
         writeLink("Open Maryam Sharifova's CV (PDF)", "assets/Maryam_Sharifova_CV.pdf", true);
+      } else if (command === "lab") {
+        // The Security lab game: a section on the long Home page (where the link scrolls there
+        // smoothly), and at the end of resume.html on the separate pages.
+        const labHref = document.getElementById("lab") ? "#lab" : "resume.html#lab";
+        writeLink("Security lab · play Phishing or legit?", labHref);
       } else if (command === "ls") {
         writeLine("about.txt projects/ assets/Maryam_Sharifova_CV.pdf contact.md");
       } else if (command === "date") {
