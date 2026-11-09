@@ -1639,27 +1639,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // Size of the closed laptop at the start of the intro, before it grows to the open size.
-  const CLOSED_SCALE = 0.46;
-  // The closed laptop is turned slightly on the desk and seen from 32 degrees above.
-  // It ends facing straight ahead at the shallower 7 degree view of the open laptop.
-  const CLOSED_YAW = -6;
-  const CLOSED_CAMERA = -32;
+  // ----- Balcony photo -----
+  // Both photos are 1376 x 768 and identical except for the laptop. In balcony-laptop.jpg the
+  // closed laptop's lid covers this box, in image pixels.
+  const PHOTO_WIDTH = 1376;
+  const PHOTO_HEIGHT = 768;
+  const PHOTO_LID = { left: 463, right: 853, top: 582, bottom: 705 };
+  // On portrait phones the photo is shrunk (never past cover size) until the photo's laptop
+  // spans this share of the window's width, and it then sits at the bottom of the screen.
+  const PORTRAIT_LID_SHARE = 0.9;
+
+  // ----- 3D laptop poses -----
+  // The closed laptop lies flat on the photo's table, turned 14 degrees so its right side is
+  // further back, like the photo's laptop. Its size, its place, and the camera angle that
+  // gives the same low view as the photo are worked out for each window (fitIntroPoses).
+  const CLOSED_YAW = 14;
+  // The open laptop faces straight ahead, seen from 7 degrees above.
   const OPEN_CAMERA = -7;
   // The open laptop never grows past this size, even on very large windows.
   const OPEN_SCALE_MAX = 1.06;
-  // Open size for the current window; fitOpenPose() replaces it.
+  // Values for the current window, all set by fitIntroPoses():
+  // the open size and the move that puts the open screen's centre in the window's middle,
   let openScale = OPEN_SCALE_MAX;
-  // Closed size and its height offset from the window's middle, also set by fitOpenPose().
-  // On tall windows they stay at the design values (CLOSED_SCALE, centred). On short windows,
-  // such as phones held sideways, the closed laptop shrinks and moves so it fits between the
-  // greeting and the scroll hint. The offset fades to zero as the lid opens.
-  let closedScale = CLOSED_SCALE;
-  let closedOffsetY = 0;
-  // The part of that offset still in use at the current frame.
-  let restOffsetY = 0;
-  const introCopy = laptopIntro.querySelector(".intro-copy");
-  const scrollCue = laptopIntro.querySelector(".scroll-cue");
+  let openShiftX = 0;
+  let openShiftY = 0;
+  // and the closed size, camera angle and move that lay the lid over the photo's laptop.
+  let closedScale = 0.4;
+  let closedCamera = -20;
+  let closedShiftX = 0;
+  let closedShiftY = 0;
+
+  // ----- Intro timeline (shares of the intro's scroll) -----
+  // 0-15%: only the greeting and hint fade; the laptop and the photo stay perfectly still.
+  // 20-46%: the lid opens. 20-24%: the front photo fades out as the lid starts to lift.
+  // 20-58%: the laptop glides from the table spot to the centred open framing.
+  // 57-60%: the sharp homepage layer takes over from the copy on the glass.
+  // 58-100%: the dive into the homepage, while the balcony fades out.
+  const LID_START = 0.2;
+  const LID_END = 0.46;
+  const PHOTO_FADE_END = 0.24;
+  const DIVE_START = 0.58;
+  const HERO_LAYER_START = 0.57;
+  const HERO_LAYER_END = 0.6;
 
   // Keep animation inputs inside the 0-to-1 range.
   const clamp = (value) => Math.min(1, Math.max(0, value));
@@ -1798,30 +1819,53 @@ document.addEventListener("DOMContentLoaded", () => {
     heroFrame.classList.remove("is-fullscreen");
     heroFrame.style.position = "fixed";
 
+    // Before the dive the laptop is placed only by its own pose (see updateLaptop), so the dive
+    // wrapper stays at rest: no zoom and no offset. Setting this directly, rather than holding
+    // the screen in place by measuring it, keeps the closed laptop perfectly still on the photo.
+    if (diveProgress <= 0) {
+      diveScale = 1;
+      diveX = 0;
+      diveY = 0;
+      laptopDive.style.removeProperty("--dive-scale");
+      laptopDive.style.removeProperty("--dive-x");
+      laptopDive.style.removeProperty("--dive-y");
+    }
+
+    // The sharp homepage layer is invisible until HERO_LAYER_START, so there is nothing to place
+    // yet: skip the layout reads below while the laptop rests on the table and opens.
+    if (progress < HERO_LAYER_START) {
+      heroFrame.style.opacity = "0";
+      heroFrame.style.setProperty("--notch-opacity", "1");
+      laptopIntro.style.setProperty("--notch-opacity", "1");
+      return;
+    }
+
     const screenRect = screenDisplay.getBoundingClientRect();
-    const viewportRect = laptopStage.getBoundingClientRect();
-    const centerX = viewportRect.left + viewportRect.width / 2;
-    const centerY = viewportRect.top + viewportRect.height / 2;
-    const baseCenterX = centerX + (
-      screenRect.left + screenRect.width / 2 - centerX - diveX
-    ) / diveScale;
-    const baseCenterY = centerY + (
-      screenRect.top + screenRect.height / 2 - centerY - diveY
-    ) / diveScale;
-    // The zoom at the end of the dive: the glass just covers the real hero's area (the window
-    // without its scrollbar). At that size the fit below is exactly 1.
-    const finalScale = Math.max(
-      heroPageWidth / (screenRect.width / diveScale),
-      heroPageHeight / (screenRect.height / diveScale),
-    );
-    diveScale = 1 + (finalScale - 1) * diveProgress;
-    diveX = centerX - (centerX + (baseCenterX - centerX) * diveScale);
-    // The screen is held at the window's middle, moved by restOffsetY while the laptop is still
-    // (partly) closed on a short window. That offset is zero once the lid is open.
-    diveY = centerY + restOffsetY - (centerY + (baseCenterY - centerY) * diveScale);
-    laptopDive.style.setProperty("--dive-scale", `${diveScale}`);
-    laptopDive.style.setProperty("--dive-x", `${diveX}px`);
-    laptopDive.style.setProperty("--dive-y", `${diveY}px`);
+    if (diveProgress > 0) {
+      const viewportRect = laptopStage.getBoundingClientRect();
+      const centerX = viewportRect.left + viewportRect.width / 2;
+      const centerY = viewportRect.top + viewportRect.height / 2;
+      const baseCenterX = centerX + (
+        screenRect.left + screenRect.width / 2 - centerX - diveX
+      ) / diveScale;
+      const baseCenterY = centerY + (
+        screenRect.top + screenRect.height / 2 - centerY - diveY
+      ) / diveScale;
+      // The zoom at the end of the dive: the glass just covers the real hero's area (the window
+      // without its scrollbar). At that size the fit below is exactly 1.
+      const finalScale = Math.max(
+        heroPageWidth / (screenRect.width / diveScale),
+        heroPageHeight / (screenRect.height / diveScale),
+      );
+      diveScale = 1 + (finalScale - 1) * diveProgress;
+      // Hold the screen's centre at the window's middle while it grows. The open pose already
+      // puts it there (fitIntroPoses), so the dive starts without any sideways step.
+      diveX = centerX - (centerX + (baseCenterX - centerX) * diveScale);
+      diveY = centerY - (centerY + (baseCenterY - centerY) * diveScale);
+      laptopDive.style.setProperty("--dive-scale", `${diveScale}`);
+      laptopDive.style.setProperty("--dive-x", `${diveX}px`);
+      laptopDive.style.setProperty("--dive-y", `${diveY}px`);
+    }
 
     // Measure again after zooming, so the homepage is fitted to the glass's size in this exact
     // frame and grows with it on every frame of the dive.
@@ -1852,11 +1896,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return `${x + (boxCorners[index][0] - x) * square}px ${y + (boxCorners[index][1] - y) * square}px`;
     });
     heroFrame.style.clipPath = `polygon(${outline.join(", ")})`;
-    // While the lid opens, the homepage copy inside the 3D glass is what shows. Once the lid
-    // is fully open (46% of the intro) and the screen faces the viewer, this sharp layer
-    // fades in over that copy by 49%. Both show the same fitted page, so nothing changes
+    // While the lid opens and the laptop glides to the middle, the homepage copy inside the
+    // 3D glass is what shows. Once the laptop has settled facing the viewer (57%), this sharp
+    // layer fades in over that copy by 60%. Both show the same fitted page, so nothing changes
     // except that the dive can now grow this layer cleanly to full size.
-    heroFrame.style.opacity = String(progressBetween(progress, 0.46, 0.49));
+    heroFrame.style.opacity = String(progressBetween(progress, HERO_LAYER_START, HERO_LAYER_END));
     heroCanvas.style.setProperty("--hero-fit-scale", `${heroScale}`);
     // Fade the camera notch out over the middle of the dive, so it is gone before the
     // homepage fills the window. Both copies (on the glass and on the homepage layer) follow.
@@ -1946,23 +1990,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const progress = currentProgress;
-    // Step 1-2 (0-20%): the closed laptop turns to face the visitor while the logo shimmers.
-    const turn = easeInOut(progressBetween(progress, 0, 0.2));
-    // The scroll hint is gone within the first 2.5%. The greeting and side labels leave
-    // from 1% to 15%, so the screen is clear before the lid starts to move.
+    // The scroll hint is gone within the first 2.5%. The greeting leaves from 1% to 15%, so
+    // the screen is clear before the lid starts to move. Nothing else moves until then.
     const cueFade = progressBetween(progress, 0, 0.025);
     const introFade = easeInOut(progressBetween(progress, 0.01, 0.15));
-    // Step 3 (20-46%): open the lid, using smoothstep easing for gentle starts and stops.
-    const openingProgress = progressBetween(progress, 0.2, 0.46);
-    const opening = easeInOut(openingProgress);
+    // Open the lid (20-46%), using smoothstep easing for gentle starts and stops.
+    const opening = easeInOut(progressBetween(progress, LID_START, LID_END));
+    // As the lid lifts, the photo with the closed laptop fades out quickly (20-24%), revealing
+    // the 3D laptop lying in exactly the same place.
+    const photoFade = easeInOut(progressBetween(progress, LID_START, PHOTO_FADE_END));
+    // Glide from the table spot to the centred open framing, spread evenly from the moment
+    // the lid lifts until the dive starts (20-58%). Position, size, camera angle and turn all
+    // follow this one eased value, so the movement starts and ends gently.
+    const move = easeInOut(progressBetween(progress, LID_START, DIVE_START));
     // The homepage on the glass brightens from very faint (10% open) to fully clear just
     // before the lid is fully open. Keys light up from 35% to 85% open.
     const screenPower = progressBetween(opening, 0.1, 0.95);
     const keyboardReveal = progressBetween(opening, 0.35, 0.85);
-    // Fade the logo as the lid lifts. The desk glow begins halfway open and builds as the display powers on.
+    // Fade the logo as the lid lifts.
     const logoFade = progressBetween(progress, 0.22, 0.33);
-    const deskGlow = progressBetween(opening, 0.5, 0.85);
-    const diveProgress = easeInOut(progressBetween(progress, 0.58, 1));
+    const diveProgress = easeInOut(progressBetween(progress, DIVE_START, 1));
 
     // Once the intro is finished the laptop pose stops changing. Skip restyling its many
     // parts on every scroll of the long Home page, but still let the hero settle below.
@@ -1972,32 +2019,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     renderedProgress = progress;
 
-    // Turn from 6 degrees to the side until the laptop faces the visitor. A small turn on the
-    // desk keeps the front edge close to horizontal, so it still reads as a laptop lying flat.
-    laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW * (1 - turn)}deg`);
-    laptopIntro.style.setProperty("--camera-angle", `${CLOSED_CAMERA + (OPEN_CAMERA - CLOSED_CAMERA) * opening}deg`);
-    // Grow from the small closed size to the open size while the lid opens.
-    // The open size comes from fitOpenPose(), so the open laptop always fits the window.
-    laptopIntro.style.setProperty("--laptop-scale", `${closedScale + (openScale - closedScale) * opening}`);
-    // On short windows the closed laptop sits lower or higher than the middle (see
-    // fitOpenPose); it glides back to the middle as the lid opens.
-    restOffsetY = closedOffsetY * (1 - opening);
+    // The pose blends from the fitted closed pose on the table to the fitted open pose in the
+    // middle (both from fitIntroPoses). Only transform values change: the perspective is fixed.
+    const blend = (closed, open) => closed + (open - closed) * move;
+    laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW * (1 - move)}deg`);
+    laptopIntro.style.setProperty("--camera-angle", `${blend(closedCamera, OPEN_CAMERA)}deg`);
+    laptopIntro.style.setProperty("--laptop-scale", `${blend(closedScale, openScale)}`);
+    laptopIntro.style.setProperty("--lid-shift", `${blend(closedShiftX, openShiftX)}px`);
+    laptopIntro.style.setProperty("--lid-lift", `${blend(closedShiftY, openShiftY)}px`);
     laptopIntro.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
-    // Keep the closed laptop a little above the centre, then lower it into the open framing.
-    laptopIntro.style.setProperty("--lid-lift", `${-27 + 22 * opening}vh`);
     laptopIntro.style.setProperty("--screen-power", screenPower);
     laptopIntro.style.setProperty("--keyboard-reveal", keyboardReveal);
     laptopIntro.style.setProperty("--logo-opacity", `${1 - logoFade}`);
-    laptopIntro.style.setProperty("--logo-shimmer", `${100 - 220 * turn}%`);
     // Slide the shine across the silver as the lid opens, so the metal catches the light.
     laptopIntro.style.setProperty("--metal-sheen", `${28 + 44 * opening}%`);
-    // Greeting fades upward, side labels slide outward, and the scroll hint simply fades.
+    // Greeting fades upward and the scroll hint simply fades.
     laptopIntro.style.setProperty("--intro-opacity", `${1 - introFade}`);
     laptopIntro.style.setProperty("--intro-shift", `${-5 * introFade}vh`);
-    laptopIntro.style.setProperty("--detail-shift", `${6 * introFade}vw`);
     laptopIntro.style.setProperty("--cue-opacity", `${1 - cueFade}`);
-    // Fade the desk and reflected screen glow away during the dive.
-    laptopIntro.style.setProperty("--desk-glow-opacity", `${0.65 * deskGlow * (1 - diveProgress)}`);
+    // The front photo fades as the lid lifts; the whole balcony fades during the dive.
+    laptopIntro.style.setProperty("--photo-opacity", `${1 - photoFade}`);
+    laptopIntro.style.setProperty("--balcony-opacity", `${1 - diveProgress}`);
 
     // Play the keys once above 90%; re-arm only after closing below 30%.
     if (opening < 0.3) {
@@ -2024,117 +2066,220 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Find the largest open size (up to OPEN_SCALE_MAX) at which the fully open laptop,
-  // base and keyboard included, fits inside the window. The dive keeps the screen's centre
-  // in the middle of the window, and the base reaches further below it than the lid does
-  // above, so each side is measured from the screen's centre. Perspective makes the base
-  // much bigger than its layout box, so measuring the real pose beats a fixed CSS size.
-  // It also fits the closed starting pose between the greeting and the scroll hint, so the
-  // laptop is sized by the window's height as well as its width at both ends of the intro.
-  const fitOpenPose = () => {
+  // Size and place both balcony photos for a stage of this size, and return where the photo's
+  // closed laptop lid lands on screen (in pixels from the stage's top-left corner).
+  //
+  // Wide screens: "cover", like background-size: cover, centred. If that crop would cut into
+  // the laptop (very wide or very short windows), the crop slides just enough to keep it in.
+  // Portrait phones: cover would crop the laptop's sides, so the photo is shrunk (never past
+  // cover size) until the laptop spans PORTRAIT_LID_SHARE of the width, centred on the
+  // laptop, and sits at the bottom of the screen; the sky colour continues above it.
+  const placeBalcony = (width, height) => {
+    const lidWidth = PHOTO_LID.right - PHOTO_LID.left;
+    const cover = Math.max(width / PHOTO_WIDTH, height / PHOTO_HEIGHT);
+    const portrait = height > width;
+    const scale = portrait ? Math.min(cover, (width * PORTRAIT_LID_SHARE) / lidWidth) : cover;
+    const photoWidth = PHOTO_WIDTH * scale;
+    const photoHeight = PHOTO_HEIGHT * scale;
+
+    // Sideways: centre the photo (or the laptop, on portrait screens), keep the laptop at least
+    // 4% from both edges, and never show past the photo's own edges.
+    const lidCenter = ((PHOTO_LID.left + PHOTO_LID.right) / 2) * scale;
+    const sideMargin = width * 0.04;
+    let left = portrait ? width / 2 - lidCenter : (width - photoWidth) / 2;
+    left = Math.max(left, sideMargin - PHOTO_LID.left * scale);
+    left = Math.min(left, width - sideMargin - PHOTO_LID.right * scale);
+    left = Math.min(0, Math.max(width - photoWidth, left));
+
+    // Up and down: a photo shorter than the screen sits on the bottom edge. A taller one is
+    // centred, raised if needed so the laptop ends above the bottom 6% of the screen.
+    let top;
+    if (photoHeight <= height) {
+      top = height - photoHeight;
+    } else {
+      top = Math.min((height - photoHeight) / 2, height * 0.94 - PHOTO_LID.bottom * scale);
+      top = Math.min(0, Math.max(height - photoHeight, top));
+    }
+
+    const style = laptopIntro.style;
+    style.setProperty("--scene-left", `${left}px`);
+    style.setProperty("--scene-top", `${top}px`);
+    style.setProperty("--scene-width", `${photoWidth}px`);
+    style.setProperty("--scene-height", `${photoHeight}px`);
+    // Blend the photo's top edge into the sky colour only when sky shows above it.
+    style.setProperty("--sky-blend", top > 0 ? `${Math.min(top, photoHeight * 0.08)}px` : "0px");
+
+    const lid = {
+      left: left + PHOTO_LID.left * scale,
+      right: left + PHOTO_LID.right * scale,
+      top: top + PHOTO_LID.top * scale,
+      bottom: top + PHOTO_LID.bottom * scale,
+    };
+
+    // The scroll hint stands just above the laptop, its line pointing down at the lid.
+    style.setProperty("--cue-x", `${(lid.left + lid.right) / 2}px`);
+    style.setProperty("--cue-bottom", `${lid.top - Math.max(10, height * 0.025)}px`);
+    return lid;
+  };
+
+  // Work out both ends of the laptop's journey for the current window. All the layout reads
+  // happen here, once per resize, never in the scroll loop; the scroll loop only blends
+  // between the two poses found here.
+  //
+  // Open pose: the largest size (up to OPEN_SCALE_MAX) at which the fully open laptop, base
+  // and keyboard included, fits inside the window with its screen's centre in the window's
+  // middle, where the dive then holds it. Perspective makes the base much bigger than its
+  // layout box, so measuring the real pose beats a fixed CSS size.
+  //
+  // Closed pose: the lid lying over the photo's laptop. The size matches the photo laptop's
+  // width, a plain move matches its centre, and the camera angle is chosen so the height
+  // matches too, which gives the same low view across the table.
+  const fitIntroPoses = () => {
     const savedIntroStyle = laptopIntro.getAttribute("style") || "";
     const savedDiveStyle = laptopDive.getAttribute("style") || "";
-    // Measure without any dive zoom, in the final open pose: facing forward, lid open.
+    const stageRect = laptopStage.getBoundingClientRect();
+    const stageMiddleX = stageRect.width / 2;
+    const stageMiddleY = stageRect.height / 2;
+
+    // Place the photos first; the closed laptop is fitted to where the photo's laptop lands.
+    const target = placeBalcony(stageRect.width, stageRect.height);
+    // Keep the photo settings through the restore at the end of this function.
+    const sceneStyle = ["--scene-left", "--scene-top", "--scene-width", "--scene-height", "--sky-blend", "--cue-x", "--cue-bottom"]
+      .map((name) => [name, laptopIntro.style.getPropertyValue(name)]);
+
+    // Measure without any dive zoom or offset.
     laptopDive.removeAttribute("style");
+
+    // A part's box on screen, relative to the stage's top-left corner.
+    const boxOf = (elements) => {
+      const box = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
+      elements.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        box.left = Math.min(box.left, rect.left - stageRect.left);
+        box.right = Math.max(box.right, rect.right - stageRect.left);
+        box.top = Math.min(box.top, rect.top - stageRect.top);
+        box.bottom = Math.max(box.bottom, rect.bottom - stageRect.top);
+      });
+      return box;
+    };
+
+    const setPose = (scale, shiftX, shiftY) => {
+      laptopIntro.style.setProperty("--laptop-scale", String(scale));
+      laptopIntro.style.setProperty("--lid-shift", `${shiftX}px`);
+      laptopIntro.style.setProperty("--lid-lift", `${shiftY}px`);
+    };
+
+    // ----- Open pose: facing forward, lid open -----
     laptopIntro.style.setProperty("--laptop-yaw", "0deg");
     laptopIntro.style.setProperty("--camera-angle", `${OPEN_CAMERA}deg`);
     laptopIntro.style.setProperty("--lid-angle", "8deg");
-    laptopIntro.style.setProperty("--lid-lift", "-5vh");
-    const parts = laptopIntro.querySelectorAll(".lid-face, .deck, .deck-wall-front");
-    const stageRect = laptopStage.getBoundingClientRect();
+    const openParts = laptopIntro.querySelectorAll(".lid-face, .deck, .deck-wall-front");
 
     // How far the laptop reaches from its screen's centre, as a share of the room available.
-    const overflowAt = (scale) => {
-      laptopIntro.style.setProperty("--laptop-scale", String(scale));
-      const screen = screenDisplay.getBoundingClientRect();
-      const centerX = screen.left + screen.width / 2;
-      const centerY = screen.top + screen.height / 2;
-      let ratio = 0;
-      parts.forEach((part) => {
-        const rect = part.getBoundingClientRect();
-        // Leave a 6% margin at the top and bottom and 3% at the sides.
-        ratio = Math.max(
-          ratio,
-          (centerY - rect.top) / (stageRect.height * 0.44),
-          (rect.bottom - centerY) / (stageRect.height * 0.44),
-          (centerX - rect.left) / (stageRect.width * 0.47),
-          (rect.right - centerX) / (stageRect.width * 0.47),
-        );
-      });
-      return ratio;
+    const overflowAt = (scale, shiftX, shiftY) => {
+      setPose(scale, shiftX, shiftY);
+      const screen = boxOf([screenDisplay]);
+      const centerX = (screen.left + screen.right) / 2;
+      const centerY = (screen.top + screen.bottom) / 2;
+      const reach = boxOf(openParts);
+      // Leave a 6% margin at the top and bottom and 3% at the sides.
+      return {
+        centerX,
+        centerY,
+        ratio: Math.max(
+          (centerY - reach.top) / (stageRect.height * 0.44),
+          (reach.bottom - centerY) / (stageRect.height * 0.44),
+          (centerX - reach.left) / (stageRect.width * 0.47),
+          (reach.right - centerX) / (stageRect.width * 0.47),
+        ),
+      };
     };
 
-    // Perspective is not linear, so shrink a few times until the laptop settles inside.
+    // Perspective is not linear, so settle in a few passes: move the screen's centre to the
+    // middle, then shrink until the laptop fits around it.
     let scale = OPEN_SCALE_MAX;
-    for (let pass = 0; pass < 3; pass += 1) {
-      scale = Math.min(OPEN_SCALE_MAX, scale / Math.max(1, overflowAt(scale)));
+    let shiftX = 0;
+    let shiftY = 0;
+    for (let pass = 0; pass < 4; pass += 1) {
+      const fit = overflowAt(scale, shiftX, shiftY);
+      shiftX += stageMiddleX - fit.centerX;
+      shiftY += stageMiddleY - fit.centerY;
+      scale = Math.min(OPEN_SCALE_MAX, scale / Math.max(1, fit.ratio));
     }
+    // One last centring step at the final size.
+    const openFit = overflowAt(scale, shiftX, shiftY);
     openScale = scale;
+    openShiftX = shiftX + stageMiddleX - openFit.centerX;
+    openShiftY = shiftY + stageMiddleY - openFit.centerY;
 
-    // The closed laptop at the start: turned, seen from above, lid shut. The dive holds the
-    // screen's centre at the window's middle, so measure how far the laptop reaches above and
-    // below that centre, and how wide it is.
+    // ----- Closed pose: lid shut, lying on the photo's table -----
     laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW}deg`);
-    laptopIntro.style.setProperty("--camera-angle", `${CLOSED_CAMERA}deg`);
     laptopIntro.style.setProperty("--lid-angle", "-90deg");
-    const closedReach = (closedSize) => {
-      laptopIntro.style.setProperty("--laptop-scale", String(closedSize));
-      const screen = screenDisplay.getBoundingClientRect();
-      const centerY = screen.top + screen.height / 2;
-      const reach = { above: 0, below: 0, left: Infinity, right: -Infinity };
-      parts.forEach((part) => {
-        const rect = part.getBoundingClientRect();
-        reach.above = Math.max(reach.above, centerY - rect.top);
-        reach.below = Math.max(reach.below, rect.bottom - centerY);
-        reach.left = Math.min(reach.left, rect.left);
-        reach.right = Math.max(reach.right, rect.right);
-      });
-      return reach;
+    // The closed laptop's outline: the lid's silver back on top, the base and its edges below.
+    const closedParts = laptopIntro.querySelectorAll(".back-face, .deck, .deck-wall");
+    const targetWidth = target.right - target.left;
+    const targetCenterX = (target.left + target.right) / 2;
+    const targetCenterY = (target.top + target.bottom) / 2;
+    const targetShape = (target.bottom - target.top) / targetWidth;
+
+    // At one camera angle, match the photo laptop's width and centre, then report how tall
+    // the laptop is for its width. Each call starts from the last answer, so it settles fast.
+    scale = closedScale;
+    shiftX = closedShiftX || targetCenterX - stageMiddleX;
+    shiftY = closedShiftY || targetCenterY - stageMiddleY;
+    const shapeAt = (camera) => {
+      laptopIntro.style.setProperty("--camera-angle", `${camera}deg`);
+      let box = null;
+      for (let pass = 0; pass < 3; pass += 1) {
+        setPose(scale, shiftX, shiftY);
+        box = boxOf(closedParts);
+        scale *= targetWidth / Math.max(1, box.right - box.left);
+        shiftX += targetCenterX - (box.left + box.right) / 2;
+        shiftY += targetCenterY - (box.top + box.bottom) / 2;
+      }
+      setPose(scale, shiftX, shiftY);
+      box = boxOf(closedParts);
+      return (box.bottom - box.top) / Math.max(1, box.right - box.left);
     };
 
-    // Free band between the greeting and the scroll hint, with a small gap to each. Both are
-    // measured from the top of the stage, without their fade-out movement.
-    const gap = 12;
-    const bandTop = introCopy.offsetTop + introCopy.offsetHeight + gap;
-    const bandBottom = scrollCue.offsetTop - gap;
-    const stageMiddle = stageRect.height / 2;
+    // A steeper (more negative) camera angle shows more of the lid's top, so the laptop looks
+    // taller. Halve the range of angles until the height matches the photo's laptop.
+    let steep = -60;
+    let shallow = 15;
+    for (let step = 0; step < 10; step += 1) {
+      const camera = (steep + shallow) / 2;
+      if (shapeAt(camera) < targetShape) {
+        shallow = camera;
+      } else {
+        steep = camera;
+      }
+    }
+    closedCamera = (steep + shallow) / 2;
+    shapeAt(closedCamera);
+    closedScale = scale;
+    closedShiftX = shiftX;
+    closedShiftY = shiftY;
 
-    // Shrink the closed laptop only if it does not fit that band (or 90% of the width).
-    let reach = closedReach(CLOSED_SCALE);
-    const shrink = Math.min(
-      1,
-      (bandBottom - bandTop) / Math.max(1, reach.above + reach.below),
-      (stageRect.width * 0.9) / Math.max(1, reach.right - reach.left),
-    );
-    closedScale = CLOSED_SCALE * Math.max(0.5, shrink);
-    reach = closedReach(closedScale);
-
-    // Keep the designed middle position when it already clears both. Otherwise move the laptop
-    // down below the greeting, or up above the hint, and centre it in the band if both are tight.
-    const lowestOffset = bandBottom - reach.below - stageMiddle;
-    const highestOffset = bandTop + reach.above - stageMiddle;
-    closedOffsetY = highestOffset > lowestOffset
-      ? (highestOffset + lowestOffset) / 2
-      : Math.min(Math.max(0, highestOffset), lowestOffset);
-
-    // Put the live pose back; the next frame redraws it with the new size.
+    // Put the live pose back (keeping the new photo placement); the next frame redraws the
+    // laptop with the new values.
     laptopIntro.setAttribute("style", savedIntroStyle);
+    sceneStyle.forEach(([name, value]) => laptopIntro.style.setProperty(name, value));
     laptopDive.setAttribute("style", savedDiveStyle);
     renderedProgress = -1;
   };
 
   window.addEventListener("scroll", requestLaptopUpdate, { passive: true });
-  // Refit after a real resize. Phones resize slightly when the address bar slides during a
-  // touch scroll; ignoring those small height changes keeps the animation steady.
-  let fittedWidth = window.innerWidth;
-  let fittedHeight = window.innerHeight;
+  // Refit when the stage changes size. The stage is 100svh tall, so it keeps its size while a
+  // phone's address bar slides during a touch scroll; the photo and laptop then stay put.
+  let fittedWidth = laptopStage.clientWidth;
+  let fittedHeight = laptopStage.clientHeight;
   window.addEventListener("resize", () => {
     // The real hero's size comes first: the homepage layers and the dive's end zoom use it.
     measureHeroPage();
-    if (window.innerWidth !== fittedWidth || Math.abs(window.innerHeight - fittedHeight) > 150) {
-      fittedWidth = window.innerWidth;
-      fittedHeight = window.innerHeight;
-      fitOpenPose();
+    if (laptopStage.clientWidth !== fittedWidth || laptopStage.clientHeight !== fittedHeight) {
+      fittedWidth = laptopStage.clientWidth;
+      fittedHeight = laptopStage.clientHeight;
+      fitIntroPoses();
     }
     // The homepage copy is window-sized, so refit it inside the glass on every resize.
     fitScreenHomepage();
@@ -2143,7 +2288,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // Web fonts can change the key labels' size, so fit once more after they load.
   document.fonts?.ready.then(() => {
-    fitOpenPose();
+    fitIntroPoses();
     requestLaptopUpdate();
   });
 
@@ -2157,7 +2302,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Start from the visitor's current scroll position instead of animating from zero.
-  fitOpenPose();
+  fitIntroPoses();
   currentProgress = readScrollProgress();
   targetProgress = currentProgress;
   updateTypewriterMotion();
