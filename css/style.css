@@ -292,17 +292,16 @@ a {
 
 /* ===== Shared page layout ===== */
 /* One horizontal layout for the whole site. Every block that holds content (the hero's top bar,
-   text and corner labels, every section on Home and on the separate pages, the Projects heading
-   and the footer) is --site-content-width wide and centred, so their left and right edges sit
-   on the same two vertical lines everywhere.
-   --site-gutter: the side margin, 5.5% of the width (at least 1rem on a small phone).
-   --site-max-width: on very wide monitors the content stops growing at 1920px and the margins
-   take the rest. Change these two values to change the layout of every page at once. */
+   text, photo and corner labels, every section on Home and on the separate pages, the Projects
+   heading and the footer) is --site-content-width wide and centred, so their left and right
+   edges sit on the same two vertical lines everywhere, close to the edges of the screen.
+   --site-gutter: the side margin, 2% of the width on each side (about 27px at 1366px, 38px at
+   1920px, 51px at 2560px), and at least 1rem on a small phone. There is no maximum width: the
+   content always runs to these margins. Change this one value to change every page at once. */
 :root {
-  --site-gutter: max(1rem, 5.5vw);
-  --site-max-width: 120rem;
+  --site-gutter: max(1rem, 2vw);
   /* % is resolved where this is used, against the full-width parent of each block. */
-  --site-content-width: min(100% - 2 * var(--site-gutter), var(--site-max-width));
+  --site-content-width: calc(100% - 2 * var(--site-gutter));
 }
 
 .page-content {
@@ -1291,10 +1290,11 @@ a {
 /* Orbiting rings and small labels frame the round portrait. */
 .hero-portrait {
   position: relative;
-  /* Fills its column, up to 68% of the screen height, so the rings never crowd the top bar. */
+  /* Fills its column, up to 68% of the screen height, so the rings never crowd the top bar.
+     It sits at the end of its column, so the outer ring reaches the right margin. */
   width: min(100%, 68svh);
   aspect-ratio: 1;
-  justify-self: center;
+  justify-self: end;
 }
 
 .portrait-rings {
@@ -1411,11 +1411,10 @@ a {
 
 .hero-footer {
   position: absolute;
-  /* The same edges as the top bar and the content: the side margin, or on a very wide monitor
-     the space left beside the maximum content width. */
-  right: max(var(--site-gutter), (100% - var(--site-max-width)) / 2);
+  /* The same edges as the top bar and the content: the shared side margin. */
+  right: var(--site-gutter);
   bottom: var(--hero-footer-bottom);
-  left: max(var(--site-gutter), (100% - var(--site-max-width)) / 2);
+  left: var(--site-gutter);
   display: flex;
   justify-content: space-between;
   color: var(--hero-copy-muted);
@@ -1527,6 +1526,8 @@ a {
   .hero-portrait {
     grid-row: 1;
     width: min(52vw, 260px);
+    /* Stacked on a phone, the photo stays centred above the text. */
+    justify-self: center;
   }
 
   .hero-copy {
@@ -1644,8 +1645,9 @@ a {
   }
 
   .hero-portrait {
-    /* At most half the height, and never more than 30% of the width. */
+    /* At most half the height, and never more than 30% of the width, at the right margin. */
     width: min(50svh, 30vw);
+    justify-self: end;
   }
 
   .hero-eyebrow {
@@ -1921,8 +1923,9 @@ a {
   position: fixed;
   z-index: 60;
   top: 50%;
-  /* Stay clear of a camera notch on the right side. */
-  right: max(1.25rem, env(safe-area-inset-right, 0px));
+  /* Close to the screen edge, inside the narrow side margin, so the dots never touch the
+     content; also clear of a camera notch on the right side. */
+  right: max(0.55rem, env(safe-area-inset-right, 0px));
   display: grid;
   gap: 0.8rem;
   opacity: 0;
@@ -3822,7 +3825,7 @@ a.contact-value:hover,
   gap: clamp(1rem, 2vw, 2rem);
   /* The first card starts on the shared left edge and the last one ends on the shared right
      edge; in between, the cards slide past the margins while scrolling. */
-  padding-inline: max(var(--site-gutter), (100% - var(--site-max-width)) / 2);
+  padding-inline: var(--site-gutter);
   will-change: transform;
 }
 
