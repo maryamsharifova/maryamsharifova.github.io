@@ -1072,17 +1072,28 @@ a {
   mask-image: radial-gradient(ellipse at center, #000 32%, transparent 100%);
 }
 
-/* The brand and links sit on one clean row at the top of the hero.
-   The top bar, content and corner labels stay within 150svh of width, about the laptop
-   screen's 16:10 shape at this height. On wide, short windows (phones on their side, ultrawide
-   monitors) this keeps the hero one compact block in the middle instead of spreading to the far
-   edges, and it looks the same on the laptop screen during the intro. On most screens the other
-   limits are smaller anyway. */
+/* ===== Full-width hero =====
+   The hero uses the whole screen: its top bar, content and corner labels span the full width
+   with one side margin, --hero-gutter (5.5% of the width on each side), instead of sitting in a
+   fixed-width column. Text, buttons, the photo and the top bar scale with the screen, each
+   with a height limit (svh) so a wide but short window (1366x768, 2560x1080) still fits the
+   hero in one screen. The laptop screen in the intro shows this same element at the real hero's
+   size, so the layout is identical there and the dive still ends on a perfect match.
+   Phones keep their own stacked layout (the max-width: 44rem rules further down). */
+.portfolio-hero {
+  --hero-gutter: 5.5vw;
+  /* Height of the top bar, and the space kept free below the content for the corner labels. */
+  --hero-bar-height: clamp(4.5rem, 9svh, 7rem);
+  --hero-foot-space: clamp(4.5rem, 9svh, 7rem);
+}
+
+/* The brand and links sit on one clean row at the top of the hero, lined up with the content
+   below by the same side margin. */
 .hero-topbar {
   position: relative;
   z-index: 1;
-  width: min(100% - 8vw, 1280px, 150svh);
-  min-height: 92px;
+  width: calc(100% - 2 * var(--hero-gutter));
+  min-height: var(--hero-bar-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1098,31 +1109,34 @@ a {
 }
 
 .hero-brand {
-  gap: 0.75rem;
+  gap: 0.75em;
   font-family: var(--font-heading);
+  /* 16px on a laptop, growing to about 22px on a 2560px monitor. */
+  font-size: clamp(1rem, 0.86vw, 1.4rem);
   font-weight: 600;
   text-decoration: none;
 }
 
 .hero-brand-mark {
-  width: 2.3rem;
-  height: 2.3rem;
+  /* Sized from the brand text, so the round mark grows with it. */
+  width: 2.3em;
+  height: 2.3em;
   display: grid;
   place-items: center;
   border: 1px solid rgb(111 208 234 / 48%);
   border-radius: 50%;
   background: rgb(111 208 234 / 9%);
   color: #6fd0ea;
-  font-size: 1.15rem;
+  font-size: 1.15em;
 }
 
 .hero-page-nav {
-  gap: clamp(0.7rem, 2vw, 1.8rem);
+  gap: clamp(0.7rem, 2vw, 2.6rem);
 }
 
 .hero-page-nav > a {
   color: var(--hero-nav-muted);
-  font-size: 0.9rem;
+  font-size: clamp(0.9rem, 0.78vw, 1.25rem);
   text-decoration: none;
   transition: color 160ms ease;
 }
@@ -1133,31 +1147,34 @@ a {
 }
 
 .hero-theme-toggle {
+  width: clamp(2.5rem, 2.2vw, 3.4rem);
+  height: clamp(2.5rem, 2.2vw, 3.4rem);
   border-color: rgb(255 255 255 / 16%);
   background: rgb(255 255 255 / 5%);
 }
 
-/* The copy and portrait share the central width of the viewport. */
-.hero-main {
-  width: min(100% - 12vw, 1160px, 146svh);
-  min-height: calc(100% - 164px);
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-  align-items: center;
-  gap: clamp(2rem, 7vw, 7rem);
-  margin-inline: auto;
-  padding-block: 2.5rem 4rem;
+.hero-theme-toggle svg {
+  width: 45%;
+  height: 45%;
 }
 
-.hero-copy {
-  max-width: 650px;
+/* Text on the left, photo on the right, across the full width between the side margins. */
+.hero-main {
+  width: calc(100% - 2 * var(--hero-gutter));
+  min-height: calc(100% - var(--hero-bar-height) - var(--hero-foot-space));
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 9rem);
+  margin-inline: auto;
+  padding-block: clamp(1.5rem, 3svh, 3rem);
 }
 
 .hero-eyebrow {
-  margin: 0 0 1.15rem;
+  margin: 0 0 1.4em;
   color: #6fd0ea;
   font-family: var(--font-label);
-  font-size: clamp(0.65rem, 1vw, 0.8rem);
+  font-size: clamp(0.65rem, 0.72vw, 1.05rem);
   letter-spacing: 0.1em;
 }
 
@@ -1165,7 +1182,10 @@ a {
   margin: 0;
   color: var(--hero-foreground);
   font-family: var(--font-heading);
-  font-size: clamp(3.8rem, 8vw, 7rem);
+  /* Grows with the width (7.4vw), limited by the height (15svh) so the two lines and the text
+     below still fit a short screen: about 100px at 1366x768, 142px at 1920x1080 and 189px at
+     2560x1440. */
+  font-size: clamp(3.8rem, min(7.4vw, 15svh), 12rem);
   font-weight: 600;
   letter-spacing: -0.08em;
   line-height: 0.94;
@@ -1180,18 +1200,21 @@ a {
 }
 
 .hero-description {
-  max-width: 600px;
-  margin: 1.8rem 0 0;
+  /* About 46 characters per line at any size, so it never becomes one very long line. */
+  max-width: 46ch;
+  margin: 1.6em 0 0;
   color: var(--hero-copy-muted);
-  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
-  line-height: 1.8;
+  font-size: clamp(0.95rem, min(1.1vw, 2.1svh), 1.6rem);
+  line-height: 1.75;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 2rem;
+  gap: 0.85em;
+  margin-top: clamp(2rem, 4svh, 3.2rem);
+  /* The buttons' size follows this, so they grow with the screen too. */
+  font-size: clamp(1rem, min(0.95vw, 1.8svh), 1.45rem);
 }
 
 .hero-button,
@@ -1214,6 +1237,13 @@ a {
 .hero-button:hover,
 [data-magnetic]:hover {
   transform: translate3d(var(--magnetic-x, 0px), calc(var(--magnetic-y, 0px) - 2px), 0);
+}
+
+/* The hero's two buttons are sized from .hero-actions, so they grow with the screen. */
+.hero-button {
+  min-height: 3.25em;
+  padding: 0.75em 1.35em;
+  font-size: 0.92em;
 }
 
 .hero-button-primary {
@@ -1248,7 +1278,8 @@ a {
 /* Orbiting rings and small labels frame the round portrait. */
 .hero-portrait {
   position: relative;
-  width: min(100%, 520px);
+  /* Fills its column, up to 68% of the screen height, so the rings never crowd the top bar. */
+  width: min(100%, 68svh);
   aspect-ratio: 1;
   justify-self: center;
 }
@@ -1336,7 +1367,7 @@ a {
   position: absolute;
   color: var(--portrait-label);
   font-family: var(--font-label);
-  font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+  font-size: clamp(0.55rem, min(0.62vw, 1.15svh), 1rem);
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
@@ -1362,20 +1393,20 @@ a {
 /* How far the corner labels sit above the hero's bottom edge. About's top spacing on Home is
    worked out from it (see .home-intro-page), so the two always agree. */
 :root {
-  --hero-footer-bottom: 1.5rem;
+  --hero-footer-bottom: clamp(1.5rem, 2.6svh, 2.6rem);
 }
 
 .hero-footer {
   position: absolute;
-  /* Inside the same 150svh-wide middle as the top bar. */
-  right: max(4vw, (100% - 150svh) / 2);
+  /* Lined up with the top bar and the content by the same side margin. */
+  right: var(--hero-gutter);
   bottom: var(--hero-footer-bottom);
-  left: max(4vw, (100% - 150svh) / 2);
+  left: var(--hero-gutter);
   display: flex;
   justify-content: space-between;
   color: var(--hero-copy-muted);
   font-family: var(--font-label);
-  font-size: 0.68rem;
+  font-size: clamp(0.68rem, 0.6vw, 0.95rem);
   letter-spacing: 0.1em;
 }
 
@@ -1555,7 +1586,7 @@ a {
    phone rules above, so it also wins on a 667px-wide phone. */
 @media (orientation: landscape) and (max-height: 540px) {
   .hero-topbar {
-    width: min(100% - 3rem, 1280px, 150svh);
+    width: calc(100% - 2 * var(--hero-gutter));
     min-height: 3.2rem;
     flex-wrap: nowrap;
     justify-content: space-between;
@@ -1590,7 +1621,7 @@ a {
   }
 
   .hero-main {
-    width: min(100% - 3rem, 1100px, 146svh);
+    width: calc(100% - 2 * var(--hero-gutter));
     /* The top bar above and the corner labels below. */
     min-height: calc(100% - 5.4rem);
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1641,8 +1672,8 @@ a {
   }
 
   .hero-footer {
-    right: max(1.5rem, env(safe-area-inset-right, 0px), (100% - 150svh) / 2);
-    left: max(1.5rem, env(safe-area-inset-left, 0px), (100% - 150svh) / 2);
+    right: var(--hero-gutter);
+    left: var(--hero-gutter);
     font-size: 0.55rem;
   }
 
