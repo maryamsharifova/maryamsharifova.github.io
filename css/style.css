@@ -4190,8 +4190,15 @@ a.contact-value:hover,
   }
 }
 
-body.project-dialog-open {
+/* While a project window is open the page behind it does not scroll. The lock is on <html>,
+   which is what actually scrolls the page. (It used to be overflow: hidden on <body>, but since
+   <html> clips sideways overflow, that never reached the page: it only turned the body into
+   its own scroll box, which detached the sticky project track.) scrollbar-gutter keeps the
+   scrollbar's space, so nothing shifts sideways. main.js removes the class whenever the
+   window closes, however it was closed. */
+html.project-window-open {
   overflow: hidden;
+  scrollbar-gutter: stable;
 }
 
 /* ===== Security lab: "Phishing or legit?" game ===== */

@@ -335,6 +335,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Opens project 1-6 in its window on this page, or is null when the page has no project
+  // cards (about.html). Set below; the About terminal uses it.
+  let openProjectByNumber = null;
+
   // Build small project demos and wire the case-study detail windows.
   const initializeProjectPage = () => {
     const projectPage = document.querySelector(".projects-page");
@@ -575,6 +579,8 @@ document.addEventListener("DOMContentLoaded", () => {
         dialog.showModal();
         // Hide the custom cursor while the window is open; the system pointer takes over.
         document.body.classList.add("project-dialog-open");
+        // Hold the page still behind the window (style.css, html.project-window-open).
+        document.documentElement.classList.add("project-window-open");
         const windowBounds = dialog.getBoundingClientRect();
         const originX = Number.isFinite(pointerX) ? pointerX : cardBounds.left + cardBounds.width / 2;
         const originY = Number.isFinite(pointerY) ? pointerY : cardBounds.top + cardBounds.height / 2;
@@ -613,7 +619,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       dialog.querySelector(".project-dialog-close").addEventListener("click", () => dialog.close());
-      dialog.addEventListener("close", () => document.body.classList.remove("project-dialog-open"));
+      // Every way of closing (the red dot, Escape, a click outside, or the browser itself) ends
+      // in this "close" event, so all clean-up happens here, once: the page's scroll lock and the
+      // cursor class come off, and the sideways track is measured again from where the page is
+      // now, so scrolling carries on past the last card into the next sections. (Nothing else is
+      // locked: there are no touch handlers and no inline overflow styles to undo.)
+      dialog.addEventListener("close", () => {
+        document.body.classList.remove("project-dialog-open");
+        document.documentElement.classList.remove("project-window-open");
+        updateHorizontalTrack();
+      });
       // A click on the dimmed page, outside the window, closes it.
       dialog.addEventListener("click", (event) => {
         const bounds = dialog.getBoundingClientRect();
@@ -629,31 +644,56 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // Direct project links scroll to the requested stop and open its window.
+      // The address bar keeps no #p1-#p6 once a project has been shown, so a reload, the Back
+      // button or the browser's own anchor handling cannot scroll back to it or reopen it.
+      const clearProjectHash = () => {
+        if (/^#p\d+$/.test(window.location.hash)) {
+          history.replaceState(history.state, "", window.location.pathname + window.location.search);
+        }
+      };
+
+      // Show a project from a #p1-#p6 link: move the page (and the sideways track) to that card,
+      // then open its window. This runs once per request, after the layout has settled, with no
+      // second delayed scroll that could pull the page back while the visitor is scrolling.
+      const showRequestedProject = (card) => {
+        updateHorizontalTrack();
+        if (horizontalTrackEnabled) {
+          // The page position at which the track has slid exactly to this card.
+          const distance = Math.min(trackDistance, card.offsetLeft - projectList.offsetLeft);
+          window.scrollTo(0, trackStart + distance);
+          updateHorizontalTrack();
+        } else {
+          card.scrollIntoView({ block: "start" });
+        }
+        clearProjectHash();
+        openProjectWindow(card);
+      };
+
+      // A project number from the URL (projects.html#p3, as the About terminal links to it).
       const requestedProject = document.getElementById(window.location.hash.slice(1));
       if (requestedProject?.matches(".project-card")) {
-        window.setTimeout(() => {
-          let requestedScrollY = 0;
-          if (horizontalTrackEnabled) {
-            const requestedDistance = Math.min(trackDistance, requestedProject.offsetLeft - projectList.offsetLeft);
-            requestedScrollY = trackStart + requestedDistance;
-            targetProgress = requestedDistance / Math.max(1, trackDistance);
-            displayedProgress = targetProgress;
-            renderHorizontalTrack();
-          } else {
-            requestedProject.scrollIntoView({ block: "start" });
-          }
-          openProjectWindow(requestedProject);
-          if (horizontalTrackEnabled) {
-            window.setTimeout(() => {
-              window.scrollTo(0, requestedScrollY);
-              targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
-              displayedProgress = targetProgress;
-              renderHorizontalTrack();
-            }, 120);
-          }
-        }, 120);
+        const showOnce = () => {
+          const fontsReady = document.fonts?.ready ?? Promise.resolve();
+          fontsReady.then(() => showRequestedProject(requestedProject));
+        };
+        if (document.readyState === "complete") showOnce();
+        else window.addEventListener("load", showOnce, { once: true });
       }
+
+      // A #p1-#p6 link inside this page (for example in the terminal on Home).
+      window.addEventListener("hashchange", () => {
+        const card = document.getElementById(window.location.hash.slice(1));
+        if (card?.matches(".project-card")) showRequestedProject(card);
+      });
+
+      // The About terminal on Home opens projects here, in place, instead of going to
+      // projects.html (whose page ends after Projects, so it felt like the page was stuck there).
+      openProjectByNumber = (number) => {
+        const card = cards[number - 1];
+        if (!card) return false;
+        openProjectWindow(card);
+        return true;
+      };
     }
   };
 
@@ -912,10 +952,29 @@ document.addEventListener("DOMContentLoaded", () => {
       output.scrollTop = output.scrollHeight;
     };
 
+    // Open project 1-6. Where the page has the project cards (the long Home page) its window
+    // opens right here, over the terminal, and closing it leaves the visitor where they were.
+    // On about.html the project opens on projects.html instead.
+    const openProject = (number) => {
+      if (openProjectByNumber?.(number)) return;
+      window.location.href = `projects.html#p${number}`;
+    };
+
+    // A project as a clickable line in the output. It keeps a real link (so it can still be
+    // opened in a new tab), but a normal click opens it exactly like typing "open 1" to "open 6".
+    const writeProjectLink = (label, number) => {
+      writeLink(label, `projects.html#p${number}`);
+      output.lastElementChild.querySelector("a").addEventListener("click", (event) => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
+        event.preventDefault();
+        openProject(number);
+      });
+    };
+
     // Each project as a clickable line. A click opens it exactly like typing "open 1" to "open 6".
     const listProjectsToOpen = () => {
       projectNames.forEach((name, index) => {
-        writeLink(`open ${index + 1} · ${name}`, `projects.html#p${index + 1}`);
+        writeProjectLink(`open ${index + 1} · ${name}`, index + 1);
       });
     };
 
@@ -941,7 +1000,7 @@ document.addEventListener("DOMContentLoaded", () => {
         writeLine("SECURITY\n  SIEM log analysis, DLP monitoring, insider-risk awareness, network monitoring\nAI\n  Local LLM deployment, RAG, MCP, speech-to-text, computer vision\nCODE\n  Python, REST APIs, HTML & CSS, Flutter, SQL\nTOOLS\n  Hugging Face, FFmpeg, FortiAnalyzer, Palo Alto, LibreNMS, Git, Linux");
       } else if (command === "projects") {
         projectNames.forEach((name, index) => {
-          writeLink(`${index + 1}. ${name} · open ${index + 1}`, `projects.html#p${index + 1}`);
+          writeProjectLink(`${index + 1}. ${name} · open ${index + 1}`, index + 1);
         });
       } else if (command === "open") {
         // The "open" chip (or a bare "open"): list the six projects as clickable lines.
@@ -954,7 +1013,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (/^open\s+\d+$/i.test(commandText)) {
         const projectNumber = Number.parseInt(commandText.split(/\s+/)[1], 10);
         if (projectNumber >= 1 && projectNumber <= projectNames.length) {
-          window.location.href = `projects.html#p${projectNumber}`;
+          openProject(projectNumber);
         } else {
           writeLine("Usage: open 1 through open 6");
         }
