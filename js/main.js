@@ -1640,44 +1640,68 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // ----- Balcony photo -----
-  // Both photos are 1376 x 768 and identical except for the laptop. In balcony-laptop.jpg the
-  // closed laptop's lid covers this box, in image pixels.
+  // images/balcony-empty.jpg is 1376 x 768. Everything drawn on it is placed in these photo
+  // pixels. The empty spot in the middle of the table, where the closed lid lies, is this box.
   const PHOTO_WIDTH = 1376;
   const PHOTO_HEIGHT = 768;
   const PHOTO_LID = { left: 463, right: 853, top: 582, bottom: 705 };
-  // On portrait phones the photo is shrunk (never past cover size) until the photo's laptop
-  // spans this share of the window's width, and it then sits at the bottom of the screen.
-  const PORTRAIT_LID_SHARE = 0.9;
+  // On portrait phones the photo sits at the bottom, 79% of the screen tall, with the point
+  // 46% across the photo lined up 46% across the screen, so the table and towers both show.
+  const PORTRAIT_PHOTO_HEIGHT = 0.79;
+  const PORTRAIT_PHOTO_X = 0.46;
+
+  // ----- Stage perspective (must match .laptop-stage in style.css) -----
+  // One steady perspective for the whole intro; it never changes from frame to frame.
+  const PERSPECTIVE = 3200;
+  const PERSPECTIVE_ORIGIN_X = 0.5;
+  const PERSPECTIVE_ORIGIN_Y = 0.45;
 
   // ----- 3D laptop poses -----
-  // The closed laptop lies flat on the photo's table, turned 14 degrees so its right side is
-  // further back, like the photo's laptop. Its size, its place, and the camera angle that
-  // gives the same low view as the photo are worked out for each window (fitIntroPoses).
-  const CLOSED_YAW = 14;
-  // The open laptop faces straight ahead, seen from 7 degrees above.
+  // The closed laptop lies flat on the table, turned 6 degrees so its right side is further
+  // back, and seen from a low angle like the table: the view tilts back only 9 degrees on wide
+  // screens and 17 on phones. Its size and place are fitted to PHOTO_LID (fitIntroPoses).
+  const CLOSED_YAW = 6;
+  const CLOSED_CAMERA_WIDE = -9;
+  const CLOSED_CAMERA_PORTRAIT = -17;
+  // At the end of the camera move the laptop faces straight ahead, seen from 7 degrees above.
   const OPEN_CAMERA = -7;
-  // The open laptop never grows past this size, even on very large windows.
-  const OPEN_SCALE_MAX = 1.06;
+  // The camera move ends with the open laptop near the middle (56% of the height) on wide
+  // screens, as big as fits (never zooming past MAX_ZOOM). On phones it stays near where it
+  // is (78%) with only a slight zoom, so no empty band appears under the photo.
+  const WIDE_END_Y = 0.56;
+  const PORTRAIT_END_Y = 0.78;
+  const PORTRAIT_ZOOM = 1.12;
+  const MAX_ZOOM = 2;
+  // As the camera moves in, the photo goes out of focus and darkens a little.
+  const FOCUS_BLUR = 3;
+  const FOCUS_DIM = 0.12;
+
   // Values for the current window, all set by fitIntroPoses():
-  // the open size and the move that puts the open screen's centre in the window's middle,
-  let openScale = OPEN_SCALE_MAX;
-  let openShiftX = 0;
-  let openShiftY = 0;
-  // and the closed size, camera angle and move that lay the lid over the photo's laptop.
-  let closedScale = 0.4;
-  let closedCamera = -20;
-  let closedShiftX = 0;
-  let closedShiftY = 0;
+  // the camera angle of the closed laptop,
+  let closedCamera = CLOSED_CAMERA_WIDE;
+  // its size on screen (the CSS scale times the perspective's enlargement at its depth),
+  let closedSize = 0.4;
+  // where the middle of its base sits on the table, in stage pixels at the start,
+  let tableX = 0;
+  let tableY = 0;
+  // and the camera at the end of the move: zoom, and pan in stage pixels.
+  let endZoom = 1;
+  let endPanX = 0;
+  let endPanY = 0;
+  // The stage size and the laptop's own (untransformed) size, read once per fit.
+  const stageSize = { width: 1, height: 1 };
+  const laptopSize = { width: 1, height: 1, pivot: 0 };
+  const laptopBody = laptopIntro.querySelector(".laptop");
+  const balconyCamera = laptopIntro.querySelector(".balcony-camera");
 
   // ----- Intro timeline (shares of the intro's scroll) -----
-  // 0-15%: only the greeting and hint fade; the laptop and the photo stay perfectly still.
-  // 20-46%: the lid opens. 20-24%: the front photo fades out as the lid starts to lift.
-  // 20-58%: the laptop glides from the table spot to the centred open framing.
+  // 0-15%: only the greeting, labels and hint fade; the laptop and photo stay perfectly still.
+  // 20-46%: the lid opens.
+  // 20-58%: the camera moves in on the laptop and its angle eases to face the screen.
   // 57-60%: the sharp homepage layer takes over from the copy on the glass.
   // 58-100%: the dive into the homepage, while the balcony fades out.
   const LID_START = 0.2;
   const LID_END = 0.46;
-  const PHOTO_FADE_END = 0.24;
   const DIVE_START = 0.58;
   const HERO_LAYER_START = 0.57;
   const HERO_LAYER_END = 0.6;
@@ -1819,9 +1843,9 @@ document.addEventListener("DOMContentLoaded", () => {
     heroFrame.classList.remove("is-fullscreen");
     heroFrame.style.position = "fixed";
 
-    // Before the dive the laptop is placed only by its own pose (see updateLaptop), so the dive
+    // Before the dive the laptop is placed only by its own pose (see placeLaptop), so the dive
     // wrapper stays at rest: no zoom and no offset. Setting this directly, rather than holding
-    // the screen in place by measuring it, keeps the closed laptop perfectly still on the photo.
+    // the screen in place by measuring it, keeps the closed laptop perfectly still on the table.
     if (diveProgress <= 0) {
       diveScale = 1;
       diveX = 0;
@@ -1858,10 +1882,13 @@ document.addEventListener("DOMContentLoaded", () => {
         heroPageHeight / (screenRect.height / diveScale),
       );
       diveScale = 1 + (finalScale - 1) * diveProgress;
-      // Hold the screen's centre at the window's middle while it grows. The open pose already
-      // puts it there (fitIntroPoses), so the dive starts without any sideways step.
-      diveX = centerX - (centerX + (baseCenterX - centerX) * diveScale);
-      diveY = centerY - (centerY + (baseCenterY - centerY) * diveScale);
+      // The camera move leaves the screen a little off the window's middle (the open laptop
+      // sits at 56% on wide screens, lower on phones). While the screen grows, its centre
+      // glides from there to the middle with the same easing, so the dive starts without a step.
+      const goalX = baseCenterX + (centerX - baseCenterX) * diveProgress;
+      const goalY = baseCenterY + (centerY - baseCenterY) * diveProgress;
+      diveX = goalX - (centerX + (baseCenterX - centerX) * diveScale);
+      diveY = goalY - (centerY + (baseCenterY - centerY) * diveScale);
       laptopDive.style.setProperty("--dive-scale", `${diveScale}`);
       laptopDive.style.setProperty("--dive-x", `${diveX}px`);
       laptopDive.style.setProperty("--dive-y", `${diveY}px`);
@@ -1990,18 +2017,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const progress = currentProgress;
-    // The scroll hint is gone within the first 2.5%. The greeting leaves from 1% to 15%, so
-    // the screen is clear before the lid starts to move. Nothing else moves until then.
+    // The scroll hint is gone within the first 2.5%. The greeting and side labels leave from
+    // 1% to 15%, so the screen is clear before the lid starts to move. Nothing else moves yet.
     const cueFade = progressBetween(progress, 0, 0.025);
     const introFade = easeInOut(progressBetween(progress, 0.01, 0.15));
     // Open the lid (20-46%), using smoothstep easing for gentle starts and stops.
     const opening = easeInOut(progressBetween(progress, LID_START, LID_END));
-    // As the lid lifts, the photo with the closed laptop fades out quickly (20-24%), revealing
-    // the 3D laptop lying in exactly the same place.
-    const photoFade = easeInOut(progressBetween(progress, LID_START, PHOTO_FADE_END));
-    // Glide from the table spot to the centred open framing, spread evenly from the moment
-    // the lid lifts until the dive starts (20-58%). Position, size, camera angle and turn all
-    // follow this one eased value, so the movement starts and ends gently.
+    // The camera move, spread evenly from the moment the lid lifts until the dive starts
+    // (20-58%). Zoom, pan, camera angle, turn and focus all follow this one eased value, so the
+    // movement starts and ends gently.
     const move = easeInOut(progressBetween(progress, LID_START, DIVE_START));
     // The homepage on the glass brightens from very faint (10% open) to fully clear just
     // before the lid is fully open. Keys light up from 35% to 85% open.
@@ -2019,27 +2043,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     renderedProgress = progress;
 
-    // The pose blends from the fitted closed pose on the table to the fitted open pose in the
-    // middle (both from fitIntroPoses). Only transform values change: the perspective is fixed.
-    const blend = (closed, open) => closed + (open - closed) * move;
-    laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW * (1 - move)}deg`);
-    laptopIntro.style.setProperty("--camera-angle", `${blend(closedCamera, OPEN_CAMERA)}deg`);
-    laptopIntro.style.setProperty("--laptop-scale", `${blend(closedScale, openScale)}`);
-    laptopIntro.style.setProperty("--lid-shift", `${blend(closedShiftX, openShiftX)}px`);
-    laptopIntro.style.setProperty("--lid-lift", `${blend(closedShiftY, openShiftY)}px`);
+    // Move the camera: the photo and the laptop zoom and pan together, so the laptop stays on
+    // its spot on the table. Its angle eases from the low table view to facing the screen.
+    // Everything here is worked out from values fitted on resize; nothing reads layout.
+    const camera = cameraAt(move);
+    setPhotoCamera(camera, move);
+    placeLaptop(
+      closedSize * camera.zoom,
+      tableX * camera.zoom + camera.panX,
+      tableY * camera.zoom + camera.panY,
+      CLOSED_YAW * (1 - move),
+      closedCamera + (OPEN_CAMERA - closedCamera) * move,
+    );
     laptopIntro.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
     laptopIntro.style.setProperty("--screen-power", screenPower);
     laptopIntro.style.setProperty("--keyboard-reveal", keyboardReveal);
     laptopIntro.style.setProperty("--logo-opacity", `${1 - logoFade}`);
     // Slide the shine across the silver as the lid opens, so the metal catches the light.
     laptopIntro.style.setProperty("--metal-sheen", `${28 + 44 * opening}%`);
-    // Greeting fades upward and the scroll hint simply fades.
+    // Greeting fades upward, side labels slide outward, and the scroll hint simply fades.
     laptopIntro.style.setProperty("--intro-opacity", `${1 - introFade}`);
     laptopIntro.style.setProperty("--intro-shift", `${-5 * introFade}vh`);
+    laptopIntro.style.setProperty("--detail-shift", `${6 * introFade}vw`);
     laptopIntro.style.setProperty("--cue-opacity", `${1 - cueFade}`);
-    // The front photo fades as the lid lifts; the whole balcony fades during the dive.
-    laptopIntro.style.setProperty("--photo-opacity", `${1 - photoFade}`);
+    // The whole balcony fades out during the dive. Its live details stop once it is gone.
     laptopIntro.style.setProperty("--balcony-opacity", `${1 - diveProgress}`);
+    balconyLife?.setShown(diveProgress < 1);
 
     // Play the keys once above 90%; re-arm only after closing below 30%.
     if (opening < 0.3) {
@@ -2066,40 +2095,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Size and place both balcony photos for a stage of this size, and return where the photo's
-  // closed laptop lid lands on screen (in pixels from the stage's top-left corner).
-  //
-  // Wide screens: "cover", like background-size: cover, centred. If that crop would cut into
-  // the laptop (very wide or very short windows), the crop slides just enough to keep it in.
-  // Portrait phones: cover would crop the laptop's sides, so the photo is shrunk (never past
-  // cover size) until the laptop spans PORTRAIT_LID_SHARE of the width, centred on the
-  // laptop, and sits at the bottom of the screen; the sky colour continues above it.
+  // ===== Balcony scene: photo placement and camera =====
+
+  // The photo's box in stage pixels at the start (before any camera move); set by placeBalcony.
+  const photoBox = { left: 0, top: 0, width: 1, height: 1 };
+
+  // Size and place the photo for a stage of this size, and return where the empty spot for the
+  // closed lid lands on screen (in pixels from the stage's top-left corner).
+  // Wide screens: cover, centred, like background-size: cover.
+  // Portrait phones: 79% of the screen tall at the bottom, 46% across; the sky colour fills
+  // the band above it.
   const placeBalcony = (width, height) => {
-    const lidWidth = PHOTO_LID.right - PHOTO_LID.left;
-    const cover = Math.max(width / PHOTO_WIDTH, height / PHOTO_HEIGHT);
     const portrait = height > width;
-    const scale = portrait ? Math.min(cover, (width * PORTRAIT_LID_SHARE) / lidWidth) : cover;
+    const scale = portrait
+      ? (height * PORTRAIT_PHOTO_HEIGHT) / PHOTO_HEIGHT
+      : Math.max(width / PHOTO_WIDTH, height / PHOTO_HEIGHT);
     const photoWidth = PHOTO_WIDTH * scale;
     const photoHeight = PHOTO_HEIGHT * scale;
-
-    // Sideways: centre the photo (or the laptop, on portrait screens), keep the laptop at least
-    // 4% from both edges, and never show past the photo's own edges.
-    const lidCenter = ((PHOTO_LID.left + PHOTO_LID.right) / 2) * scale;
-    const sideMargin = width * 0.04;
-    let left = portrait ? width / 2 - lidCenter : (width - photoWidth) / 2;
-    left = Math.max(left, sideMargin - PHOTO_LID.left * scale);
-    left = Math.min(left, width - sideMargin - PHOTO_LID.right * scale);
-    left = Math.min(0, Math.max(width - photoWidth, left));
-
-    // Up and down: a photo shorter than the screen sits on the bottom edge. A taller one is
-    // centred, raised if needed so the laptop ends above the bottom 6% of the screen.
-    let top;
-    if (photoHeight <= height) {
-      top = height - photoHeight;
-    } else {
-      top = Math.min((height - photoHeight) / 2, height * 0.94 - PHOTO_LID.bottom * scale);
-      top = Math.min(0, Math.max(height - photoHeight, top));
-    }
+    // object-position style: 50% centres the photo; 46% shows a little more of its left side.
+    // (If a very wide phone made the photo narrower than the screen, centre it instead.)
+    const across = portrait && photoWidth > width ? PORTRAIT_PHOTO_X : 0.5;
+    const left = (width - photoWidth) * across;
+    const top = portrait ? height - photoHeight : (height - photoHeight) / 2;
+    Object.assign(photoBox, { left, top, width: photoWidth, height: photoHeight });
 
     const style = laptopIntro.style;
     style.setProperty("--scene-left", `${left}px`);
@@ -2122,26 +2140,542 @@ document.addEventListener("DOMContentLoaded", () => {
     return lid;
   };
 
-  // Work out both ends of the laptop's journey for the current window. All the layout reads
-  // happen here, once per resize, never in the scroll loop; the scroll loop only blends
-  // between the two poses found here.
+  // Keep a camera pan inside the photo: every screen edge the photo covered at the start stays
+  // covered at this zoom, so no empty band ever opens beside or under it. (On phones the top
+  // is plain sky colour anyway, so only the sides and bottom are held.)
+  const clampPan = (zoom, panX, panY) => {
+    const { left, top, width, height } = photoBox;
+    let x = panX;
+    let y = panY;
+    if (left <= 0.5) x = Math.min(x, -zoom * left);
+    if (left + width >= stageSize.width - 0.5) x = Math.max(x, stageSize.width - zoom * (left + width));
+    if (top <= 0.5) y = Math.min(y, -zoom * top);
+    if (top + height >= stageSize.height - 0.5) y = Math.max(y, stageSize.height - zoom * (top + height));
+    return { x, y };
+  };
+
+  // The camera at a point of the move (0 = start, 1 = end). A stage point p shows at
+  // p * zoom + pan. Zoom and pan both change in a straight line with the eased move value, so
+  // the laptop's spot glides in a straight line too, and since the start and the end both keep
+  // the photo covering the screen, every point between them does as well.
+  const cameraAt = (move) => ({
+    zoom: 1 + (endZoom - 1) * move,
+    panX: endPanX * move,
+    panY: endPanY * move,
+  });
+
+  // Apply the camera to the photo and its live details, with the focus pull: blur up to 3px and
+  // 12% darker at the end of the move. The filter sits inside the zoom, so its radius is divided
+  // by the zoom to look the same on screen. At rest there is no filter at all.
+  const setPhotoCamera = (camera, move) => {
+    balconyCamera.style.transform = `translate(${camera.panX}px, ${camera.panY}px) scale(${camera.zoom})`;
+    balconyCamera.style.filter = move > 0
+      ? `blur(${(FOCUS_BLUR * move) / camera.zoom}px) brightness(${1 - FOCUS_DIM * move})`
+      : "none";
+  };
+
+  // Where the middle of the laptop's base ends up for a pose at scale 1, relative to the
+  // laptop's own centre, following the same steps as the .laptop transform in style.css
+  // (read right to left): move to the turning point, turn on the table, move back, tilt.
+  // The base starts at the hinge (half the lid's height below the centre) and reaches toward
+  // the viewer by the lid's height, so its middle is half that height out.
+  const baseCentre = (yawDegrees, cameraDegrees) => {
+    const half = laptopSize.height / 2;
+    const yaw = (yawDegrees * Math.PI) / 180;
+    const tilt = (cameraDegrees * Math.PI) / 180;
+    let x = 0;
+    let y = half;
+    let z = half - laptopSize.pivot;
+    [x, z] = [x * Math.cos(yaw) + z * Math.sin(yaw), -x * Math.sin(yaw) + z * Math.cos(yaw)];
+    z += laptopSize.pivot;
+    [y, z] = [y * Math.cos(tilt) - z * Math.sin(tilt), y * Math.sin(tilt) + z * Math.cos(tilt)];
+    return { x, y, z };
+  };
+
+  // Place the laptop so the middle of its base shows at (screenX, screenY) in the stage, at this
+  // size on screen, turn and camera angle. This is the stage's perspective worked out exactly,
+  // so the laptop sits on its spot of the photo without measuring anything.
   //
-  // Open pose: the largest size (up to OPEN_SCALE_MAX) at which the fully open laptop, base
-  // and keyboard included, fits inside the window with its screen's centre in the window's
-  // middle, where the dive then holds it. Perspective makes the base much bigger than its
-  // layout box, so measuring the real pose beats a fixed CSS size.
+  // "Size on screen" is the CSS scale times the perspective's enlargement at the laptop's depth.
+  // Solving for the scale that gives it keeps the laptop's size in step with the photo's zoom.
+  const placeLaptop = (size, screenX, screenY, yawDegrees, cameraDegrees) => {
+    const base = baseCentre(yawDegrees, cameraDegrees);
+    const scale = (size * PERSPECTIVE) / (PERSPECTIVE + size * base.z);
+    const enlarge = PERSPECTIVE / (PERSPECTIVE - scale * base.z);
+    // Undo the perspective for that one point, then subtract where the pose itself puts it.
+    const originX = stageSize.width * PERSPECTIVE_ORIGIN_X;
+    const originY = stageSize.height * PERSPECTIVE_ORIGIN_Y;
+    const flatX = originX + (screenX - originX) / enlarge;
+    const flatY = originY + (screenY - originY) / enlarge;
+    const style = laptopIntro.style;
+    style.setProperty("--laptop-scale", String(scale));
+    style.setProperty("--lid-shift", `${flatX - stageSize.width / 2 - scale * base.x}px`);
+    style.setProperty("--lid-lift", `${flatY - stageSize.height / 2 - scale * base.y}px`);
+    style.setProperty("--laptop-yaw", `${yawDegrees}deg`);
+    style.setProperty("--camera-angle", `${cameraDegrees}deg`);
+  };
+
+  // ===== Balcony scene: live details =====
+  // Small, slow movements drawn over the photo on one canvas, in photo pixels (the canvas is
+  // 1376 x 768 and is stretched with the photo, so everything stays aligned through the zoom).
+  const createBalconyLife = () => {
+    const canvas = laptopIntro.querySelector(".balcony-canvas");
+    const photo = laptopIntro.querySelector(".balcony-photo");
+    const context = canvas?.getContext("2d");
+    if (!context) {
+      return null;
+    }
+
+    // A fixed-seed random number generator, so the stars and lights are the same every visit.
+    let seed = 20261110;
+    const random = () => {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    };
+    const between = (low, high) => low + (high - low) * random();
+
+    // Soft round light, drawn once and stamped wherever a glow is needed (much cheaper than a
+    // new gradient per light). One warm and one cool white version.
+    const makeGlow = (red, green, blue) => {
+      const sprite = document.createElement("canvas");
+      sprite.width = 64;
+      sprite.height = 64;
+      const paint = sprite.getContext("2d");
+      const gradient = paint.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gradient.addColorStop(0, `rgb(${red} ${green} ${blue} / 100%)`);
+      gradient.addColorStop(0.25, `rgb(${red} ${green} ${blue} / 55%)`);
+      gradient.addColorStop(1, `rgb(${red} ${green} ${blue} / 0%)`);
+      paint.fillStyle = gradient;
+      paint.fillRect(0, 0, 64, 64);
+      return sprite;
+    };
+    const warmGlow = makeGlow(255, 196, 132);
+    const whiteGlow = makeGlow(235, 242, 255);
+    const stamp = (sprite, x, y, radius, alpha) => {
+      if (alpha <= 0.002) return;
+      context.globalAlpha = Math.min(1, alpha);
+      context.drawImage(sprite, x - radius, y - radius, radius * 2, radius * 2);
+    };
+
+    // ----- Picking spots from the photo, once -----
+    // Reading pixels needs the page to be served (Live Server, GitHub Pages). From a file://
+    // address the browser blocks it; the stars then use random spots in the sky area and the
+    // city lights are left out.
+    let pixels = null;
+    const readPhoto = () => {
+      try {
+        const reader = document.createElement("canvas");
+        reader.width = PHOTO_WIDTH;
+        reader.height = PHOTO_HEIGHT;
+        const paint = reader.getContext("2d", { willReadFrequently: true });
+        paint.drawImage(photo, 0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+        pixels = paint.getImageData(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT).data;
+      } catch {
+        pixels = null;
+      }
+    };
+    const colourAt = (x, y) => {
+      const index = (Math.round(y) * PHOTO_WIDTH + Math.round(x)) * 4;
+      return [pixels[index], pixels[index + 1], pixels[index + 2]];
+    };
+    const brightnessAt = (x, y) => {
+      const [red, green, blue] = colourAt(x, y);
+      return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    };
+    // Areas with a life of their own, left out of the stars and city lights.
+    const TOWER_AREA = { left: 795, right: 945, top: 268, bottom: 382 };
+    const PLANT_AREA = { left: 932, right: 1082, top: 428, bottom: 590 };
+    const inside = (area, x, y) => x >= area.left && x <= area.right && y >= area.top && y <= area.bottom;
+    // Open sky: right of the roof overhang (its edge runs from x 448 at the top to x 345 at
+    // y 190) and right of the curved balcony wall below that, above the skyline.
+    const inOpenSky = (x, y) => {
+      if (y > 300 || inside(TOWER_AREA, x, y)) return false;
+      return y < 190 ? x > 456 - y * 0.55 : x > 525;
+    };
+
+    // Stars: dark sky pixels, more of them high up where the sky is darkest.
+    const stars = [];
+    for (let attempt = 0; attempt < 4000 && stars.length < 90; attempt += 1) {
+      const x = between(350, PHOTO_WIDTH - 2);
+      const y = 2 + 296 * random() ** 1.5;
+      if (!inOpenSky(x, y) || (pixels && brightnessAt(x, y) > 52)) continue;
+      stars.push({
+        x,
+        y,
+        size: between(0.7, 1.7) * (random() < 0.12 ? 1.6 : 1),
+        glow: between(0.35, 0.85),
+        speed: between(0.6, 2.2),
+        phase: between(0, Math.PI * 2),
+      });
+    }
+
+    // City lights: the brightest little points in the city band behind the railing, each a
+    // local peak so one light gets one twinkle. Their own colour is used for the glow.
+    const cityLights = [];
+    if (pixels) {
+      const found = [];
+      for (let y = 342; y <= 500; y += 2) {
+        for (let x = 560; x <= PHOTO_WIDTH - 4; x += 2) {
+          if (inside(TOWER_AREA, x, y) || inside(PLANT_AREA, x, y)) continue;
+          const light = brightnessAt(x, y);
+          if (light < 150) continue;
+          if (light < brightnessAt(x - 2, y) || light < brightnessAt(x + 2, y)
+            || light < brightnessAt(x, y - 2) || light < brightnessAt(x, y + 2)) continue;
+          found.push({ x, y, colour: colourAt(x, y) });
+        }
+      }
+      // Shuffle and keep up to 150, spread over the whole band.
+      for (let index = found.length - 1; index > 0; index -= 1) {
+        const other = Math.floor(random() * (index + 1));
+        [found[index], found[other]] = [found[other], found[index]];
+      }
+      found.slice(0, 150).forEach((light) => {
+        const [red, green, blue] = light.colour;
+        cityLights.push({
+          ...light,
+          tint: `rgb(${red} ${green} ${blue})`,
+          size: between(1.6, 3.4),
+          speed: between(0.4, 1.6),
+          phase: between(0, Math.PI * 2),
+        });
+      });
+    }
+    // City lights are tinted copies of a small white glow, one per colour, made on first use.
+    const tintedGlows = new Map();
+    const glowIn = (tint) => {
+      if (!tintedGlows.has(tint)) {
+        const sprite = document.createElement("canvas");
+        sprite.width = 32;
+        sprite.height = 32;
+        const paint = sprite.getContext("2d");
+        paint.drawImage(whiteGlow, 0, 0, 32, 32);
+        paint.globalCompositeOperation = "source-in";
+        paint.fillStyle = tint;
+        paint.fillRect(0, 0, 32, 32);
+        tintedGlows.set(tint, sprite);
+      }
+      return tintedGlows.get(tint);
+    };
+
+    // Light on the bay: short glints on the water (x 1185-1370, y 400-417) drifting sideways.
+    const glints = Array.from({ length: 46 }, () => ({
+      x: between(1188, 1370),
+      y: between(401, 416.5),
+      length: between(2.5, 9),
+      drift: between(-3.5, 3.5),
+      speed: between(1.2, 3),
+      phase: between(0, Math.PI * 2),
+    }));
+
+    // Lamps and candles: a slow breath for all, plus a faster uneven flicker for the flames.
+    const lamps = [
+      { x: 210, y: 298, radius: 92, glow: 0.2, flicker: 0.03 }, // desk lamp
+      { x: 208, y: 372, radius: 72, glow: 0.2, flicker: 0.03 }, // table lamp, left
+      { x: 531, y: 364, radius: 72, glow: 0.2, flicker: 0.03 }, // table lamp, right
+      { x: 260, y: 388, radius: 26, glow: 0.42, flicker: 0.22 }, // candles
+      { x: 286, y: 384, radius: 26, glow: 0.42, flicker: 0.22 },
+      { x: 262, y: 466, radius: 30, glow: 0.4, flicker: 0.2 },
+    ].map((lamp) => ({ ...lamp, phase: between(0, Math.PI * 2) }));
+
+    // Steam from the coffee (surface around 966, 568): soft puffs rising, curling, fading.
+    const STEAM_LIFE = 5;
+    const steam = Array.from({ length: 24 }, (_, index) => ({
+      born: -(index / 24) * STEAM_LIFE,
+      x: between(-7, 7),
+      curl: between(0, Math.PI * 2),
+      sway: between(2.5, 5),
+    }));
+
+    // Flame Towers: the LED façades show flames rising, clipped to each tower's outline.
+    // The flames are drawn on a small canvas covering the three towers and masked by their
+    // outlines (traced from the photo, in photo pixels).
+    const FLAME_AREA = { left: 798, top: 272, width: 144, height: 108 };
+    const towerOutlines = [
+      // left tower, around x 801-845, y 275-377
+      [[809, 275], [816, 279], [824, 289], [829, 299], [831, 310], [835, 313], [840, 323], [842, 333],
+        [844, 345], [845, 365], [846, 377], [801, 377], [801, 353], [802, 334], [804, 315], [807, 295]],
+      // middle tower, around x 881-907, y 299-357
+      [[889, 305], [895, 301], [901, 299], [907, 298], [909, 312], [907, 357], [880, 357], [881, 334], [884, 318]],
+      // right tower, around x 903-939, y 283-357
+      [[934, 283], [935, 300], [937, 322], [939, 344], [939, 357], [910, 357], [909, 322], [910, 312],
+        [912, 303], [916, 296], [924, 289]],
+    ];
+    // Each tower's top and bottom, so the flames are strongest at the foot and thin out upward.
+    const towerSpans = towerOutlines.map((outline) => {
+      const heights = outline.map(([, y]) => y);
+      return { top: Math.min(...heights), bottom: Math.max(...heights) };
+    });
+    const flameCanvas = document.createElement("canvas");
+    flameCanvas.width = FLAME_AREA.width;
+    flameCanvas.height = FLAME_AREA.height;
+    const flamePaint = flameCanvas.getContext("2d");
+    const flameImage = flamePaint.createImageData(FLAME_AREA.width, FLAME_AREA.height);
+    // The outlines' mask (soft edges), and which tower each masked pixel belongs to.
+    const flameMask = new Float32Array(FLAME_AREA.width * FLAME_AREA.height);
+    const flameTower = new Int8Array(FLAME_AREA.width * FLAME_AREA.height).fill(-1);
+    towerOutlines.forEach((outline, tower) => {
+      flamePaint.clearRect(0, 0, FLAME_AREA.width, FLAME_AREA.height);
+      flamePaint.beginPath();
+      outline.forEach(([x, y], index) => {
+        const method = index === 0 ? "moveTo" : "lineTo";
+        flamePaint[method](x - FLAME_AREA.left, y - FLAME_AREA.top);
+      });
+      flamePaint.closePath();
+      flamePaint.fill();
+      const coverage = flamePaint.getImageData(0, 0, FLAME_AREA.width, FLAME_AREA.height).data;
+      for (let index = 0; index < flameMask.length; index += 1) {
+        const alpha = coverage[index * 4 + 3] / 255;
+        if (alpha > flameMask[index]) {
+          flameMask[index] = alpha;
+          flameTower[index] = tower;
+        }
+      }
+    });
+    // Smooth value noise: random values on a grid, blended smoothly in between.
+    const lattice = (x, y) => {
+      const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+      return value - Math.floor(value);
+    };
+    const smooth = (value) => value * value * (3 - 2 * value);
+    const noise = (x, y) => {
+      const cellX = Math.floor(x);
+      const cellY = Math.floor(y);
+      const fracX = smooth(x - cellX);
+      const fracY = smooth(y - cellY);
+      const top = lattice(cellX, cellY) + (lattice(cellX + 1, cellY) - lattice(cellX, cellY)) * fracX;
+      const bottom = lattice(cellX, cellY + 1) + (lattice(cellX + 1, cellY + 1) - lattice(cellX, cellY + 1)) * fracX;
+      return top + (bottom - top) * fracY;
+    };
+    const drawFlames = (time) => {
+      const data = flameImage.data;
+      for (let row = 0; row < FLAME_AREA.height; row += 1) {
+        const y = FLAME_AREA.top + row;
+        for (let column = 0; column < FLAME_AREA.width; column += 1) {
+          const index = row * FLAME_AREA.width + column;
+          const offset = index * 4;
+          const mask = flameMask[index];
+          if (mask <= 0) {
+            data[offset + 3] = 0;
+            continue;
+          }
+          const span = towerSpans[flameTower[index]];
+          // 0 at the tower's foot, 1 at its tip.
+          const height = (span.bottom - y) / (span.bottom - span.top);
+          const x = FLAME_AREA.left + column;
+          // Two layers of noise scrolling upward make tongues of flame that rise and flicker.
+          const tongues = noise(x * 0.16, y * 0.075 + time * 1.5) * 0.65
+            + noise(x * 0.38 + 7, y * 0.16 + time * 2.6) * 0.35;
+          const flame = Math.min(1, Math.max(0, (tongues - height * 0.72 + 0.12) * 2.1));
+          data[offset] = 255;
+          data[offset + 1] = 70 + 160 * flame * flame;
+          data[offset + 2] = 18 + 60 * flame * flame * flame;
+          data[offset + 3] = 255 * mask * flame * 0.82;
+        }
+      }
+      flamePaint.putImageData(flameImage, 0, 0);
+      context.globalAlpha = 0.78;
+      context.drawImage(flameCanvas, FLAME_AREA.left, FLAME_AREA.top);
+    };
+
+    // A soft shadow on the table where the laptop touches it (centred around 658, 655),
+    // stretched along the table's slant so the laptop looks like it rests on the wood.
+    const drawContactShadow = () => {
+      context.save();
+      context.globalAlpha = 1;
+      context.translate(658, 655);
+      context.rotate(-0.11);
+      context.scale(1, 0.27);
+      const shadow = context.createRadialGradient(0, 0, 0, 0, 0, 225);
+      shadow.addColorStop(0, "rgb(0 0 0 / 58%)");
+      shadow.addColorStop(0.62, "rgb(0 0 0 / 38%)");
+      shadow.addColorStop(1, "rgb(0 0 0 / 0%)");
+      context.fillStyle = shadow;
+      context.fillRect(-225, -225, 450, 450);
+      context.restore();
+    };
+
+    // Film grain: a few tiles of faint light and dark specks, shifted at random every other
+    // frame, so the grain shimmers like a real camera's without redrawing noise each frame.
+    const grainTiles = Array.from({ length: 3 }, () => {
+      const tile = document.createElement("canvas");
+      tile.width = 128;
+      tile.height = 128;
+      const paint = tile.getContext("2d");
+      const specks = paint.createImageData(128, 128);
+      for (let index = 0; index < specks.data.length; index += 4) {
+        const light = random() < 0.5 ? 255 : 0;
+        specks.data[index] = light;
+        specks.data[index + 1] = light;
+        specks.data[index + 2] = light;
+        specks.data[index + 3] = random() * 22;
+      }
+      paint.putImageData(specks, 0, 0);
+      return context.createPattern(tile, "repeat");
+    });
+    let grain = { tile: 0, x: 0, y: 0 };
+    let grainFrame = 0;
+    const drawGrain = (still) => {
+      if (!still && (grainFrame += 1) % 2 === 0) {
+        grain = { tile: Math.floor(random() * 3), x: random() * 128, y: random() * 128 };
+      }
+      context.save();
+      context.globalAlpha = 1;
+      context.translate(-grain.x, -grain.y);
+      context.fillStyle = grainTiles[grain.tile];
+      context.fillRect(grain.x, grain.y, PHOTO_WIDTH, PHOTO_HEIGHT);
+      context.restore();
+    };
+
+    // Draw one moment of the scene. "still" draws a calm frame for reduced motion.
+    const draw = (time, still = false) => {
+      context.clearRect(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+      context.globalCompositeOperation = "source-over";
+      drawContactShadow();
+
+      // Lights add to the photo's own light.
+      context.globalCompositeOperation = "lighter";
+      stars.forEach((star) => {
+        const twinkle = still ? 0.7 : 0.5 + 0.5 * Math.sin(time * star.speed + star.phase);
+        stamp(whiteGlow, star.x, star.y, star.size * 2.2, star.glow * twinkle * twinkle);
+      });
+      cityLights.forEach((light) => {
+        // Mostly steady, with a brighter shimmer now and then.
+        const wave = still ? 0.4 : 0.5 + 0.5 * Math.sin(time * light.speed + light.phase);
+        stamp(glowIn(light.tint), light.x, light.y, light.size, 0.12 + 0.38 * wave ** 3);
+      });
+      glints.forEach((glint) => {
+        const shine = still ? 0.5 : 0.5 + 0.5 * Math.sin(time * glint.speed + glint.phase);
+        const span = 1370 - 1188;
+        const x = 1188 + ((((glint.x - 1188 + glint.drift * time) % span) + span) % span);
+        context.globalAlpha = 0.32 * shine * shine;
+        context.fillStyle = "rgb(255 236 205)";
+        context.fillRect(x, glint.y, glint.length, 0.9);
+      });
+      lamps.forEach((lamp) => {
+        const breath = still ? 0 : 0.07 * Math.sin(time * 0.8 + lamp.phase);
+        const flicker = still ? 0 : lamp.flicker * (
+          0.5 * Math.sin(time * 7.3 + lamp.phase)
+          + 0.3 * Math.sin(time * 13.1 + lamp.phase * 2.1)
+          + 0.2 * Math.sin(time * 23.7 + lamp.phase * 3.7)
+        );
+        stamp(warmGlow, lamp.x, lamp.y, lamp.radius * (1 + flicker * 0.3), lamp.glow * (1 + breath + flicker));
+      });
+
+      context.globalCompositeOperation = "source-over";
+      drawFlames(still ? 1.5 : time);
+
+      // Steam: each puff rises about 24 photo pixels a second, curls side to side more as it
+      // climbs, grows, and fades in and out over its life.
+      steam.forEach((puff) => {
+        let age = (time - puff.born) % STEAM_LIFE;
+        if (still) age = (puff.born + STEAM_LIFE) % STEAM_LIFE;
+        const life = age / STEAM_LIFE;
+        const x = 966 + puff.x + Math.sin(age * 1.25 + puff.curl) * puff.sway * (0.4 + life * 2.2);
+        const y = 563 - age * 24;
+        stamp(whiteGlow, x, y, 5 + life * 15, 0.085 * Math.sin(Math.PI * life));
+      });
+
+      drawGrain(still);
+      context.globalAlpha = 1;
+    };
+
+    // ----- One animation loop, running only while it can be seen -----
+    let frame = 0;
+    let ready = false;
+    let onScreen = true;
+    let shown = true;
+    const shouldRun = () => ready && onScreen && shown && !reducedMotion.matches && !document.hidden;
+    const loop = (now) => {
+      frame = 0;
+      if (!shouldRun()) return;
+      draw(now / 1000);
+      frame = window.requestAnimationFrame(loop);
+    };
+    const refresh = () => {
+      if (!ready) return;
+      if (reducedMotion.matches) {
+        // No motion: one calm frame, still with the lamps, lights and shadow.
+        if (frame) window.cancelAnimationFrame(frame);
+        frame = 0;
+        draw(0, true);
+        return;
+      }
+      if (shouldRun() && !frame) {
+        frame = window.requestAnimationFrame(loop);
+      } else if (!shouldRun() && frame) {
+        window.cancelAnimationFrame(frame);
+        frame = 0;
+      }
+    };
+
+    // Pause whenever the intro is scrolled out of view.
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver((entries) => {
+        onScreen = entries.some((entry) => entry.isIntersecting);
+        refresh();
+      }).observe(laptopIntro);
+    }
+    document.addEventListener("visibilitychange", refresh);
+    if (typeof reducedMotion.addEventListener === "function") {
+      reducedMotion.addEventListener("change", refresh);
+    } else {
+      reducedMotion.addListener(refresh);
+    }
+
+    // Start once the photo has loaded (its pixels choose the stars and lights).
+    const start = () => {
+      if (ready) return;
+      readPhoto();
+      ready = true;
+      refresh();
+    };
+    if (photo.complete && photo.naturalWidth > 0) {
+      start();
+    } else {
+      photo.addEventListener("load", start, { once: true });
+    }
+
+    return {
+      // Called by the scroll loop: stop once the balcony has faded out in the dive.
+      setShown(value) {
+        if (value === shown) return;
+        shown = value;
+        refresh();
+      },
+    };
+  };
+
+  // Note: stars and city lights are chosen inside createBalconyLife only after the photo has
+  // loaded, because they depend on its pixels.
+  let balconyLife = null;
+
+  // ===== Fitting the two ends of the camera move =====
+  // All the layout reads happen here, once per resize, never in the scroll loop.
   //
-  // Closed pose: the lid lying over the photo's laptop. The size matches the photo laptop's
-  // width, a plain move matches its centre, and the camera angle is chosen so the height
-  // matches too, which gives the same low view across the table.
+  // Start: the closed laptop lies on the table. Its size matches the empty spot's width and
+  // its outline is centred on it (measured, then corrected a few times, since perspective is
+  // not linear). That gives the size and the table spot that the camera move then carries.
+  //
+  // End: the camera zoom and pan that put the open laptop near the middle (56% of the height)
+  // at the largest size that fits, or on phones near where it is (78%) at a 1.12 zoom, with
+  // the photo still covering the screen.
   const fitIntroPoses = () => {
     const savedIntroStyle = laptopIntro.getAttribute("style") || "";
     const savedDiveStyle = laptopDive.getAttribute("style") || "";
+    const savedCamera = [balconyCamera.style.transform, balconyCamera.style.filter];
     const stageRect = laptopStage.getBoundingClientRect();
-    const stageMiddleX = stageRect.width / 2;
-    const stageMiddleY = stageRect.height / 2;
+    stageSize.width = stageRect.width;
+    stageSize.height = stageRect.height;
+    // The laptop's own size, before any transform (offset sizes ignore transforms).
+    laptopSize.width = laptopBody.offsetWidth;
+    laptopSize.height = laptopBody.offsetHeight;
+    // Same as --laptop-pivot in style.css: half the base's depth, so turns happen around the
+    // middle of the laptop's footprint.
+    laptopSize.pivot = laptopSize.width * 0.322;
+    const portrait = stageRect.height > stageRect.width;
+    closedCamera = portrait ? CLOSED_CAMERA_PORTRAIT : CLOSED_CAMERA_WIDE;
 
-    // Place the photos first; the closed laptop is fitted to where the photo's laptop lands.
+    // Place the photo first; the closed laptop is fitted to the empty spot on its table.
     const target = placeBalcony(stageRect.width, stageRect.height);
     // Keep the photo settings through the restore at the end of this function.
     const sceneStyle = ["--scene-left", "--scene-top", "--scene-width", "--scene-height", "--sky-blend", "--cue-x", "--cue-bottom"]
@@ -2150,7 +2684,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Measure without any dive zoom or offset.
     laptopDive.removeAttribute("style");
 
-    // A part's box on screen, relative to the stage's top-left corner.
+    // The outline of some parts on screen, relative to the stage's top-left corner.
     const boxOf = (elements) => {
       const box = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
       elements.forEach((element) => {
@@ -2160,119 +2694,76 @@ document.addEventListener("DOMContentLoaded", () => {
         box.top = Math.min(box.top, rect.top - stageRect.top);
         box.bottom = Math.max(box.bottom, rect.bottom - stageRect.top);
       });
+      box.width = box.right - box.left;
+      box.height = box.bottom - box.top;
+      box.centerX = (box.left + box.right) / 2;
+      box.centerY = (box.top + box.bottom) / 2;
       return box;
     };
 
-    const setPose = (scale, shiftX, shiftY) => {
-      laptopIntro.style.setProperty("--laptop-scale", String(scale));
-      laptopIntro.style.setProperty("--lid-shift", `${shiftX}px`);
-      laptopIntro.style.setProperty("--lid-lift", `${shiftY}px`);
-    };
-
-    // ----- Open pose: facing forward, lid open -----
-    laptopIntro.style.setProperty("--laptop-yaw", "0deg");
-    laptopIntro.style.setProperty("--camera-angle", `${OPEN_CAMERA}deg`);
-    laptopIntro.style.setProperty("--lid-angle", "8deg");
-    const openParts = laptopIntro.querySelectorAll(".lid-face, .deck, .deck-wall-front");
-
-    // How far the laptop reaches from its screen's centre, as a share of the room available.
-    const overflowAt = (scale, shiftX, shiftY) => {
-      setPose(scale, shiftX, shiftY);
-      const screen = boxOf([screenDisplay]);
-      const centerX = (screen.left + screen.right) / 2;
-      const centerY = (screen.top + screen.bottom) / 2;
-      const reach = boxOf(openParts);
-      // Leave a 6% margin at the top and bottom and 3% at the sides.
-      return {
-        centerX,
-        centerY,
-        ratio: Math.max(
-          (centerY - reach.top) / (stageRect.height * 0.44),
-          (reach.bottom - centerY) / (stageRect.height * 0.44),
-          (centerX - reach.left) / (stageRect.width * 0.47),
-          (reach.right - centerX) / (stageRect.width * 0.47),
-        ),
-      };
-    };
-
-    // Perspective is not linear, so settle in a few passes: move the screen's centre to the
-    // middle, then shrink until the laptop fits around it.
-    let scale = OPEN_SCALE_MAX;
-    let shiftX = 0;
-    let shiftY = 0;
-    for (let pass = 0; pass < 4; pass += 1) {
-      const fit = overflowAt(scale, shiftX, shiftY);
-      shiftX += stageMiddleX - fit.centerX;
-      shiftY += stageMiddleY - fit.centerY;
-      scale = Math.min(OPEN_SCALE_MAX, scale / Math.max(1, fit.ratio));
-    }
-    // One last centring step at the final size.
-    const openFit = overflowAt(scale, shiftX, shiftY);
-    openScale = scale;
-    openShiftX = shiftX + stageMiddleX - openFit.centerX;
-    openShiftY = shiftY + stageMiddleY - openFit.centerY;
-
-    // ----- Closed pose: lid shut, lying on the photo's table -----
-    laptopIntro.style.setProperty("--laptop-yaw", `${CLOSED_YAW}deg`);
+    // ----- Start: closed, on the table -----
     laptopIntro.style.setProperty("--lid-angle", "-90deg");
-    // The closed laptop's outline: the lid's silver back on top, the base and its edges below.
+    // The closed laptop's outline: the lid's back on top, the base and its edges below.
     const closedParts = laptopIntro.querySelectorAll(".back-face, .deck, .deck-wall");
     const targetWidth = target.right - target.left;
-    const targetCenterX = (target.left + target.right) / 2;
-    const targetCenterY = (target.top + target.bottom) / 2;
-    const targetShape = (target.bottom - target.top) / targetWidth;
-
-    // At one camera angle, match the photo laptop's width and centre, then report how tall
-    // the laptop is for its width. Each call starts from the last answer, so it settles fast.
-    scale = closedScale;
-    shiftX = closedShiftX || targetCenterX - stageMiddleX;
-    shiftY = closedShiftY || targetCenterY - stageMiddleY;
-    const shapeAt = (camera) => {
-      laptopIntro.style.setProperty("--camera-angle", `${camera}deg`);
-      let box = null;
-      for (let pass = 0; pass < 3; pass += 1) {
-        setPose(scale, shiftX, shiftY);
-        box = boxOf(closedParts);
-        scale *= targetWidth / Math.max(1, box.right - box.left);
-        shiftX += targetCenterX - (box.left + box.right) / 2;
-        shiftY += targetCenterY - (box.top + box.bottom) / 2;
-      }
-      setPose(scale, shiftX, shiftY);
-      box = boxOf(closedParts);
-      return (box.bottom - box.top) / Math.max(1, box.right - box.left);
-    };
-
-    // A steeper (more negative) camera angle shows more of the lid's top, so the laptop looks
-    // taller. Halve the range of angles until the height matches the photo's laptop.
-    let steep = -60;
-    let shallow = 15;
-    for (let step = 0; step < 10; step += 1) {
-      const camera = (steep + shallow) / 2;
-      if (shapeAt(camera) < targetShape) {
-        shallow = camera;
-      } else {
-        steep = camera;
-      }
+    const targetX = (target.left + target.right) / 2;
+    const targetY = (target.top + target.bottom) / 2;
+    let size = targetWidth / Math.max(1, laptopSize.width);
+    let spotX = targetX;
+    let spotY = targetY;
+    for (let pass = 0; pass < 4; pass += 1) {
+      placeLaptop(size, spotX, spotY, CLOSED_YAW, closedCamera);
+      const box = boxOf(closedParts);
+      size *= targetWidth / Math.max(1, box.width);
+      spotX += targetX - box.centerX;
+      spotY += targetY - box.centerY;
     }
-    closedCamera = (steep + shallow) / 2;
-    shapeAt(closedCamera);
-    closedScale = scale;
-    closedShiftX = shiftX;
-    closedShiftY = shiftY;
+    closedSize = size;
+    tableX = spotX;
+    tableY = spotY;
+
+    // ----- End: open, facing the screen, camera moved in -----
+    laptopIntro.style.setProperty("--lid-angle", "8deg");
+    const openParts = laptopIntro.querySelectorAll(".lid-face, .deck, .deck-wall-front");
+    const endX = stageRect.width / 2;
+    const endY = stageRect.height * (portrait ? PORTRAIT_END_Y : WIDE_END_Y);
+    let zoom = portrait ? PORTRAIT_ZOOM : 1.6;
+    // Where the table spot should land; corrected below by how far the open laptop's outline
+    // sits from it.
+    let goalX = endX;
+    let goalY = endY;
+    let pan = { x: 0, y: 0 };
+    for (let pass = 0; pass < 5; pass += 1) {
+      pan = clampPan(zoom, goalX - zoom * tableX, goalY - zoom * tableY);
+      placeLaptop(closedSize * zoom, tableX * zoom + pan.x, tableY * zoom + pan.y, 0, OPEN_CAMERA);
+      const box = boxOf(openParts);
+      if (!portrait) {
+        // As big as fits: 74% of the height and 86% of the width at most.
+        const room = Math.min((stageRect.height * 0.74) / box.height, (stageRect.width * 0.86) / box.width);
+        zoom = Math.min(MAX_ZOOM, Math.max(1, zoom * room));
+      }
+      goalX += endX - box.centerX;
+      goalY += endY - box.centerY;
+    }
+    pan = clampPan(zoom, goalX - zoom * tableX, goalY - zoom * tableY);
+    endZoom = zoom;
+    endPanX = pan.x;
+    endPanY = pan.y;
 
     // Put the live pose back (keeping the new photo placement); the next frame redraws the
-    // laptop with the new values.
+    // laptop and the camera with the new values.
     laptopIntro.setAttribute("style", savedIntroStyle);
     sceneStyle.forEach(([name, value]) => laptopIntro.style.setProperty(name, value));
     laptopDive.setAttribute("style", savedDiveStyle);
+    [balconyCamera.style.transform, balconyCamera.style.filter] = savedCamera;
     renderedProgress = -1;
   };
 
   window.addEventListener("scroll", requestLaptopUpdate, { passive: true });
   // Refit when the stage changes size. The stage is 100svh tall, so it keeps its size while a
   // phone's address bar slides during a touch scroll; the photo and laptop then stay put.
-  let fittedWidth = laptopStage.clientWidth;
-  let fittedHeight = laptopStage.clientHeight;
+  let fittedWidth = 0;
+  let fittedHeight = 0;
   window.addEventListener("resize", () => {
     // The real hero's size comes first: the homepage layers and the dive's end zoom use it.
     measureHeroPage();
@@ -2286,11 +2777,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderedProgress = -1;
     requestLaptopUpdate();
   });
-  // Web fonts can change the key labels' size, so fit once more after they load.
-  document.fonts?.ready.then(() => {
-    fitIntroPoses();
-    requestLaptopUpdate();
-  });
 
   // Recheck both animations whenever the visitor changes motion preferences.
   if (typeof reducedMotion.addEventListener === "function") {
@@ -2301,11 +2787,15 @@ document.addEventListener("DOMContentLoaded", () => {
     reducedMotion.addListener(updateTypewriterMotion);
   }
 
-  // Start from the visitor's current scroll position instead of animating from zero.
+  // Start from the visitor's current scroll position instead of animating from zero, and draw
+  // the first pose straight away, so the laptop is on the table in the very first paint.
+  fittedWidth = laptopStage.clientWidth;
+  fittedHeight = laptopStage.clientHeight;
   fitIntroPoses();
+  balconyLife = createBalconyLife();
   currentProgress = readScrollProgress();
   targetProgress = currentProgress;
   updateTypewriterMotion();
-  requestLaptopUpdate();
+  updateLaptop();
 
 });

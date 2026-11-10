@@ -354,11 +354,12 @@ a {
 .laptop-intro {
   height: 420vh;
   height: 420svh;
-  /* Starting pose: closed, small, lying on the photo's table. main.js works out the exact
-     size, angle and position for the current window (fitIntroPoses) and moves every value
-     below as the page scrolls; these are only a rough first guess before it runs. */
-  --camera-angle: -20deg;
-  --laptop-yaw: 14deg;
+  /* Starting pose: closed, small, lying flat on the photo's table, seen from a low angle and
+     turned slightly right. main.js works out the exact size and position for the current
+     window (fitIntroPoses) and moves every value below as the page scrolls; these are only
+     a rough first guess before it runs. */
+  --camera-angle: -9deg;
+  --laptop-yaw: 6deg;
   --laptop-scale: 0.4;
   /* Half the deck's depth: the turn pivots around the middle of the laptop, not its hinge. */
   --laptop-pivot: calc(min(84vw, 118vh, 980px) * 0.322);
@@ -366,9 +367,19 @@ a {
   /* Where the laptop sits on screen, as a plain sideways and vertical move in pixels. */
   --lid-shift: 0px;
   --lid-lift: 0px;
-  /* The photo with the closed laptop (in front) and the whole balcony (behind). */
-  --photo-opacity: 1;
+  /* The balcony photo fades out during the dive. */
   --balcony-opacity: 1;
+  /* A darker space grey than the shared silver, to suit the night lighting. Only the Home
+     intro laptop uses these; the closing laptop on Contact keeps the silver. */
+  --laptop-edge: #3d4147;
+  --laptop-silver-base: #4b4f55;
+  --laptop-silver-dark: #2c2f34;
+  --laptop-silver-highlight: rgb(255 255 255 / 9%);
+  --laptop-sheen: rgb(255 255 255 / 7%);
+  --laptop-edge-light: rgb(255 255 255 / 16%);
+  --laptop-metal-shadow: rgb(0 0 0 / 34%);
+  --laptop-glint: rgb(255 255 255 / 11%);
+  --keyboard-frame: #33363b;
   --screen-power: 0;
   --keyboard-reveal: 0;
   --logo-opacity: 1;
@@ -392,9 +403,11 @@ a {
   overflow: clip;
   display: grid;
   place-items: center;
-  /* Give the laptop depth while keeping the camera slightly above center. */
-  perspective: 1700px;
-  perspective-origin: 50% 35%;
+  /* One steady, gentle perspective for the whole intro, like a long lens. It never changes
+     from frame to frame; main.js uses the same values (PERSPECTIVE, PERSPECTIVE_ORIGIN_*) to
+     keep the laptop on its spot of the photo. */
+  perspective: 3200px;
+  perspective-origin: 50% 45%;
   /* The stage itself stays flat, so its layers (back photo, 3D laptop, front photo, text)
      stack by z-index rather than by 3D depth: the front photo must hide the 3D laptop.
      The perspective above still applies to the laptop, and .laptop-dive keeps the lid,
@@ -587,74 +600,79 @@ a {
 }
 
 /* ===== Balcony scene behind the intro ===== */
-/* The photo has its own table and shadows, so the drawn desk and its floor shadow are hidden,
-   and so are the AI and SEC side labels. */
-.laptop-intro .desk-surface,
-.laptop-intro .intro-detail {
+/* The photo has its own table, so the drawn desk and its floor shadow are hidden. */
+.laptop-intro .desk-surface {
   display: none;
 }
 
-/* Both photo layers fill the stage. Stacking, bottom to top: the empty balcony (0), the 3D
-   laptop (1), the balcony with the closed laptop (2), then the greeting and hint (3). */
+/* The background layer fills the stage, under the 3D laptop. Stacking, bottom to top: the
+   balcony (0), the 3D laptop (1), then the greeting, side labels and hint (3). */
 .balcony-layer {
   position: absolute;
+  z-index: 0;
   inset: 0;
   overflow: hidden;
-  pointer-events: none;
-}
-
-.balcony-back {
-  z-index: 0;
   /* The photo's sky colour. On phones the photo sits at the bottom and this fills the sky
      above it. The whole balcony fades out during the dive (--balcony-opacity). */
   background: #0b284a;
   opacity: var(--balcony-opacity);
+  pointer-events: none;
 }
 
-/* The front copy only has to fade, never move. Fading this layer instead of the laptop keeps
-   the laptop's 3D intact (opacity below 1 on a 3D element would flatten it). */
-.balcony-front {
-  z-index: 2;
-  opacity: var(--photo-opacity);
+/* The camera: the photo and its live details move and zoom together. main.js sets its
+   transform (zoom around the laptop and pan) and its focus pull (blur and slight darkening)
+   on every scroll frame; the laptop is placed to follow the same move. */
+.balcony-camera {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform, filter;
 }
 
-/* main.js sets the photo's box in pixels (the same box for both layers), so the 3D laptop can
-   be matched to the photo's laptop. Until then, a plain centred cover crop. */
-.balcony-photo {
+/* main.js sets the photo's box in pixels, so the laptop can be fitted to the table.
+   Until then, a plain centred cover crop. The canvas of live details lies exactly on it. */
+.balcony-photo,
+.balcony-canvas {
   position: absolute;
   left: var(--scene-left, 0px);
   top: var(--scene-top, 0px);
   width: var(--scene-width, 100%);
   height: var(--scene-height, 100%);
   max-width: none;
+}
+
+.balcony-photo {
   object-fit: cover;
 }
 
-/* A soft dark band at the top keeps the white greeting readable, plus a short blend at the
-   photo's top edge into the sky colour for phones, where plain sky continues above it.
-   Each photo layer carries its own copy, so the band fades with its layer and never darkens
-   the 3D laptop in between. */
-.balcony-layer::after {
+/* On phones, a short blend at the photo's top edge into the sky colour above it. It moves
+   with the photo. main.js gives it a height only when sky shows above the photo. */
+.balcony-camera::after {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgb(4 12 28 / 72%) 0%, rgb(4 12 28 / 38%) 26%, transparent 52%);
-  content: "";
-}
-
-.balcony-layer::before {
-  position: absolute;
-  z-index: 1;
   left: 0;
   right: 0;
   top: var(--scene-top, 0px);
-  /* main.js sets this only when sky shows above the photo; otherwise it is 0. */
   height: var(--sky-blend, 0px);
   background: linear-gradient(180deg, #0b284a, transparent);
   content: "";
 }
 
+/* Fixed to the screen, not the photo: a soft dark band at the top keeps the white greeting
+   readable, and a soft vignette darkens the corners like a real camera lens. (Drawn here
+   rather than on the moving canvas, so the vignette stays at the screen's edges while the
+   camera zooms.) Both sit under the laptop, so it is never darkened. */
+.balcony-layer::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(4 12 28 / 72%) 0%, rgb(4 12 28 / 38%) 26%, transparent 52%),
+    radial-gradient(ellipse 120% 95% at 50% 55%, transparent 58%, rgb(0 0 0 / 42%) 100%);
+  content: "";
+}
+
 /* White text over the night photo, in both themes. */
 .laptop-intro .intro-copy,
+.laptop-intro .intro-detail,
 .laptop-intro .scroll-cue {
   z-index: 3;
   text-shadow: 0 1px 12px rgb(0 0 0 / 55%);
@@ -663,6 +681,7 @@ a {
 .laptop-intro .intro-label,
 .laptop-intro .intro-title,
 .laptop-intro .typed-line,
+.laptop-intro .detail-caption,
 .laptop-intro .scroll-cue {
   color: #fff;
 }
@@ -673,12 +692,18 @@ a {
   -webkit-text-fill-color: #fff;
 }
 
+/* The outlined AI and SEC letters: a white outline, no fill. */
+.laptop-intro .detail-title {
+  -webkit-text-stroke-color: rgb(255 255 255 / 82%);
+  text-shadow: none;
+}
+
 .laptop-intro .typed-caret {
   background: #fff;
 }
 
-/* The hint sits just above the photo's laptop (main.js sets --cue-x and --cue-bottom), so its
-   line points down at the lid it opens. */
+/* The hint sits just above the laptop on the table (main.js sets --cue-x and --cue-bottom),
+   so its line points down at the lid it opens. */
 .laptop-intro .scroll-cue {
   top: var(--cue-bottom, 96%);
   bottom: auto;
@@ -703,7 +728,8 @@ a {
      laptop's footprint on the desk rather than around the hinge. */
   transform:
     translate(var(--lid-shift, 0px), var(--lid-lift))
-    scale(var(--laptop-scale))
+    /* Scale depth too, so a smaller laptop is a true smaller copy under the perspective. */
+    scale3d(var(--laptop-scale), var(--laptop-scale), var(--laptop-scale))
     rotateX(var(--camera-angle))
     translateZ(var(--laptop-pivot, 0px))
     rotateY(var(--laptop-yaw))

@@ -14,9 +14,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/style.css">
-    <!-- Load the balcony photos early: the front one hides the closed 3D laptop at the start. -->
-    <link rel="preload" as="image" href="images/balcony-laptop.jpg" fetchpriority="high">
-    <link rel="preload" as="image" href="images/balcony-empty.jpg">
+    <!-- Load the balcony photo early: it is the first thing the Home intro shows. -->
+    <link rel="preload" as="image" href="images/balcony-empty.jpg" fetchpriority="high">
     <script src="js/main.js"></script>
   </head>
   <body class="home-intro-page">
@@ -24,15 +23,16 @@
       <!-- Sticky stage for the scroll-driven laptop introduction. -->
       <section class="laptop-intro" aria-label="Laptop introduction">
         <div class="laptop-stage">
-          <!-- Night balcony in Baku, in two layers of the same photo. The empty table sits behind
-               the 3D laptop; the copy with the closed laptop sits in front of it and fades out
-               when the lid starts to lift, so the photo's laptop seems to open. main.js sizes and
-               places both photos identically (cover on wide screens, bottom-anchored on phones). -->
-          <div class="balcony-layer balcony-back" aria-hidden="true">
-            <img class="balcony-photo" src="images/balcony-empty.jpg" alt="" width="1376" height="768" decoding="async">
-          </div>
-          <div class="balcony-layer balcony-front" aria-hidden="true">
-            <img class="balcony-photo" src="images/balcony-laptop.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high">
+          <!-- A "living photo": a night balcony in Baku behind the 3D laptop, which lies on its
+               table. main.js sizes the photo (cover on wide screens, at the bottom on phones),
+               moves the camera wrapper (zoom, pan and focus pull) as the page scrolls, and draws
+               the live details (stars, Flame Towers, city lights, bay, lamps, steam, the laptop's
+               shadow, film grain) on the canvas, in the photo's own pixels (1376 x 768). -->
+          <div class="balcony-layer" aria-hidden="true">
+            <div class="balcony-camera">
+              <img class="balcony-photo" src="images/balcony-empty.jpg" alt="" width="1376" height="768" decoding="async" fetchpriority="high">
+              <canvas class="balcony-canvas" width="1376" height="768"></canvas>
+            </div>
           </div>
 
           <!-- Intro copy fades away before the lid opens. -->
@@ -47,8 +47,7 @@
             </p>
           </div>
 
-          <!-- Desktop-only labels frame the laptop and introduce its themes.
-               Hidden in the balcony scene (see style.css). -->
+          <!-- Desktop-only labels frame the laptop and introduce its themes. -->
           <aside class="intro-detail intro-detail-left" aria-hidden="true">
             <span class="detail-title">AI</span>
             <span class="detail-caption">LOCAL LLMS · RAG · SPEECH</span>
@@ -59,14 +58,14 @@
             <span class="detail-caption">DLP · SIEM · INSIDER RISK</span>
           </aside>
 
-          <!-- Scroll hint. main.js places it just above the photo's laptop, pointing down at it. -->
+          <!-- Scroll hint. main.js places it just above the laptop on the table, pointing down at it. -->
           <p class="scroll-cue" aria-hidden="true">
             <span>SCROLL TO OPEN</span>
             <span class="scroll-cue-line"></span>
           </p>
 
-          <!-- Soft desk shading and screen glow. Hidden in the balcony scene, whose photo has
-               its own table and shadows (see style.css). -->
+          <!-- Soft desk shading and screen glow. Hidden in the balcony scene, whose photo has its
+               own table; the laptop's contact shadow is drawn on the photo instead (main.js). -->
           <div class="desk-surface" aria-hidden="true"></div>
 
           <!-- CSS-only laptop: hinged lid above a separate flat deck. -->
