@@ -776,22 +776,30 @@ a {
   transform: translateZ(calc(var(--laptop-unit) * 0.2));
 }
 
-/* The "MS" logo: small, in the heading font, light chrome silver (a light grey to white
-   metallic gradient) with a soft sheen. Clearly readable, but not dark and not glowing: no
-   bright shadow around it, just a hair of dark edge so it sits in the metal. Its size is in
-   laptop units, so it stays the same small share of the lid at every window size. */
+/* The "MS" logo: a polished chrome mark on the dark lid, clearly readable. About 10-11% of
+   the lid's width (the lid is 61.25 laptop units wide; "MS" in this font is about 1.3 times
+   its font size wide, so 5 units gives about 10.6%), in the heading font, semi-bold, with
+   tight letter spacing. Its size is in laptop units, so it keeps that share at every size.
+   The chrome is a metallic gradient from light grey through near-white to mid grey. Its
+   shine (--logo-shimmer, set by main.js) moves slightly with the lid's shine as it opens. */
 .laptop-intro {
-  --chrome-logo-highlight: #ffffff;
-  --chrome-logo-light: #eef0f2;
-  --chrome-logo-mid: #c3c7cc;
-  --chrome-logo-shadow: #a3a8ae;
+  --chrome-logo-highlight: #fbfcfd;
+  --chrome-logo-light: #dfe3e7;
+  --chrome-logo-mid: #a4aab1;
+  --chrome-logo-shadow: #7f858d;
 }
 
 .laptop-intro .lid-logo {
-  /* About 51px at the full laptop size: small on the lid, but still readable once the low
-     viewing angle has flattened it. */
-  font-size: calc(var(--laptop-unit) * 3.2);
-  text-shadow: 0 1px 0 rgb(0 0 0 / 22%);
+  font-size: calc(var(--laptop-unit) * 5);
+  font-weight: 600;
+  letter-spacing: -0.08em;
+  /* A thin light highlight on the top edge and a soft dark edge below. The logo is turned
+     180 degrees on the shut lid (see .lid-logo), so "down" in its own coordinates is up on
+     screen: the light edge is offset downward here and the dark edge upward. In em, so the
+     edges scale with the logo. */
+  text-shadow:
+    0 0.03em 0 rgb(255 255 255 / 55%),
+    0 -0.035em 0.04em rgb(0 0 0 / 45%);
 }
 
 /* ===== Laptop: overall camera and placement ===== */

@@ -2077,6 +2077,8 @@ document.addEventListener("DOMContentLoaded", () => {
     laptopIntro.style.setProperty("--metal-sheen", `${28 + 44 * opening}%`);
     // The soft diagonal shine on the lid's back turns slightly (96 to 106 degrees) as it opens.
     laptopIntro.style.setProperty("--lid-shine-angle", `${96 + 10 * opening}deg`);
+    // The logo's chrome shine slides a little with it (its gradient position, 100% to 70%).
+    laptopIntro.style.setProperty("--logo-shimmer", `${100 - 30 * opening}%`);
     // Greeting fades upward, side labels slide outward, and the scroll hint simply fades.
     laptopIntro.style.setProperty("--intro-opacity", `${1 - introFade}`);
     laptopIntro.style.setProperty("--intro-shift", `${-5 * introFade}vh`);
