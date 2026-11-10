@@ -1658,10 +1658,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ----- 3D laptop poses -----
   // The closed laptop lies flat on the table, turned 6 degrees so its right side is further
-  // back. Its size, place and tilt are fitted so its outline covers PHOTO_LID in the photo's
-  // own pixels, on every screen (fitIntroPoses): 390 wide, from its back edge at y 582 to its
-  // front edge at y 705. The lid itself then shows a depth of about 0.30 of its width.
+  // back, tilted back 9 degrees on wide screens and 17 on portrait phones (a low view, like
+  // the table's). Its size and place are fitted so the lid covers PHOTO_LID (fitIntroPoses).
   const CLOSED_YAW = 6;
+  const CLOSED_CAMERA_WIDE = -9;
+  const CLOSED_CAMERA_PORTRAIT = -17;
+  // The lid's depth on screen in the design's reference windows, in photo pixels: 133 px at
+  // 1600x900 (photo scale 1.172) and 96 px at 390x844 (photo scale 0.868).
+  const LID_PHOTO_DEPTH_WIDE = 113.5;
+  const LID_PHOTO_DEPTH_PORTRAIT = 110.6;
   // At the end of the camera move the laptop faces straight ahead, seen from 7 degrees above.
   const OPEN_CAMERA = -7;
   // The camera move ends with the open laptop near the middle (56% of the height) on wide
@@ -1677,7 +1682,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Values for the current window, all set by fitIntroPoses():
   // the camera angle (tilt) of the closed laptop,
-  let closedCamera = -20;
+  let closedCamera = CLOSED_CAMERA_WIDE;
   // its size on screen (the CSS scale times the perspective's enlargement at its depth),
   let closedSize = 0.4;
   // where the middle of its base sits on the table, in stage pixels at the start,
@@ -1693,22 +1698,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const laptopBody = laptopIntro.querySelector(".laptop");
   const balconyCamera = laptopIntro.querySelector(".balcony-camera");
 
-  // Invisible points on the laptop's base, measured once per fit to find where it touches the
-  // table: the base's back-left, back-right and front-left corners, and the bottom corners of
-  // its front edge.
-  const makeProbes = (parent, corners) => corners.map(([left, top]) => {
-    const probe = document.createElement("span");
-    probe.setAttribute("aria-hidden", "true");
-    probe.style.cssText = `position:absolute;left:${left};top:${top};width:0;height:0;`;
-    parent.append(probe);
-    return probe;
-  });
-  const deckProbes = makeProbes(laptopIntro.querySelector(".deck"), [["0", "0"], ["100%", "0"], ["0", "100%"]]);
-  const edgeProbes = makeProbes(laptopIntro.querySelector(".deck-wall-front"), [["0", "100%"], ["100%", "100%"]]);
-  // That footprint, in photo pixels (set by fitIntroPoses). The contact shadow on the photo is
-  // drawn from it, and redrawn whenever the version changes.
-  let laptopFootprint = null;
-  let footprintVersion = 0;
 
   // ----- Intro timeline (shares of the intro's scroll) -----
   // 0-15%: only the greeting, labels and hint fade; the laptop and photo stay perfectly still.
@@ -2086,6 +2075,8 @@ document.addEventListener("DOMContentLoaded", () => {
     laptopIntro.style.setProperty("--logo-opacity", `${1 - logoFade}`);
     // Slide the shine across the silver as the lid opens, so the metal catches the light.
     laptopIntro.style.setProperty("--metal-sheen", `${28 + 44 * opening}%`);
+    // The soft diagonal shine on the lid's back turns slightly (96 to 106 degrees) as it opens.
+    laptopIntro.style.setProperty("--lid-shine-angle", `${96 + 10 * opening}deg`);
     // Greeting fades upward, side labels slide outward, and the scroll hint simply fades.
     laptopIntro.style.setProperty("--intro-opacity", `${1 - introFade}`);
     laptopIntro.style.setProperty("--intro-shift", `${-5 * introFade}vh`);
@@ -2222,11 +2213,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // so the laptop sits on its spot of the photo without measuring anything.
   //
   // "Size on screen" is the CSS scale times the perspective's enlargement at the laptop's depth.
-  // Solving for the scale that gives it keeps the laptop's size in step with the photo's zoom.
+  // The scale is flat (style.css: scale(), not scale3d()), so it does not change the depth:
+  // the enlargement depends only on the pose, and the scale is simply the size divided by it.
+  // That keeps the laptop's size in step with the photo's zoom.
   const placeLaptop = (size, screenX, screenY, yawDegrees, cameraDegrees) => {
     const base = baseCentre(yawDegrees, cameraDegrees);
-    const scale = (size * PERSPECTIVE) / (PERSPECTIVE + size * base.z);
-    const enlarge = PERSPECTIVE / (PERSPECTIVE - scale * base.z);
+    const enlarge = PERSPECTIVE / (PERSPECTIVE - base.z);
+    const scale = size / enlarge;
     // Undo the perspective for that one point, then subtract where the pose itself puts it.
     const originX = stageSize.width * PERSPECTIVE_ORIGIN_X;
     const originY = stageSize.height * PERSPECTIVE_ORIGIN_Y;
@@ -2538,70 +2531,24 @@ document.addEventListener("DOMContentLoaded", () => {
       context.drawImage(flameCanvas, FLAME_AREA.left, FLAME_AREA.top);
     };
 
-    // The laptop's shadow on the table, drawn from its measured footprint (laptopFootprint, in
-    // photo pixels), so it always sits exactly under the laptop and moves with it. Two layers:
-    // - a soft, wider shadow, falling a little toward the front right, away from the desk lamp;
-    // - a thin, dark, slightly blurred line right along the front and side edges, where the
-    //   laptop touches the wood, so it clearly rests on the table instead of floating.
-    // It only changes when the laptop is refitted, so it is drawn once onto its own canvas and
-    // stamped onto each frame.
-    const shadowCanvas = document.createElement("canvas");
-    shadowCanvas.width = PHOTO_WIDTH;
-    shadowCanvas.height = PHOTO_HEIGHT;
-    const shadowPaint = shadowCanvas.getContext("2d");
-    let shadowVersion = -1;
-    // Canvas shadows are the one blur every browser supports. Each shape is drawn far outside
-    // the canvas and only its shadow is moved back in, so just the soft shadow shows.
-    const OFFSCREEN = 4000;
-    const paintShadow = (draw, blur, colour, offsetX = 0, offsetY = 0) => {
-      shadowPaint.save();
-      shadowPaint.shadowColor = colour;
-      shadowPaint.shadowBlur = blur;
-      shadowPaint.shadowOffsetX = offsetX - OFFSCREEN;
-      shadowPaint.shadowOffsetY = offsetY;
-      shadowPaint.translate(OFFSCREEN, 0);
-      draw();
-      shadowPaint.restore();
-    };
-    const buildShadow = () => {
-      shadowVersion = footprintVersion;
-      shadowPaint.clearRect(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
-      const foot = laptopFootprint;
-      if (!foot) return;
-      const corners = [foot.backLeft, foot.backRight, foot.frontRight, foot.frontLeft];
-      const middle = corners.reduce((sum, corner) => ({ x: sum.x + corner.x / 4, y: sum.y + corner.y / 4 }), { x: 0, y: 0 });
-      const quad = (grow) => {
-        shadowPaint.beginPath();
-        corners.forEach((corner, index) => {
-          const x = middle.x + (corner.x - middle.x) * grow;
-          const y = middle.y + (corner.y - middle.y) * grow;
-          shadowPaint[index === 0 ? "moveTo" : "lineTo"](x, y);
-        });
-        shadowPaint.closePath();
-      };
-      // The front edge and both sides, the edges that show where the laptop meets the wood.
-      const edges = () => {
-        shadowPaint.beginPath();
-        shadowPaint.moveTo(foot.backLeft.x, foot.backLeft.y);
-        shadowPaint.lineTo(foot.frontLeft.x, foot.frontLeft.y);
-        shadowPaint.lineTo(foot.frontRight.x, foot.frontRight.y);
-        shadowPaint.lineTo(foot.backRight.x, foot.backRight.y);
-      };
-      shadowPaint.fillStyle = "#000";
-      shadowPaint.strokeStyle = "#000";
-      shadowPaint.lineJoin = "round";
-      // Soft, wider shadow, reaching well past the laptop (most of it lies under the laptop,
-      // so it is grown a little and blurred widely for enough of it to show around the edges).
-      paintShadow(() => { quad(1.07); shadowPaint.fill(); }, 30, "rgb(0 0 0 / 62%)", 6, 8);
-      // A tighter shadow band just around the edges.
-      paintShadow(() => { edges(); shadowPaint.lineWidth = 9; shadowPaint.stroke(); }, 8, "rgb(0 0 0 / 55%)", 1, 2.5);
-      // The thin, dark contact line itself.
-      paintShadow(() => { edges(); shadowPaint.lineWidth = 2.2; shadowPaint.stroke(); }, 1.6, "rgb(0 0 0 / 88%)", 0, 0.6);
-    };
+    // One soft shadow on the table under the laptop, centred at photo pixels (658, 655): a
+    // radial gradient with a radius of 230 photo pixels, squashed vertically to 22% of its
+    // width, black at 50% in the middle, 25% at 60% of the radius, fading to nothing at the
+    // edge. (A 230-pixel radius makes it reach a little past the 390-pixel-wide laptop, so it
+    // shows around the edges; most of it lies under the laptop.)
+    const SHADOW = { x: 658, y: 655, radius: 230, squash: 0.22 };
     const drawContactShadow = () => {
-      if (shadowVersion !== footprintVersion) buildShadow();
+      context.save();
       context.globalAlpha = 1;
-      context.drawImage(shadowCanvas, 0, 0);
+      context.translate(SHADOW.x, SHADOW.y);
+      context.scale(1, SHADOW.squash);
+      const shadow = context.createRadialGradient(0, 0, 0, 0, 0, SHADOW.radius);
+      shadow.addColorStop(0, "rgb(0 0 0 / 50%)");
+      shadow.addColorStop(0.6, "rgb(0 0 0 / 25%)");
+      shadow.addColorStop(1, "rgb(0 0 0 / 0%)");
+      context.fillStyle = shadow;
+      context.fillRect(-SHADOW.radius, -SHADOW.radius, SHADOW.radius * 2, SHADOW.radius * 2);
+      context.restore();
     };
 
     // Draw one moment of the scene. "still" draws a calm frame for reduced motion.
@@ -2783,10 +2730,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ----- Start: closed, on the table -----
-    // Everything here is checked in the photo's own pixels: each measured box is converted
-    // back with the inverse of the cover maths (photo pixel = (screen pixel - photo's left or
-    // top) / photo scale), and compared with where the laptop belongs in the photo.
+    // The closed pose uses fixed angles: tilted back 9 degrees on wide screens and 17 on
+    // portrait phones, turned 6 degrees to the right. Only its size and position are fitted,
+    // so the lid (the .lid element itself, not the base) covers the empty spot in the photo,
+    // x 463-853 and y 582-705: the same width (390 photo pixels) and the same centre, with
+    // the reference depth (below).
+    // Measured boxes are converted back to photo pixels with the inverse of the cover maths
+    // (photo pixel = (screen pixel - photo's left or top) / photo scale). On load and resize
+    // only, never in the animation loop.
+    // Reference values from the design: at 1600x900 the lid's box is centred at about
+    // (765, 753), 457 x 133 px; at 390x844 at about (198, 735), 339 x 96 px.
     laptopIntro.style.setProperty("--lid-angle", "-90deg");
+    closedCamera = portrait ? CLOSED_CAMERA_PORTRAIT : CLOSED_CAMERA_WIDE;
     const photoScale = photoBox.width / PHOTO_WIDTH;
     const toPhoto = (box) => ({
       left: (box.left - photoBox.left) / photoScale,
@@ -2794,86 +2749,62 @@ document.addEventListener("DOMContentLoaded", () => {
       top: (box.top - photoBox.top) / photoScale,
       bottom: (box.bottom - photoBox.top) / photoScale,
     });
-    // The closed laptop as seen: the lid's back on top, the base and its front and side edges
-    // below. Its outline should cover PHOTO_LID: back edge at y 582, front edge at y 705,
-    // x 463-853, so its centre is at (658, 643.5) and it is 390 photo pixels wide.
-    const closedOutline = laptopIntro.querySelectorAll(".back-face, .deck, .deck-wall");
-    const lidFace = [laptopIntro.querySelector(".back-face")];
+    const lidElement = [laptopIntro.querySelector(".lid")];
     const goal = {
       width: PHOTO_LID.right - PHOTO_LID.left,
       x: (PHOTO_LID.left + PHOTO_LID.right) / 2,
       y: (PHOTO_LID.top + PHOTO_LID.bottom) / 2,
-      shape: (PHOTO_LID.bottom - PHOTO_LID.top) / (PHOTO_LID.right - PHOTO_LID.left),
     };
     let size = (goal.width * photoScale) / Math.max(1, laptopSize.width);
     let spotX = target.left + (target.right - target.left) / 2;
     let spotY = target.top + (target.bottom - target.top) / 2;
-
-    // At one tilt, fit the outline's width and centre (a few passes, since perspective is not
-    // linear), then report its height as a share of its width. Each call starts from the last
+    // At one tilt, fit the lid's width and centre (a few passes, since perspective is not
+    // linear), and report the lid's height in photo pixels. Each call starts from the last
     // answer, so it settles quickly.
-    const outlineShapeAt = (tilt, passes) => {
+    const lidDepthAt = (tilt, passes) => {
       for (let pass = 0; pass < passes; pass += 1) {
         placeLaptop(size, spotX, spotY, CLOSED_YAW, tilt);
-        const box = toPhoto(boxOf(closedOutline));
+        const box = toPhoto(boxOf(lidElement));
         size *= goal.width / Math.max(1, box.right - box.left);
         spotX += (goal.x - (box.left + box.right) / 2) * photoScale;
         spotY += (goal.y - (box.top + box.bottom) / 2) * photoScale;
       }
       placeLaptop(size, spotX, spotY, CLOSED_YAW, tilt);
-      const box = toPhoto(boxOf(closedOutline));
-      return (box.bottom - box.top) / Math.max(1, box.right - box.left);
+      const box = toPhoto(boxOf(lidElement));
+      return box.bottom - box.top;
     };
 
-    // A steeper (more negative) tilt shows more of the lid's top, so the laptop looks deeper.
-    // Halve the range of tilts until the outline's height matches 582-705 (to within a
-    // fraction of a degree). The lid itself then shows a depth of about 0.30 of its width;
-    // the rest is the laptop's front edge.
-    let steep = -75;
-    let flat = 5;
+    // The design's tilt (-9 or -17 degrees) gives exactly the reference look at 1600x900 and
+    // 390x844. On other window shapes the perspective shows the lid a little deeper or
+    // flatter, so the tilt is nudged until the lid has the same depth in the photo as in the
+    // reference: 133 px at 1600x900 is 113.5 photo pixels, 96 px at 390x844 is 110.6. (At the
+    // reference sizes this lands back on -9 and -17 degrees.) A steeper (more negative) tilt
+    // shows more of the lid, so halve the range of tilts until the depth matches.
+    const depthGoal = portrait ? LID_PHOTO_DEPTH_PORTRAIT : LID_PHOTO_DEPTH_WIDE;
+    let steep = closedCamera - 30;
+    let flat = closedCamera + 20;
     for (let step = 0; step < 12; step += 1) {
       const tilt = (steep + flat) / 2;
-      if (outlineShapeAt(tilt, 2) < goal.shape) {
+      if (lidDepthAt(tilt, 2) < depthGoal) {
         flat = tilt;
       } else {
         steep = tilt;
       }
     }
     closedCamera = (steep + flat) / 2;
-    // Fit the position and width once more at the chosen tilt, so every edge matches.
-    outlineShapeAt(closedCamera, 4);
+    // Fit the size and position once more at the chosen tilt.
+    lidDepthAt(closedCamera, 6);
     closedSize = size;
     tableX = spotX;
     tableY = spotY;
 
-    // Record where the laptop ended up, in photo pixels, for checking (inspect the
-    // data-laptop-fit attribute on .laptop-intro): its outline, and the lid's depth ratio.
-    const outline = toPhoto(boxOf(closedOutline));
-    const lid = toPhoto(boxOf(lidFace));
-    laptopIntro.dataset.laptopFit = [outline.left, outline.top, outline.right, outline.bottom]
-      .map((value) => value.toFixed(1)).join(" ")
-      + ` lid ${((lid.bottom - lid.top) / (lid.right - lid.left)).toFixed(3)}`;
-
-    // The footprint where the laptop touches the table, in photo pixels, for its contact
-    // shadow (drawn on the photo). The bottom of the front edge gives the two front corners;
-    // the back corners are the base's back corners moved down by the same edge height.
-    const point = (probe) => {
-      const rect = probe.getBoundingClientRect();
-      return {
-        x: (rect.left - stageRect.left - photoBox.left) / photoScale,
-        y: (rect.top - stageRect.top - photoBox.top) / photoScale,
-      };
-    };
-    const [backLeft, backRight, deckFrontLeft] = deckProbes.map(point);
-    const [frontLeft, frontRight] = edgeProbes.map(point);
-    const drop = { x: frontLeft.x - deckFrontLeft.x, y: frontLeft.y - deckFrontLeft.y };
-    laptopFootprint = {
-      backLeft: { x: backLeft.x + drop.x, y: backLeft.y + drop.y },
-      backRight: { x: backRight.x + drop.x, y: backRight.y + drop.y },
-      frontRight,
-      frontLeft,
-    };
-    footprintVersion += 1;
+    // Record the lid's box for checking (inspect data-laptop-fit on .laptop-intro): on screen
+    // (centre x, centre y, width, height in CSS pixels) and in photo pixels.
+    const lidScreen = boxOf(lidElement);
+    const lidPhoto = toPhoto(lidScreen);
+    laptopIntro.dataset.laptopFit = `screen ${[lidScreen.centerX + stageRect.left, lidScreen.centerY + stageRect.top, lidScreen.width, lidScreen.height]
+      .map((value) => value.toFixed(1)).join(" ")} / photo ${[lidPhoto.left, lidPhoto.top, lidPhoto.right, lidPhoto.bottom]
+      .map((value) => value.toFixed(1)).join(" ")}`;
 
     // ----- End: open, facing the screen, camera moved in -----
     laptopIntro.style.setProperty("--lid-angle", "8deg");

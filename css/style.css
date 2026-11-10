@@ -715,25 +715,21 @@ a {
   background: linear-gradient(#fff, transparent);
 }
 
-/* ===== The intro laptop's lid, lit by the scene ===== */
-/* A dark space-grey lid lit like the photo: a faint warm light from the desk lamp on the
-   left falls on its left side and back edge, it slowly gets darker toward the front right,
-   and a very soft cool sheen from the city lights touches the back. All very subtle.
-   Direction note: when the lid is shut, this face is turned 180 degrees on screen (which is
-   why the logo is counter-rotated), so in its own coordinates the bottom edge is the back
-   (hinge) edge and the right side is the left on screen. "to top left" therefore runs from
-   the back-left on screen toward the front-right. */
+/* ===== The intro laptop's lid ===== */
+/* The lid's back: a darker space grey, lighter in the upper middle and darker toward the
+   edges, with a soft diagonal shine on top. The shine's angle (--lid-shine-angle, set by
+   main.js) turns slightly, from 96 to 106 degrees, as the lid opens. */
 .laptop-intro .back-face {
-  background-color: #44484e;
+  background-color: #65686f;
   background-image:
-    /* A thin warm light along the back edge, from the lamp behind on the left. */
-    linear-gradient(0deg, rgb(255 206 150 / 15%), transparent 7%),
-    /* Warm lamp light over the left side, fading out across the lid. */
-    linear-gradient(to top left, rgb(255 198 140 / 12%) 0%, rgb(255 198 140 / 4%) 35%, transparent 60%),
-    /* A very soft cool sheen from the city lights at the back right. */
-    radial-gradient(ellipse 70% 55% at 12% 100%, rgb(150 190 255 / 8%), transparent 70%),
-    /* The grey itself: a little lighter at the back left, darker toward the front right. */
-    linear-gradient(to top left, #50555b 0%, #44484e 45%, #34373c 100%);
+    linear-gradient(
+      var(--lid-shine-angle, 96deg),
+      transparent 25%,
+      rgb(255 255 255 / 10%) 45%,
+      rgb(255 255 255 / 3%) 55%,
+      transparent 72%
+    ),
+    radial-gradient(130% 110% at 50% 20%, #80838b 0%, #65686f 45%, #4d4f55 100%);
 }
 
 /* Thicknesses in proportion to the laptop. The shared laptop sizes its edges, lid thickness
@@ -780,17 +776,22 @@ a {
   transform: translateZ(calc(var(--laptop-unit) * 0.2));
 }
 
-/* The "MS" logo: a soft grey just lighter than the lid, with a faint metallic sheen and an
-   engraved edge (a hair of dark above, a hair of light below), not bright white. */
+/* The "MS" logo: small, in the heading font, light chrome silver (a light grey to white
+   metallic gradient) with a soft sheen. Clearly readable, but not dark and not glowing: no
+   bright shadow around it, just a hair of dark edge so it sits in the metal. Its size is in
+   laptop units, so it stays the same small share of the lid at every window size. */
 .laptop-intro {
-  --chrome-logo-highlight: #7f858c;
-  --chrome-logo-light: #6c7178;
-  --chrome-logo-mid: #5a5f65;
-  --chrome-logo-shadow: #4c5056;
+  --chrome-logo-highlight: #ffffff;
+  --chrome-logo-light: #eef0f2;
+  --chrome-logo-mid: #c3c7cc;
+  --chrome-logo-shadow: #a3a8ae;
 }
 
 .laptop-intro .lid-logo {
-  text-shadow: 0 1px 0 rgb(0 0 0 / 30%), 0 -1px 0 rgb(255 255 255 / 6%);
+  /* About 51px at the full laptop size: small on the lid, but still readable once the low
+     viewing angle has flattened it. */
+  font-size: calc(var(--laptop-unit) * 3.2);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 22%);
 }
 
 /* ===== Laptop: overall camera and placement ===== */
@@ -806,8 +807,11 @@ a {
      laptop's footprint on the desk rather than around the hinge. */
   transform:
     translate(var(--lid-shift, 0px), var(--lid-lift))
-    /* Scale depth too, so a smaller laptop is a true smaller copy under the perspective. */
-    scale3d(var(--laptop-scale), var(--laptop-scale), var(--laptop-scale))
+    /* A flat scale: width and height shrink, depth does not. Under the stage's perspective the
+       full depth tips a laptop low on the screen a little more toward the viewer, which gives
+       the closed laptop on the table its look (the design values, e.g. scale(0.385) with a
+       9 degree tilt, assume this). main.js's placement maths assumes it too. */
+    scale(var(--laptop-scale))
     rotateX(var(--camera-angle))
     translateZ(var(--laptop-pivot, 0px))
     rotateY(var(--laptop-yaw))
