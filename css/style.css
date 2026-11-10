@@ -715,6 +715,84 @@ a {
   background: linear-gradient(#fff, transparent);
 }
 
+/* ===== The intro laptop's lid, lit by the scene ===== */
+/* A dark space-grey lid lit like the photo: a faint warm light from the desk lamp on the
+   left falls on its left side and back edge, it slowly gets darker toward the front right,
+   and a very soft cool sheen from the city lights touches the back. All very subtle.
+   Direction note: when the lid is shut, this face is turned 180 degrees on screen (which is
+   why the logo is counter-rotated), so in its own coordinates the bottom edge is the back
+   (hinge) edge and the right side is the left on screen. "to top left" therefore runs from
+   the back-left on screen toward the front-right. */
+.laptop-intro .back-face {
+  background-color: #44484e;
+  background-image:
+    /* A thin warm light along the back edge, from the lamp behind on the left. */
+    linear-gradient(0deg, rgb(255 206 150 / 15%), transparent 7%),
+    /* Warm lamp light over the left side, fading out across the lid. */
+    linear-gradient(to top left, rgb(255 198 140 / 12%) 0%, rgb(255 198 140 / 4%) 35%, transparent 60%),
+    /* A very soft cool sheen from the city lights at the back right. */
+    radial-gradient(ellipse 70% 55% at 12% 100%, rgb(150 190 255 / 8%), transparent 70%),
+    /* The grey itself: a little lighter at the back left, darker toward the front right. */
+    linear-gradient(to top left, #50555b 0%, #44484e 45%, #34373c 100%);
+}
+
+/* Thicknesses in proportion to the laptop. The shared laptop sizes its edges, lid thickness
+   and corners in rem, which is right at the full 980px size, but on a phone (a 330px laptop)
+   those edges were three times too thick for its size and made it look squat. Here one unit is
+   1/61.25 of the laptop's width: exactly 1rem at 980px, so desktop is unchanged. Only the Home
+   intro laptop uses this; the closing laptop on Contact keeps its own sizes. */
+.laptop-intro {
+  --laptop-width: min(84vw, 118vh, 980px);
+  --laptop-unit: calc(var(--laptop-width) / 61.25);
+}
+
+.laptop-intro .lid-face,
+.laptop-intro .deck {
+  border-radius: calc(var(--laptop-unit) * 1.35);
+}
+
+.laptop-intro .back-face {
+  transform: rotateY(180deg) translateZ(calc(var(--laptop-unit) * 0.5));
+}
+
+.laptop-intro .lid::before {
+  left: calc(var(--laptop-unit) * 1.1);
+  right: calc(var(--laptop-unit) * 1.1);
+  height: calc(var(--laptop-unit) * 0.6);
+  border-radius: calc(var(--laptop-unit) * 0.3);
+  transform: translateZ(calc(var(--laptop-unit) * -0.5)) rotateX(90deg);
+}
+
+.laptop-intro .deck-wall-front {
+  height: calc(var(--laptop-unit) * 0.7);
+  border-radius: 0 0 calc(var(--laptop-unit) * 0.6) calc(var(--laptop-unit) * 0.6);
+}
+
+.laptop-intro .deck-wall-left,
+.laptop-intro .deck-wall-right {
+  width: calc(var(--laptop-unit) * 0.7);
+}
+
+/* The keyboard and trackpad stand 0.2 units above the base, always below the shut lid
+   (0.5 units). Left in rem, they poked through the thinner lid of a small phone laptop. */
+.laptop-intro .keyboard,
+.laptop-intro .trackpad {
+  transform: translateZ(calc(var(--laptop-unit) * 0.2));
+}
+
+/* The "MS" logo: a soft grey just lighter than the lid, with a faint metallic sheen and an
+   engraved edge (a hair of dark above, a hair of light below), not bright white. */
+.laptop-intro {
+  --chrome-logo-highlight: #7f858c;
+  --chrome-logo-light: #6c7178;
+  --chrome-logo-mid: #5a5f65;
+  --chrome-logo-shadow: #4c5056;
+}
+
+.laptop-intro .lid-logo {
+  text-shadow: 0 1px 0 rgb(0 0 0 / 30%), 0 -1px 0 rgb(255 255 255 / 6%);
+}
+
 /* ===== Laptop: overall camera and placement ===== */
 .laptop {
   position: relative;
