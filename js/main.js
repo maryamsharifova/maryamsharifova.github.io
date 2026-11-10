@@ -1658,11 +1658,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ----- 3D laptop poses -----
   // The closed laptop lies flat on the table, turned 6 degrees so its right side is further
-  // back, and seen from a low angle like the table: the view tilts back only 9 degrees on wide
-  // screens and 17 on phones. Its size and place are fitted to PHOTO_LID (fitIntroPoses).
+  // back. Its tilt is chosen so the lid looks the way a laptop lying in that spot would in the
+  // photo: the lid's visible depth on screen is 30% of its width (28% on phones). Its size and
+  // place are then fitted to PHOTO_LID (fitIntroPoses).
   const CLOSED_YAW = 6;
-  const CLOSED_CAMERA_WIDE = -9;
-  const CLOSED_CAMERA_PORTRAIT = -17;
+  const LID_SHAPE_WIDE = 0.3;
+  const LID_SHAPE_PORTRAIT = 0.28;
   // At the end of the camera move the laptop faces straight ahead, seen from 7 degrees above.
   const OPEN_CAMERA = -7;
   // The camera move ends with the open laptop near the middle (56% of the height) on wide
@@ -1677,8 +1678,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const FOCUS_DIM = 0.12;
 
   // Values for the current window, all set by fitIntroPoses():
-  // the camera angle of the closed laptop,
-  let closedCamera = CLOSED_CAMERA_WIDE;
+  // the camera angle (tilt) of the closed laptop,
+  let closedCamera = -20;
   // its size on screen (the CSS scale times the perspective's enlargement at its depth),
   let closedSize = 0.4;
   // where the middle of its base sits on the table, in stage pixels at the start,
@@ -1767,15 +1768,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Both homepage layers are laid out at exactly this size (style.css reads these values), and
   // the full-screen layer at the end of the dive sits exactly here, so the hand-over to the
   // real page is the same picture at the same place.
+  //
+  // The hero is at least one screen tall, and taller when its content needs more room (a very
+  // short or narrow window), so it never cuts its content off. Its height is the real hero's
+  // natural height (offsetHeight ignores the dive's scaling); the hero section takes that height
+  // through --hero-page-height, so the page below starts after it during the intro too.
   let heroPageWidth = 0;
   let heroPageHeight = 0;
+  const realHero = heroCanvas;
   const measureHeroPage = () => {
     const box = heroSection.getBoundingClientRect();
     heroPageWidth = box.width;
-    heroPageHeight = box.height;
+    heroPageHeight = realHero.offsetHeight;
     const root = document.documentElement.style;
     root.setProperty("--hero-page-width", `${box.width}px`);
-    root.setProperty("--hero-page-height", `${box.height}px`);
+    root.setProperty("--hero-page-height", `${heroPageHeight}px`);
     root.setProperty("--hero-page-left", `${box.left}px`);
   };
   measureHeroPage();
@@ -1884,9 +1891,12 @@ document.addEventListener("DOMContentLoaded", () => {
       diveScale = 1 + (finalScale - 1) * diveProgress;
       // The camera move leaves the screen a little off the window's middle (the open laptop
       // sits at 56% on wide screens, lower on phones). While the screen grows, its centre
-      // glides from there to the middle with the same easing, so the dive starts without a step.
+      // glides from there to where the real hero's centre will be, with the same easing, so the
+      // dive starts without a step. That is the window's middle, or lower when the hero is
+      // taller than the window: its top then lines up with the window's top, like the real page.
+      const endY = viewportRect.top + heroPageHeight / 2;
       const goalX = baseCenterX + (centerX - baseCenterX) * diveProgress;
-      const goalY = baseCenterY + (centerY - baseCenterY) * diveProgress;
+      const goalY = baseCenterY + (endY - baseCenterY) * diveProgress;
       diveX = goalX - (centerX + (baseCenterX - centerX) * diveScale);
       diveY = goalY - (centerY + (baseCenterY - centerY) * diveScale);
       laptopDive.style.setProperty("--dive-scale", `${diveScale}`);
@@ -2386,94 +2396,130 @@ document.addEventListener("DOMContentLoaded", () => {
       sway: between(2.5, 5),
     }));
 
-    // Flame Towers: the LED façades show flames rising, clipped to each tower's outline.
-    // The flames are drawn on a small canvas covering the three towers and masked by their
-    // outlines (traced from the photo, in photo pixels).
-    const FLAME_AREA = { left: 798, top: 272, width: 144, height: 108 };
-    const towerOutlines = [
+    // Flame Towers: the LED façades at night. Soft, glowing bands of warm orange light rise
+    // slowly up each tower, added to the photo's own light at low strength (at most about 27%),
+    // so the towers' glass always shows through. The bands fade in at the foot and out near the
+    // tip, the outline's edge is feathered by about 2px, and each tower runs at its own pace,
+    // slightly out of step with the others. Drawn on a small canvas covering the three towers.
+    const FLAME_AREA = { left: 796, top: 270, width: 148, height: 112 };
+    const FLAME_STRENGTH = 0.27;
+    const towers = [
       // left tower, around x 801-845, y 275-377
-      [[809, 275], [816, 279], [824, 289], [829, 299], [831, 310], [835, 313], [840, 323], [842, 333],
-        [844, 345], [845, 365], [846, 377], [801, 377], [801, 353], [802, 334], [804, 315], [807, 295]],
+      {
+        outline: [[809, 275], [816, 279], [824, 289], [829, 299], [831, 310], [835, 313], [840, 323], [842, 333],
+          [844, 345], [845, 365], [846, 377], [801, 377], [801, 353], [802, 334], [804, 315], [807, 295]],
+        speed: 6.2, spacing: 26, phase: 0,
+      },
       // middle tower, around x 881-907, y 299-357
-      [[889, 305], [895, 301], [901, 299], [907, 298], [909, 312], [907, 357], [880, 357], [881, 334], [884, 318]],
+      {
+        outline: [[889, 305], [895, 301], [901, 299], [907, 298], [909, 312], [907, 357], [880, 357], [881, 334], [884, 318]],
+        speed: 5.1, spacing: 22, phase: 2.1,
+      },
       // right tower, around x 903-939, y 283-357
-      [[934, 283], [935, 300], [937, 322], [939, 344], [939, 357], [910, 357], [909, 322], [910, 312],
-        [912, 303], [916, 296], [924, 289]],
+      {
+        outline: [[934, 283], [935, 300], [937, 322], [939, 344], [939, 357], [910, 357], [909, 322], [910, 312],
+          [912, 303], [916, 296], [924, 289]],
+        speed: 5.7, spacing: 24, phase: 4.3,
+      },
     ];
-    // Each tower's top and bottom, so the flames are strongest at the foot and thin out upward.
-    const towerSpans = towerOutlines.map((outline) => {
-      const heights = outline.map(([, y]) => y);
-      return { top: Math.min(...heights), bottom: Math.max(...heights) };
-    });
     const flameCanvas = document.createElement("canvas");
     flameCanvas.width = FLAME_AREA.width;
     flameCanvas.height = FLAME_AREA.height;
     const flamePaint = flameCanvas.getContext("2d");
     const flameImage = flamePaint.createImageData(FLAME_AREA.width, FLAME_AREA.height);
-    // The outlines' mask (soft edges), and which tower each masked pixel belongs to.
-    const flameMask = new Float32Array(FLAME_AREA.width * FLAME_AREA.height);
-    const flameTower = new Int8Array(FLAME_AREA.width * FLAME_AREA.height).fill(-1);
-    towerOutlines.forEach((outline, tower) => {
+    const pixelCount = FLAME_AREA.width * FLAME_AREA.height;
+
+    // Soften a mask by about 2px: a small box blur run twice across and twice down, which is
+    // close to a gaussian. Done once here, never per frame (and without canvas filters, which
+    // not every browser supports).
+    const feather = (mask) => {
+      const width = FLAME_AREA.width;
+      const height = FLAME_AREA.height;
+      const radius = 1;
+      let source = mask;
+      for (let pass = 0; pass < 4; pass += 1) {
+        const across = pass % 2 === 0;
+        const result = new Float32Array(pixelCount);
+        for (let y = 0; y < height; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            let sum = 0;
+            for (let step = -radius; step <= radius; step += 1) {
+              const sx = across ? Math.min(width - 1, Math.max(0, x + step)) : x;
+              const sy = across ? y : Math.min(height - 1, Math.max(0, y + step));
+              sum += source[sy * width + sx];
+            }
+            result[y * width + x] = sum / (radius * 2 + 1);
+          }
+        }
+        source = result;
+      }
+      return source;
+    };
+
+    // Each tower's own feathered mask, and its foot and tip, so the bands fade at both ends.
+    towers.forEach((tower) => {
       flamePaint.clearRect(0, 0, FLAME_AREA.width, FLAME_AREA.height);
       flamePaint.beginPath();
-      outline.forEach(([x, y], index) => {
+      tower.outline.forEach(([x, y], index) => {
         const method = index === 0 ? "moveTo" : "lineTo";
         flamePaint[method](x - FLAME_AREA.left, y - FLAME_AREA.top);
       });
       flamePaint.closePath();
       flamePaint.fill();
       const coverage = flamePaint.getImageData(0, 0, FLAME_AREA.width, FLAME_AREA.height).data;
-      for (let index = 0; index < flameMask.length; index += 1) {
-        const alpha = coverage[index * 4 + 3] / 255;
-        if (alpha > flameMask[index]) {
-          flameMask[index] = alpha;
-          flameTower[index] = tower;
-        }
+      const mask = new Float32Array(pixelCount);
+      for (let index = 0; index < pixelCount; index += 1) {
+        mask[index] = coverage[index * 4 + 3] / 255;
       }
+      tower.mask = feather(mask);
+      const heights = tower.outline.map(([, y]) => y);
+      tower.top = Math.min(...heights);
+      tower.bottom = Math.max(...heights);
     });
-    // Smooth value noise: random values on a grid, blended smoothly in between.
-    const lattice = (x, y) => {
-      const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-      return value - Math.floor(value);
+    flamePaint.clearRect(0, 0, FLAME_AREA.width, FLAME_AREA.height);
+
+    const smoothstep = (edge0, edge1, value) => {
+      const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
+      return t * t * (3 - 2 * t);
     };
-    const smooth = (value) => value * value * (3 - 2 * value);
-    const noise = (x, y) => {
-      const cellX = Math.floor(x);
-      const cellY = Math.floor(y);
-      const fracX = smooth(x - cellX);
-      const fracY = smooth(y - cellY);
-      const top = lattice(cellX, cellY) + (lattice(cellX + 1, cellY) - lattice(cellX, cellY)) * fracX;
-      const bottom = lattice(cellX, cellY + 1) + (lattice(cellX + 1, cellY + 1) - lattice(cellX, cellY + 1)) * fracX;
-      return top + (bottom - top) * fracY;
-    };
+
     const drawFlames = (time) => {
       const data = flameImage.data;
+      data.fill(0);
       for (let row = 0; row < FLAME_AREA.height; row += 1) {
         const y = FLAME_AREA.top + row;
         for (let column = 0; column < FLAME_AREA.width; column += 1) {
           const index = row * FLAME_AREA.width + column;
-          const offset = index * 4;
-          const mask = flameMask[index];
-          if (mask <= 0) {
-            data[offset + 3] = 0;
-            continue;
+          let glow = 0;
+          for (const tower of towers) {
+            const mask = tower.mask[index];
+            if (mask < 0.004) continue;
+            // 0 at the tower's foot, 1 at its tip; fade in over the lowest 18% and out over the
+            // top 30%, so no band starts or ends on a line.
+            const height = (tower.bottom - y) / (tower.bottom - tower.top);
+            const ends = smoothstep(-0.02, 0.18, height) * (1 - smoothstep(0.7, 1.02, height));
+            if (ends <= 0) continue;
+            // Distance up the tower, moving with time so the bands rise; a gentle sideways wave
+            // bends them a little, like light running over the curved glass.
+            const x = FLAME_AREA.left + column;
+            const rise = (tower.bottom - y) - tower.speed * time
+              + 2.2 * Math.sin(x * 0.21 + time * 0.55 + tower.phase);
+            const wave = 0.5 + 0.5 * Math.sin((rise / tower.spacing) * Math.PI * 2 + tower.phase);
+            // Cubed, so the bands are soft glows with darker gaps between them; a slow breath
+            // makes the whole façade brighten and dim a little.
+            const breath = 0.78 + 0.22 * Math.sin(time * 0.33 + tower.phase);
+            glow = Math.max(glow, wave * wave * wave * breath * ends * mask);
           }
-          const span = towerSpans[flameTower[index]];
-          // 0 at the tower's foot, 1 at its tip.
-          const height = (span.bottom - y) / (span.bottom - span.top);
-          const x = FLAME_AREA.left + column;
-          // Two layers of noise scrolling upward make tongues of flame that rise and flicker.
-          const tongues = noise(x * 0.16, y * 0.075 + time * 1.5) * 0.65
-            + noise(x * 0.38 + 7, y * 0.16 + time * 2.6) * 0.35;
-          const flame = Math.min(1, Math.max(0, (tongues - height * 0.72 + 0.12) * 2.1));
+          if (glow <= 0) continue;
+          const offset = index * 4;
           data[offset] = 255;
-          data[offset + 1] = 70 + 160 * flame * flame;
-          data[offset + 2] = 18 + 60 * flame * flame * flame;
-          data[offset + 3] = 255 * mask * flame * 0.82;
+          data[offset + 1] = 150;
+          data[offset + 2] = 64;
+          data[offset + 3] = 255 * FLAME_STRENGTH * glow;
         }
       }
       flamePaint.putImageData(flameImage, 0, 0);
-      context.globalAlpha = 0.78;
+      context.globalAlpha = 1;
       context.drawImage(flameCanvas, FLAME_AREA.left, FLAME_AREA.top);
     };
 
@@ -2491,38 +2537,6 @@ document.addEventListener("DOMContentLoaded", () => {
       shadow.addColorStop(1, "rgb(0 0 0 / 0%)");
       context.fillStyle = shadow;
       context.fillRect(-225, -225, 450, 450);
-      context.restore();
-    };
-
-    // Film grain: a few tiles of faint light and dark specks, shifted at random every other
-    // frame, so the grain shimmers like a real camera's without redrawing noise each frame.
-    const grainTiles = Array.from({ length: 3 }, () => {
-      const tile = document.createElement("canvas");
-      tile.width = 128;
-      tile.height = 128;
-      const paint = tile.getContext("2d");
-      const specks = paint.createImageData(128, 128);
-      for (let index = 0; index < specks.data.length; index += 4) {
-        const light = random() < 0.5 ? 255 : 0;
-        specks.data[index] = light;
-        specks.data[index + 1] = light;
-        specks.data[index + 2] = light;
-        specks.data[index + 3] = random() * 22;
-      }
-      paint.putImageData(specks, 0, 0);
-      return context.createPattern(tile, "repeat");
-    });
-    let grain = { tile: 0, x: 0, y: 0 };
-    let grainFrame = 0;
-    const drawGrain = (still) => {
-      if (!still && (grainFrame += 1) % 2 === 0) {
-        grain = { tile: Math.floor(random() * 3), x: random() * 128, y: random() * 128 };
-      }
-      context.save();
-      context.globalAlpha = 1;
-      context.translate(-grain.x, -grain.y);
-      context.fillStyle = grainTiles[grain.tile];
-      context.fillRect(grain.x, grain.y, PHOTO_WIDTH, PHOTO_HEIGHT);
       context.restore();
     };
 
@@ -2561,8 +2575,9 @@ document.addEventListener("DOMContentLoaded", () => {
         stamp(warmGlow, lamp.x, lamp.y, lamp.radius * (1 + flicker * 0.3), lamp.glow * (1 + breath + flicker));
       });
 
+      // The towers' LED light adds to the glass, like the other lights.
+      drawFlames(still ? 4 : time);
       context.globalCompositeOperation = "source-over";
-      drawFlames(still ? 1.5 : time);
 
       // Steam: each puff rises about 24 photo pixels a second, curls side to side more as it
       // climbs, grows, and fades in and out over its life.
@@ -2575,7 +2590,7 @@ document.addEventListener("DOMContentLoaded", () => {
         stamp(whiteGlow, x, y, 5 + life * 15, 0.085 * Math.sin(Math.PI * life));
       });
 
-      drawGrain(still);
+      // No film grain: the photo stays clean and sharp. Only the soft vignette (CSS) remains.
       context.globalAlpha = 1;
     };
 
@@ -2673,7 +2688,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // middle of the laptop's footprint.
     laptopSize.pivot = laptopSize.width * 0.322;
     const portrait = stageRect.height > stageRect.width;
-    closedCamera = portrait ? CLOSED_CAMERA_PORTRAIT : CLOSED_CAMERA_WIDE;
 
     // Place the photo first; the closed laptop is fitted to the empty spot on its table.
     const target = placeBalcony(stageRect.width, stageRect.height);
@@ -2703,21 +2717,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ----- Start: closed, on the table -----
     laptopIntro.style.setProperty("--lid-angle", "-90deg");
-    // The closed laptop's outline: the lid's back on top, the base and its edges below.
-    const closedParts = laptopIntro.querySelectorAll(".back-face, .deck, .deck-wall");
+    // The closed lid's outline on screen: its silver back, which faces up when it is shut.
+    const lidFace = [laptopIntro.querySelector(".back-face")];
     const targetWidth = target.right - target.left;
     const targetX = (target.left + target.right) / 2;
     const targetY = (target.top + target.bottom) / 2;
+    const targetShape = portrait ? LID_SHAPE_PORTRAIT : LID_SHAPE_WIDE;
     let size = targetWidth / Math.max(1, laptopSize.width);
     let spotX = targetX;
     let spotY = targetY;
-    for (let pass = 0; pass < 4; pass += 1) {
-      placeLaptop(size, spotX, spotY, CLOSED_YAW, closedCamera);
-      const box = boxOf(closedParts);
-      size *= targetWidth / Math.max(1, box.width);
-      spotX += targetX - box.centerX;
-      spotY += targetY - box.centerY;
+
+    // At one tilt, fit the lid's width and centre to the empty spot (a few passes, since
+    // perspective is not linear), then report the lid's visible depth as a share of its width.
+    // Each call starts from the last answer, so it settles quickly.
+    const lidShapeAt = (tilt, passes) => {
+      for (let pass = 0; pass < passes; pass += 1) {
+        placeLaptop(size, spotX, spotY, CLOSED_YAW, tilt);
+        const box = boxOf(lidFace);
+        size *= targetWidth / Math.max(1, box.width);
+        spotX += targetX - box.centerX;
+        spotY += targetY - box.centerY;
+      }
+      placeLaptop(size, spotX, spotY, CLOSED_YAW, tilt);
+      const box = boxOf(lidFace);
+      return box.height / Math.max(1, box.width);
+    };
+
+    // A steeper (more negative) tilt shows more of the lid's top, so it looks deeper. Halve
+    // the range of tilts until the lid's shape matches (to within a fraction of a degree).
+    let steep = -75;
+    let flat = 5;
+    for (let step = 0; step < 12; step += 1) {
+      const tilt = (steep + flat) / 2;
+      if (lidShapeAt(tilt, 2) < targetShape) {
+        flat = tilt;
+      } else {
+        steep = tilt;
+      }
     }
+    closedCamera = (steep + flat) / 2;
+    // Fit the position and width once more at the chosen tilt, so the centre and the width
+    // match the empty spot exactly.
+    lidShapeAt(closedCamera, 4);
     closedSize = size;
     tableX = spotX;
     tableY = spotY;
@@ -2777,6 +2818,19 @@ document.addEventListener("DOMContentLoaded", () => {
     renderedProgress = -1;
     requestLaptopUpdate();
   });
+  // The hero's natural height can also change without a resize, when the web fonts or the
+  // portrait finish loading. Re-measure it then, so the dive and the page below stay in step.
+  if ("ResizeObserver" in window) {
+    let observedHeight = realHero.offsetHeight;
+    new ResizeObserver(() => {
+      if (realHero.offsetHeight === observedHeight) return;
+      observedHeight = realHero.offsetHeight;
+      measureHeroPage();
+      fitScreenHomepage();
+      renderedProgress = -1;
+      requestLaptopUpdate();
+    }).observe(realHero);
+  }
 
   // Recheck both animations whenever the visitor changes motion preferences.
   if (typeof reducedMotion.addEventListener === "function") {

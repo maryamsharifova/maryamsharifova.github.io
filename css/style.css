@@ -1106,6 +1106,9 @@ a {
   position: relative;
   min-height: 100vh;
   min-height: 100svh;
+  /* At least one screen, and as tall as the hero's content needs (main.js measures the real
+     hero's natural height into --hero-page-height), so nothing is ever cut off. */
+  min-height: var(--hero-page-height, 100svh);
   /* Overlap the intro's last screen. The laptop animation finishes one screen before the
      intro section ends, and that screen used to be a dead stretch where the finished hero
      sat pinned while nothing moved. Pulling the hero up by one screen makes it take over
@@ -1118,8 +1121,9 @@ a {
 }
 
 .portfolio-hero-section.is-current .portfolio-hero-frame {
-  position: absolute;
-  inset: 0;
+  /* In the normal flow, so the section is exactly as tall as the hero. */
+  position: relative;
+  inset: auto;
   overflow: visible;
   opacity: 1;
   pointer-events: auto;
@@ -1127,9 +1131,9 @@ a {
 }
 
 .portfolio-hero-section.is-current .portfolio-hero {
-  inset: 0;
+  position: relative;
+  inset: auto;
   width: 100%;
-  height: 100%;
   transform: none;
 }
 
@@ -1145,17 +1149,19 @@ a {
 }
 
 /* The same hero, always laid out at the real hero's full size, is uniformly scaled into the
-   measured screen. main.js sets --hero-page-width and --hero-page-height to the hero section's
-   size (the window without its scrollbar); the vw and svh values are only the fallback before
-   the script runs. */
+   measured screen. main.js sets --hero-page-width to the hero section's width (the window
+   without its scrollbar); 100vw is only the fallback before the script runs.
+   Its height is its content's: at least one screen (100svh), and taller when the content needs
+   more room, so it never cuts anything off. Both copies (the real hero and the one on the
+   laptop screen) are laid out at the same width and screen height, so they always match. */
 .portfolio-hero {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100vw;
   width: var(--hero-page-width, 100vw);
-  height: 100vh;
-  height: var(--hero-page-height, 100svh);
+  min-height: 100vh;
+  min-height: 100svh;
   overflow: hidden;
   background: var(--hero-background);
   color: var(--hero-foreground);
@@ -1199,9 +1205,9 @@ a {
 }
 
 .portfolio-hero-frame.is-fullscreen .portfolio-hero {
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
   transform: none;
 }
 
@@ -1237,9 +1243,10 @@ a {
    size, so the layout is identical there and the dive still ends on a perfect match.
    Phones keep their own stacked layout (the max-width: 44rem rules further down). */
 .portfolio-hero {
-  /* Height of the top bar, and the space kept free below the content for the corner labels. */
-  --hero-bar-height: clamp(4.5rem, 9svh, 7rem);
-  --hero-foot-space: clamp(4.5rem, 9svh, 7rem);
+  /* Height of the top bar, and the space kept free below the content for the corner labels.
+     Both shrink on short screens (svh), with a floor that still clears the bar and labels. */
+  --hero-bar-height: clamp(3.6rem, 9svh, 7rem);
+  --hero-foot-space: clamp(3rem, 9svh, 7rem);
 }
 
 /* The brand and links sit on one clean row at the top of the hero, lined up with the content
@@ -1316,20 +1323,22 @@ a {
 /* Text on the left, photo on the right, across the full width between the side margins. */
 .hero-main {
   width: var(--site-content-width);
-  min-height: calc(100% - var(--hero-bar-height) - var(--hero-foot-space));
+  /* The screen's height minus the bar and the labels' space, so the content is centred in one
+     screen. (svh rather than %, because the hero's own height now follows its content.) */
+  min-height: calc(100svh - var(--hero-bar-height) - var(--hero-foot-space));
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   align-items: center;
   gap: clamp(2rem, 5vw, 9rem);
   margin-inline: auto;
-  padding-block: clamp(1.5rem, 3svh, 3rem);
+  padding-block: clamp(1rem, 3svh, 3rem);
 }
 
 .hero-eyebrow {
   margin: 0 0 1.4em;
   color: #6fd0ea;
   font-family: var(--font-label);
-  font-size: clamp(0.65rem, 0.72vw, 1.05rem);
+  font-size: clamp(0.6rem, min(0.72vw, 1.4svh), 1.05rem);
   letter-spacing: 0.1em;
 }
 
@@ -1339,8 +1348,8 @@ a {
   font-family: var(--font-heading);
   /* Grows with the width (7.4vw), limited by the height (15svh) so the two lines and the text
      below still fit a short screen: about 100px at 1366x768, 142px at 1920x1080 and 189px at
-     2560x1440. */
-  font-size: clamp(3.8rem, min(7.4vw, 15svh), 12rem);
+     2560x1440. The lower floor (2.6rem) lets it shrink further on small, short windows. */
+  font-size: clamp(2.6rem, min(7.4vw, 15svh), 12rem);
   font-weight: 600;
   letter-spacing: -0.08em;
   line-height: 0.94;
@@ -1359,7 +1368,8 @@ a {
   max-width: 46ch;
   margin: 1.6em 0 0;
   color: var(--hero-copy-muted);
-  font-size: clamp(0.95rem, min(1.1vw, 2.1svh), 1.6rem);
+  /* By the width and the height, whichever is smaller, never below about 13px. */
+  font-size: clamp(0.82rem, min(1.1vw, 2.1svh), 1.6rem);
   line-height: 1.75;
 }
 
@@ -1367,9 +1377,9 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 0.85em;
-  margin-top: clamp(2rem, 4svh, 3.2rem);
+  margin-top: clamp(1.2rem, 4svh, 3.2rem);
   /* The buttons' size follows this, so they grow with the screen too. */
-  font-size: clamp(1rem, min(0.95vw, 1.8svh), 1.45rem);
+  font-size: clamp(0.85rem, min(0.95vw, 1.8svh), 1.45rem);
 }
 
 .hero-button,
@@ -1659,16 +1669,19 @@ a {
   }
 
   .hero-main {
-    min-height: calc(100% - 7rem);
+    /* One screen minus the two-row top bar and the corner labels. */
+    min-height: calc(100svh - 7rem);
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;
     gap: 0.6rem;
-    padding-block: 0.9rem 2.5rem;
+    /* The bottom space keeps the text clear of the corner labels, even when the hero grows. */
+    padding-block: clamp(0.5rem, 2svh, 0.9rem) 2.5rem;
   }
 
   .hero-portrait {
     grid-row: 1;
-    width: min(52vw, 260px);
+    /* By the width and the height, so the photo leaves room for the text on short phones. */
+    width: min(52vw, 30svh, 260px);
     /* Stacked on a phone, the photo stays centred above the text. */
     justify-self: center;
   }
@@ -1683,12 +1696,12 @@ a {
   }
 
   .hero-title {
-    font-size: clamp(2.6rem, 12vw, 4.2rem);
+    font-size: clamp(2.2rem, min(12vw, 7svh), 4.2rem);
   }
 
   .hero-description {
     margin-top: 0.85rem;
-    font-size: 0.82rem;
+    font-size: clamp(0.76rem, 1.95svh, 0.82rem);
     line-height: 1.55;
   }
 
@@ -1774,8 +1787,8 @@ a {
   }
 
   .hero-main {
-    /* The top bar above and the corner labels below. */
-    min-height: calc(100% - 5.4rem);
+    /* One screen minus the top bar above and the corner labels below. */
+    min-height: calc(100svh - 5.4rem);
     grid-template-columns: minmax(0, 1fr) auto;
     justify-items: stretch;
     gap: clamp(1.25rem, 4vw, 3rem);
