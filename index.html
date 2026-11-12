@@ -1,4 +1,11 @@
 <!doctype html>
+<!--
+  index.html: the Home page of my portfolio, one long page with every section.
+  Order: head, the laptop intro (balcony photo and 3D laptop), the homepage hero, then the
+  About, Projects, Resume, Security lab and Contact sections (ending with the closing laptop),
+  the project window, the floating navigation and the footer.
+  It shares css/style.css and js/main.js with the separate pages, which hold the same sections.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,7 +15,7 @@
     <meta name="color-scheme" content="only light">
     <meta name="description" content="Maryam Sharifova's personal portfolio.">
     <title>Home | Maryam Sharifova</title>
-    <!-- One stylesheet and script are shared across every page. -->
+    <!-- Fonts from Google Fonts, then the stylesheet and script that every page of the site shares. -->
     <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,11 +23,16 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Load the balcony photo early: it is the first thing the Home intro shows. -->
     <link rel="preload" as="image" href="images/balcony-empty.jpg" fetchpriority="high">
+    <!-- main.js loads here in the head (not at the end of body) so a saved dark theme is applied
+         before the first paint; the rest of the script waits for DOMContentLoaded. -->
     <script src="js/main.js"></script>
   </head>
   <body class="home-intro-page">
+    <!-- body.home-intro-page lets style.css lay out the long Home page with the intro. Each section
+         below has class home-section, so main.js points the page dots at them, not at other pages. -->
     <main>
-      <!-- Sticky stage for the scroll-driven laptop introduction. -->
+      <!-- Home intro: a tall section with a sticky stage. As the visitor scrolls, main.js opens the
+           laptop lid and zooms into its screen until the homepage hero fills the window. -->
       <section class="laptop-intro" aria-label="Laptop introduction">
         <div class="laptop-stage">
           <!-- A "living photo": a night balcony in Baku behind the 3D laptop, which lies on its
@@ -35,7 +47,8 @@
             </div>
           </div>
 
-          <!-- Intro copy fades away before the lid opens. -->
+          <!-- Intro text, which fades away before the lid opens. main.js types the phrases into
+               typed-phrase; the aria-label gives screen readers the full sentence instead of changing letters. -->
           <div class="intro-copy">
             <p class="intro-label">PORTFOLIO <span aria-hidden="true">·</span> 2026</p>
             <h1 class="intro-title">Hi, I'm <span class="gradient-text">Maryam.</span></h1>
@@ -65,7 +78,8 @@
           </p>
 
 
-          <!-- CSS-only laptop: hinged lid above a separate flat deck. -->
+          <!-- 3D laptop made of divs: a hinged lid above a flat deck. main.js turns the lid and moves the
+               laptop as the page scrolls. It is aria-hidden because it is only decoration. -->
           <div class="laptop-dive" aria-hidden="true">
             <div class="laptop">
             <div class="lid">
@@ -85,7 +99,8 @@
             </div>
             <!-- The keyboard and trackpad are attached to the horizontal base. -->
             <div class="deck">
-              <!-- Key rows are separate elements so the keyboard has visible gaps. -->
+              <!-- Key rows are separate elements so the keyboard has visible gaps. The keys with data-letter
+                   are the ones main.js presses to type MARYAM once the lid is open. -->
               <div class="keyboard">
                 <div class="key-row key-row-function">
                   <span class="key key-escape">esc</span>
@@ -172,6 +187,7 @@
                   <span class="key key-arrow">→</span>
                 </div>
               </div>
+              <!-- Trackpad, then the front and side walls that give the base its thickness. -->
               <div class="trackpad"></div>
               <span class="deck-wall deck-wall-front"></span>
               <span class="deck-wall deck-wall-left"></span>
@@ -182,14 +198,16 @@
         </div>
       </section>
 
-      <!-- This full-size hero temporarily fits inside the laptop screen during the dive. -->
+      <!-- Homepage hero. During the intro main.js shows it scaled down inside the laptop screen;
+           when the zoom ends it is the normal full-size hero with id "home". -->
       <section class="portfolio-hero-section" id="home" aria-label="Portfolio home">
         <div class="portfolio-hero-frame">
           <div class="portfolio-hero">
             <!-- The hero grid and soft blue glows create a dark landing-page backdrop. -->
             <div class="hero-atmosphere" aria-hidden="true"></div>
 
-            <!-- The compact brand bar belongs to the homepage shown on the laptop. -->
+            <!-- Top bar: my name, links to the sections below and the theme button. main.js switches the
+                 theme and updates the button's label; CSS shows the sun or the moon icon. -->
             <header class="hero-topbar">
               <a class="hero-brand" href="index.html">
                 <span class="hero-brand-mark">M</span>
@@ -227,7 +245,8 @@
                 </div>
               </div>
 
-              <!-- The portrait sits inside three animated rings. -->
+              <!-- My photo inside three animated rings with small labels. The rings are aria-hidden
+                   because they are only decoration. -->
               <div class="hero-portrait">
                 <div class="portrait-rings" aria-hidden="true">
                   <span class="portrait-ring portrait-ring-outer"><span></span></span>
@@ -288,8 +307,10 @@
           </div>
         </section>
 
-        <!-- The terminal safely simulates portfolio commands in the browser. -->
+        <!-- Portfolio terminal: main.js reads the typed command (or a chip's data-command) and prints
+             the answer in the output log. It is only a simulation; nothing runs on a real machine. -->
         <section class="terminal-card" aria-labelledby="terminal-title" data-reveal>
+          <!-- Window bar with decorative dots (aria-hidden) and the terminal's title. -->
           <div class="terminal-header">
             <div class="terminal-window-dots" aria-hidden="true">
               <span></span><span></span><span></span>
@@ -315,9 +336,13 @@
             <button class="terminal-command" type="button" data-command="date">date</button>
             <button class="terminal-command" type="button" data-command="clear">clear</button>
           </div>
+          <!-- Output log: role="log" with aria-live makes screen readers read each new answer, and
+               tabindex="0" lets keyboard users focus it to scroll back through older output. -->
           <div class="terminal-output" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
             <p class="terminal-welcome">Welcome to Maryam's portfolio terminal. Type <strong>help</strong> to explore.</p>
           </div>
+          <!-- Command line. Pressing Enter submits the form, which main.js catches instead of reloading
+               the page. The prompt text is aria-hidden because the hidden label already names the input. -->
           <form class="terminal-form" autocomplete="off">
             <label class="sr-only" for="terminal-input">Enter a portfolio command</label>
             <span aria-hidden="true">maryam@portfolio:~$</span>
@@ -328,8 +353,12 @@
 
       <!-- ===== Projects: the same content as projects.html, so its styles and scripts apply unchanged. ===== -->
       <section id="projects" class="projects-page home-section">
+        <!-- On wide, tall screens main.js pins this track and slides the six cards sideways as the
+             page scrolls; on small screens or with reduced motion they simply stack. -->
         <section class="projects-track" aria-labelledby="projects-title">
           <div class="projects-pin">
+            <!-- Heading and progress counter. main.js updates the count, the bar and the aria-label
+                 as each project card comes into view. -->
             <div class="projects-track-heading">
               <div>
                 <p class="eyebrow">02 · PROJECTS</p>
@@ -340,8 +369,11 @@
                 <span class="project-progress-bar"><span></span></span>
               </div>
             </div>
-            <!-- The JavaScript track translates this row as the page scrolls. -->
+            <!-- The six project cards. main.js moves this row sideways while the section is pinned.
+                 Clicking a card or its "Open window" button opens the project window with more details. -->
             <div class="project-list">
+          <!-- Project 1: speech to text. Each card has its text on one side and a small visual on the
+               other; main.js also adds a real photo to the visual if one exists in images/projects. -->
           <article class="project-card" id="p1" tabindex="0" aria-label="Open details for Speech-to-text API for Azerbaijani">
             <div class="project-copy">
               <p class="project-label">01 / SPEECH</p>
@@ -354,11 +386,13 @@
             </div>
             <figure class="project-visual visual-waveform">
               <div class="visual-topline"><span>CALL TRANSCRIPT</span><code>{"lang":"az","status":"ok"}</code></div>
+              <!-- Empty on purpose: main.js fills it with randomly sized, animated bars. -->
               <div class="waveform-bars" aria-hidden="true"></div>
               <div class="waveform-time"><span>00:18.4</span><span>00:42.0</span></div>
             </figure>
           </article>
 
+          <!-- Project 2: local LLM chatbot. -->
           <article class="project-card" id="p2" tabindex="0" aria-label="Open details for Local LLM chatbot">
             <div class="project-copy">
               <p class="project-label">02 / LOCAL AI</p>
@@ -404,6 +438,7 @@
             </figure>
           </article>
 
+          <!-- Project 3: plant-health vision. -->
           <article class="project-card" id="p3" tabindex="0" aria-label="Open details for Plant-health vision for Agrohub">
             <div class="project-copy">
               <p class="project-label">03 / VISION</p>
@@ -414,6 +449,8 @@
               </ul>
               <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
             </div>
+            <!-- Leaf scan drawn in SVG: a leaf with brown disease spots and a pink detection box,
+                 with a scan line that CSS moves across it. -->
             <figure class="project-visual visual-plant">
               <div class="visual-topline"><span>LEAF HEALTH SCAN</span><span class="scan-status">ANALYSING</span></div>
               <svg class="plant-scan" viewBox="0 0 520 310" role="img" aria-label="A green leaf with brown spots being scanned">
@@ -437,6 +474,7 @@
             </figure>
           </article>
 
+          <!-- Project 4: logic gates. -->
           <article class="project-card" id="p4" tabindex="0" aria-label="Open details for Logic gates">
             <div class="project-copy">
               <p class="project-label">04 / PROJECT 1</p>
@@ -447,6 +485,8 @@
               </ul>
               <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
             </div>
+            <!-- A small working circuit (data-circuit). main.js flips inputs A and B, works out the chosen
+                 gate's output, lights the LED and rebuilds the truth table, hiding the B column for NOT. -->
             <figure class="project-visual visual-circuit" data-circuit>
               <div class="visual-topline"><span>LIVE LOGIC CIRCUIT</span><span class="circuit-power">● POWERED</span></div>
               <div class="circuit-controls">
@@ -469,6 +509,7 @@
             </figure>
           </article>
 
+          <!-- Project 5: Hour of AI. -->
           <article class="project-card" id="p5" tabindex="0" aria-label="Open details for Hour of AI">
             <div class="project-copy">
               <p class="project-label">05 / PROJECT 2</p>
@@ -479,6 +520,7 @@
               </ul>
               <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
             </div>
+            <!-- Coloured blocks that look like the MakeCode program the children built. -->
             <figure class="project-visual visual-code">
               <div class="visual-topline"><span>MAKECODE / ON START</span><span class="code-play-dot"></span></div>
               <div class="code-block block-start">on start</div>
@@ -489,6 +531,7 @@
             </figure>
           </article>
 
+          <!-- Project 6: LEGO EV3 line-following robot. -->
           <article class="project-card" id="p6" tabindex="0" aria-label="Open details for Line-following robot with LEGO EV3">
             <div class="project-copy">
               <p class="project-label">06 / PROJECT 3</p>
@@ -501,10 +544,13 @@
             </div>
             <figure class="project-visual visual-robot">
               <div class="visual-topline"><span>ADA MAKERSPACE</span><code>gyro: 0° → 90°</code></div>
+              <!-- The first path is the grey track and the dashed copy is its moving centre line;
+                   animateMotion drives the robot along the first path (by its id). -->
               <svg class="robot-track" viewBox="0 0 520 300" role="img" aria-label="A small EV3 robot following a curving track">
                 <path id="robot-track-path" d="M105 228C62 201 78 102 161 89c85-13 110 79 183 64 77-16 57-95 12-106-44-11-95 16-82 70 13 54 94 88 168 39C475 210 166 293 105 228Z"/>
                 <path class="robot-track-dash" d="M105 228C62 201 78 102 161 89c85-13 110 79 183 64 77-16 57-95 12-106-44-11-95 16-82 70 13 54 94 88 168 39C475 210 166 293 105 228Z"/>
-                <!-- Reduced-motion visitors get a stationary robot on the track. -->
+                <!-- A still robot at the start of the track. CSS shows it, and hides the moving one,
+                     for visitors who ask for reduced motion. -->
                 <g class="ev3-robot-static" transform="translate(105 228)" aria-hidden="true">
                   <rect x="-22" y="-16" width="44" height="32" rx="6" fill="#353c40" stroke="#8bd3e3" stroke-width="2"/>
                   <rect x="-27" y="-12" width="6" height="12" rx="2" fill="#141719"/>
@@ -532,7 +578,8 @@
 
       <!-- ===== Resume: the same content as resume.html, so its styles and scripts apply unchanged. ===== -->
       <section id="resume" class="page-content resume-page home-section">
-        <!-- Section label, split heading, and a single link to the PDF resume. -->
+        <!-- Section label, heading and a button that opens my PDF resume in a new tab.
+             data-magnetic makes main.js pull the button slightly toward the pointer. -->
         <section class="page-intro resume-intro" aria-labelledby="resume-title">
           <p class="eyebrow" data-reveal>03 · RESUME</p>
           <h2 class="page-title" id="resume-title" data-reveal>Experience &amp; <span class="gradient-text">education.</span></h2>
@@ -547,7 +594,7 @@
           </a>
         </section>
 
-        <!-- Wide player card: avatar, toolkits, and skill pips. -->
+        <!-- Game-style player card: avatar, my role, two toolkits and skill meters. -->
         <section class="player-card" aria-label="Player profile" data-reveal>
           <div class="player-avatar" aria-hidden="true">MS</div>
           <div class="player-identity">
@@ -572,7 +619,8 @@
               <li>RAG</li>
             </ul>
           </div>
-          <!-- Each row is a name, five pips, and a rank. Filled pips match the level. -->
+          <!-- Skill meters: a name, five pips and a rank. The pips are only visual, so each row's
+               aria-label says the level in words for screen readers. -->
           <ul class="skill-meters">
             <li>
               <span class="skill-name">HTML &amp; CSS</span>
@@ -612,8 +660,10 @@
           </ul>
         </section>
 
-        <!-- Missions draw a timeline on the left; certifications stack on the right. -->
+        <!-- Two columns: the missions timeline on the left, certifications on the right. -->
         <div class="resume-columns">
+          <!-- Missions timeline. As the page scrolls, main.js draws a line down the list and lights each
+               mission's node when the line reaches it. -->
           <section class="missions" aria-labelledby="missions-title">
             <h2 id="missions-title">Missions</h2>
             <ol class="quest-timeline">
@@ -651,6 +701,7 @@
             </ol>
           </section>
 
+          <!-- Certifications: test scores, then a card with the languages I speak. -->
           <section class="cert-column" aria-labelledby="cert-title">
             <h2 id="cert-title">Certifications</h2>
             <article class="cert-card">
@@ -683,6 +734,8 @@
           <p class="lab-lead" data-reveal>Can you spot the fake emails? Hover over or tap the links to see where they really go.</p>
         </div>
 
+        <!-- The game box. Its parts start empty or hidden; main.js shows one email at a time,
+             checks the answer and swaps between the answers, feedback and final score. -->
         <div class="lab-game" data-reveal>
           <!-- Progress: one dot per email (green right, red wrong, teal current) and a counter. -->
           <div class="lab-topline">
@@ -701,6 +754,7 @@
               <span class="mail-dot mail-dot-green"></span>
               <span class="mail-app">Inbox</span>
             </div>
+            <!-- Sender, address and subject, filled in by main.js for each email. -->
             <header class="mail-head">
               <span class="mail-avatar" aria-hidden="true"></span>
               <div class="mail-meta">
@@ -766,7 +820,8 @@
           </div>
         </section>
 
-        <!-- Contact options are limited to public profiles, location, and the CV. -->
+        <!-- Four contact cards: public profiles, location and the CV. On each spotlight-card,
+             main.js makes a soft glow follow the pointer. -->
         <section class="contact-grid" aria-label="Contact details">
           <a class="contact-card spotlight-card" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener" data-reveal>
             <span class="contact-card-icon" aria-hidden="true">in</span>
@@ -800,6 +855,8 @@
         <section class="closing-laptop" aria-label="Thanks for visiting">
           <div class="closing-laptop-scaler">
             <div class="laptop">
+              <!-- Lid: the screen side shows the thank-you message, the back side with the MS logo
+                   faces up once the lid is closed. -->
               <div class="lid">
                 <div class="lid-face screen-face">
                   <div class="screen-display">
@@ -815,6 +872,7 @@
                   <span class="lid-logo" aria-hidden="true">MS</span>
                 </div>
               </div>
+              <!-- Base with the keyboard and trackpad. They are decoration, so they are hidden from screen readers. -->
               <div class="deck">
                 <div class="keyboard" aria-hidden="true">
                   <div class="key-row key-row-function">
@@ -913,10 +971,12 @@
       </section>
     </main>
 
-    <!-- macOS-style project window presents the visual and project highlights. -->
+    <!-- Project window: one shared <dialog> that starts empty. main.js fills it from the clicked
+         card (label, title, text, tags and a copy of its visual) plus extra highlights, then opens it. -->
     <dialog class="project-dialog" aria-labelledby="project-dialog-title">
       <div class="project-window">
         <div class="project-window-titlebar">
+          <!-- The red dot is the real close button; yellow and green are only decoration, so they are aria-hidden. -->
           <div class="window-controls">
             <button class="project-dialog-close" type="button" aria-label="Close project details"></button>
             <span class="window-dot window-dot-yellow" aria-hidden="true"></span>
@@ -939,7 +999,8 @@
       </div>
     </dialog>
 
-    <!-- A floating navigation pill appears after the hero settles. On Home its links scroll to the sections below. -->
+    <!-- Floating navigation pill, shown once the hero has settled. On Home its links scroll to the
+         sections above; on the other pages main.js builds the same pill itself. -->
     <nav class="floating-nav" aria-label="Main navigation">
       <a href="#home">Home</a>
       <a href="#about">About</a>
@@ -958,10 +1019,11 @@
       </button>
     </nav>
 
-    <!-- Shared footer links back to the public source repository. -->
+    <!-- Footer, the same on every page: copyright, my GitHub profile and a link to this site's code. -->
     <footer class="site-footer">
-      <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
+      <!-- Copyright line with a link to my GitHub profile. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
+      <!-- The repository link is only an icon, so aria-label gives it a name for screen readers. -->
       <a
         class="github-link"
         href="https://github.com/maryamsharifova/maryamsharifova.github.io"

@@ -1,4 +1,10 @@
 <!doctype html>
+<!--
+  projects.html: the Projects page of my portfolio.
+  Order: head, the projects track with six project cards, footer, then the project window
+  (a dialog that opens over the page). It shares css/style.css and js/main.js with every page;
+  main.js adds the floating navigation and runs the track, the demos and the project window.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,19 +14,24 @@
     <meta name="color-scheme" content="only light">
     <meta name="description" content="Projects by Maryam Sharifova.">
     <title>Projects | Maryam Sharifova</title>
-    <!-- The site's shared styles and behavior keep every page consistent. -->
+    <!-- Fonts from Google Fonts, then the stylesheet and script that every page of the site shares. -->
     <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/style.css">
+    <!-- main.js loads here in the head (not at the end of body) so a saved dark theme is applied
+         before the first paint; the rest of the script waits for DOMContentLoaded. -->
     <script src="js/main.js"></script>
   </head>
   <body>
-    <!-- A pinned horizontal track turns each case study into a full-screen stop. -->
+    <!-- Projects page. On wide, tall screens main.js pins this section and slides the six cards
+         sideways as the page scrolls; on small screens or with reduced motion they simply stack. -->
     <main class="projects-page">
       <section class="projects-track" aria-labelledby="projects-title">
         <div class="projects-pin">
+          <!-- Heading and progress counter. main.js updates the count, the bar and the aria-label
+               as each project card comes into view. -->
           <div class="projects-track-heading">
             <div>
               <p class="eyebrow">02 · PROJECTS</p>
@@ -31,8 +42,11 @@
               <span class="project-progress-bar"><span></span></span>
             </div>
           </div>
-          <!-- The JavaScript track translates this row as the page scrolls. -->
+          <!-- The six project cards. main.js moves this row sideways while the section is pinned.
+               Clicking a card or its "Open window" button opens the project window with more details. -->
           <div class="project-list">
+        <!-- Project 1: speech to text. Each card has its text on one side and a small visual on the
+             other; main.js also adds a real photo to the visual if one exists in images/projects. -->
         <article class="project-card" id="p1" tabindex="0" aria-label="Open details for Speech-to-text API for Azerbaijani">
           <div class="project-copy">
             <p class="project-label">01 / SPEECH</p>
@@ -45,11 +59,13 @@
           </div>
           <figure class="project-visual visual-waveform">
             <div class="visual-topline"><span>CALL TRANSCRIPT</span><code>{"lang":"az","status":"ok"}</code></div>
+            <!-- Empty on purpose: main.js fills it with randomly sized, animated bars. -->
             <div class="waveform-bars" aria-hidden="true"></div>
             <div class="waveform-time"><span>00:18.4</span><span>00:42.0</span></div>
           </figure>
         </article>
 
+        <!-- Project 2: local LLM chatbot. -->
         <article class="project-card" id="p2" tabindex="0" aria-label="Open details for Local LLM chatbot">
           <div class="project-copy">
             <p class="project-label">02 / LOCAL AI</p>
@@ -95,6 +111,7 @@
           </figure>
         </article>
 
+        <!-- Project 3: plant-health vision. -->
         <article class="project-card" id="p3" tabindex="0" aria-label="Open details for Plant-health vision for Agrohub">
           <div class="project-copy">
             <p class="project-label">03 / VISION</p>
@@ -105,6 +122,8 @@
             </ul>
             <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
           </div>
+          <!-- Leaf scan drawn in SVG: a leaf with brown disease spots and a pink detection box,
+               with a scan line that CSS moves across it. -->
           <figure class="project-visual visual-plant">
             <div class="visual-topline"><span>LEAF HEALTH SCAN</span><span class="scan-status">ANALYSING</span></div>
             <svg class="plant-scan" viewBox="0 0 520 310" role="img" aria-label="A green leaf with brown spots being scanned">
@@ -128,6 +147,7 @@
           </figure>
         </article>
 
+        <!-- Project 4: logic gates. -->
         <article class="project-card" id="p4" tabindex="0" aria-label="Open details for Logic gates">
           <div class="project-copy">
             <p class="project-label">04 / PROJECT 1</p>
@@ -138,6 +158,8 @@
             </ul>
             <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
           </div>
+          <!-- A small working circuit (data-circuit). main.js flips inputs A and B, works out the chosen
+               gate's output, lights the LED and rebuilds the truth table, hiding the B column for NOT. -->
           <figure class="project-visual visual-circuit" data-circuit>
             <div class="visual-topline"><span>LIVE LOGIC CIRCUIT</span><span class="circuit-power">● POWERED</span></div>
             <div class="circuit-controls">
@@ -160,6 +182,7 @@
           </figure>
         </article>
 
+        <!-- Project 5: Hour of AI. -->
         <article class="project-card" id="p5" tabindex="0" aria-label="Open details for Hour of AI">
           <div class="project-copy">
             <p class="project-label">05 / PROJECT 2</p>
@@ -170,6 +193,7 @@
             </ul>
             <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
           </div>
+          <!-- Coloured blocks that look like the MakeCode program the children built. -->
           <figure class="project-visual visual-code">
             <div class="visual-topline"><span>MAKECODE / ON START</span><span class="code-play-dot"></span></div>
             <div class="code-block block-start">on start</div>
@@ -180,6 +204,7 @@
           </figure>
         </article>
 
+        <!-- Project 6: LEGO EV3 line-following robot. -->
         <article class="project-card" id="p6" tabindex="0" aria-label="Open details for Line-following robot with LEGO EV3">
           <div class="project-copy">
             <p class="project-label">06 / PROJECT 3</p>
@@ -192,10 +217,13 @@
           </div>
           <figure class="project-visual visual-robot">
             <div class="visual-topline"><span>ADA MAKERSPACE</span><code>gyro: 0° → 90°</code></div>
+            <!-- The first path is the grey track and the dashed copy is its moving centre line;
+                 animateMotion drives the robot along the first path (by its id). -->
             <svg class="robot-track" viewBox="0 0 520 300" role="img" aria-label="A small EV3 robot following a curving track">
               <path id="robot-track-path" d="M105 228C62 201 78 102 161 89c85-13 110 79 183 64 77-16 57-95 12-106-44-11-95 16-82 70 13 54 94 88 168 39C475 210 166 293 105 228Z"/>
               <path class="robot-track-dash" d="M105 228C62 201 78 102 161 89c85-13 110 79 183 64 77-16 57-95 12-106-44-11-95 16-82 70 13 54 94 88 168 39C475 210 166 293 105 228Z"/>
-              <!-- Reduced-motion visitors get a stationary robot on the track. -->
+              <!-- A still robot at the start of the track. CSS shows it, and hides the moving one,
+                   for visitors who ask for reduced motion. -->
               <g class="ev3-robot-static" transform="translate(105 228)" aria-hidden="true">
                 <rect x="-22" y="-16" width="44" height="32" rx="6" fill="#353c40" stroke="#8bd3e3" stroke-width="2"/>
                 <rect x="-27" y="-12" width="6" height="12" rx="2" fill="#141719"/>
@@ -221,20 +249,23 @@
       </section>
     </main>
 
-    <!-- Shared footer links to the portfolio repository. -->
+    <!-- Footer, the same on every page: copyright, my GitHub profile and a link to this site's code. -->
     <footer class="site-footer">
-      <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
+      <!-- Copyright line with a link to my GitHub profile. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
+      <!-- The repository link is only an icon, so aria-label gives it a name for screen readers. -->
       <a class="github-link" href="https://github.com/maryamsharifova/maryamsharifova.github.io" aria-label="Visit the portfolio repository on GitHub" title="Portfolio repository on GitHub">
         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
           <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.61 1.21 3.25.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.77 1.15 2.99 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/>
         </svg>
       </a>
     </footer>
-    <!-- macOS-style project window presents the visual and project highlights. -->
+    <!-- Project window: one shared <dialog> that starts empty. main.js fills it from the clicked
+         card (label, title, text, tags and a copy of its visual) plus extra highlights, then opens it. -->
     <dialog class="project-dialog" aria-labelledby="project-dialog-title">
       <div class="project-window">
         <div class="project-window-titlebar">
+          <!-- The red dot is the real close button; yellow and green are only decoration, so they are aria-hidden. -->
           <div class="window-controls">
             <button class="project-dialog-close" type="button" aria-label="Close project details"></button>
             <span class="window-dot window-dot-yellow" aria-hidden="true"></span>

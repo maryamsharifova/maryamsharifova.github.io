@@ -1,4 +1,10 @@
 <!doctype html>
+<!--
+  resume.html: the Resume page of my portfolio.
+  Order: head, intro with the PDF button, player card, missions timeline and certifications,
+  the Security lab game, footer. It shares css/style.css and js/main.js with every page;
+  the floating nav's "Lab" link points to the #lab section at the end of this page.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,18 +14,22 @@
     <meta name="color-scheme" content="only light">
     <meta name="description" content="Resume of Maryam Sharifova.">
     <title>Resume | Maryam Sharifova</title>
-    <!-- The site's shared styles and behavior keep every page consistent. -->
+    <!-- Fonts from Google Fonts, then the stylesheet and script that every page of the site shares. -->
     <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/style.css">
+    <!-- main.js loads here in the head (not at the end of body) so a saved dark theme is applied
+         before the first paint; the rest of the script waits for DOMContentLoaded. -->
     <script src="js/main.js"></script>
   </head>
   <body>
-    <!-- Game-style profile: player card, missions, and certifications. -->
+    <!-- Main content, styled like a game profile: player card, missions, certifications and the
+         Security lab. Elements with data-reveal are faded in by main.js as they scroll into view. -->
     <main class="page-content resume-page">
-      <!-- Section label, split heading, and a single link to the PDF resume. -->
+      <!-- Section label, heading and a button that opens my PDF resume in a new tab.
+           data-magnetic makes main.js pull the button slightly toward the pointer. -->
       <section class="page-intro resume-intro" aria-labelledby="resume-title">
         <p class="eyebrow" data-reveal>03 · RESUME</p>
         <h1 class="page-title" id="resume-title" data-reveal>Experience &amp; <span class="gradient-text">education.</span></h1>
@@ -34,7 +44,7 @@
         </a>
       </section>
 
-      <!-- Wide player card: avatar, toolkits, and skill pips. -->
+      <!-- Game-style player card: avatar, my role, two toolkits and skill meters. -->
       <section class="player-card" aria-label="Player profile" data-reveal>
         <div class="player-avatar" aria-hidden="true">MS</div>
         <div class="player-identity">
@@ -59,7 +69,8 @@
             <li>RAG</li>
           </ul>
         </div>
-        <!-- Each row is a name, five pips, and a rank. Filled pips match the level. -->
+        <!-- Skill meters: a name, five pips and a rank. The pips are only visual, so each row's
+             aria-label says the level in words for screen readers. -->
         <ul class="skill-meters">
           <li>
             <span class="skill-name">HTML &amp; CSS</span>
@@ -99,8 +110,10 @@
         </ul>
       </section>
 
-      <!-- Missions draw a timeline on the left; certifications stack on the right. -->
+      <!-- Two columns: the missions timeline on the left, certifications on the right. -->
       <div class="resume-columns">
+        <!-- Missions timeline. As the page scrolls, main.js draws a line down the list and lights each
+             mission's node when the line reaches it. -->
         <section class="missions" aria-labelledby="missions-title">
           <h2 id="missions-title">Missions</h2>
           <ol class="quest-timeline">
@@ -138,6 +151,7 @@
           </ol>
         </section>
 
+        <!-- Certifications: test scores, then a card with the languages I speak. -->
         <section class="cert-column" aria-labelledby="cert-title">
           <h2 id="cert-title">Certifications</h2>
           <article class="cert-card">
@@ -169,6 +183,8 @@
           <p class="lab-lead" data-reveal>Can you spot the fake emails? Hover over or tap the links to see where they really go.</p>
         </div>
 
+        <!-- The game box. Its parts start empty or hidden; main.js shows one email at a time,
+             checks the answer and swaps between the answers, feedback and final score. -->
         <div class="lab-game" data-reveal>
           <!-- Progress: one dot per email (green right, red wrong, teal current) and a counter. -->
           <div class="lab-topline">
@@ -187,6 +203,7 @@
               <span class="mail-dot mail-dot-green"></span>
               <span class="mail-app">Inbox</span>
             </div>
+            <!-- Sender, address and subject, filled in by main.js for each email. -->
             <header class="mail-head">
               <span class="mail-avatar" aria-hidden="true"></span>
               <div class="mail-meta">
@@ -239,10 +256,11 @@
       </section>
     </main>
 
-    <!-- Shared footer links to the portfolio repository. -->
+    <!-- Footer, the same on every page: copyright, my GitHub profile and a link to this site's code. -->
     <footer class="site-footer">
-      <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
+      <!-- Copyright line with a link to my GitHub profile. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
+      <!-- The repository link is only an icon, so aria-label gives it a name for screen readers. -->
       <a class="github-link" href="https://github.com/maryamsharifova/maryamsharifova.github.io" aria-label="Visit the portfolio repository on GitHub" title="Portfolio repository on GitHub">
         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
           <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.61 1.21 3.25.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.77 1.15 2.99 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/>

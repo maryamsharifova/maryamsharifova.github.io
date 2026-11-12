@@ -1,4 +1,10 @@
 <!doctype html>
+<!--
+  contact.html: the Contact page of my portfolio.
+  Order: head, intro with quick links, four contact cards, the closing laptop, footer.
+  It shares css/style.css and js/main.js with every page; main.js adds the floating
+  navigation and closes the laptop's lid as the visitor reaches the end of the page.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,16 +14,19 @@
     <meta name="color-scheme" content="only light">
     <meta name="description" content="Contact Maryam Sharifova.">
     <title>Contact | Maryam Sharifova</title>
-    <!-- The site's shared styles and behavior keep every page consistent. -->
+    <!-- Fonts from Google Fonts, then the stylesheet and script that every page of the site shares. -->
     <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/style.css">
+    <!-- main.js loads here in the head (not at the end of body) so a saved dark theme is applied
+         before the first paint; the rest of the script waits for DOMContentLoaded. -->
     <script src="js/main.js"></script>
   </head>
   <body>
-    <!-- Main Contact page uses direct links rather than a form. -->
+    <!-- Main content. Contact is through plain links (no form), so the site needs no server
+         and stores no messages. -->
     <main class="page-content contact-page">
       <!-- The heading links to LinkedIn. The gradient shifts when the pointer is over it. -->
       <section class="page-intro contact-intro" aria-labelledby="contact-title">
@@ -31,7 +40,8 @@
         </div>
       </section>
 
-      <!-- Contact options are limited to public profiles, location, and the CV. -->
+      <!-- Four contact cards: public profiles, location and the CV. On each spotlight-card,
+           main.js makes a soft glow follow the pointer. -->
       <section class="contact-grid" aria-label="Contact details">
         <a class="contact-card spotlight-card" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener" data-reveal>
           <span class="contact-card-icon" aria-hidden="true">in</span>
@@ -65,6 +75,8 @@
       <section class="closing-laptop" aria-label="Thanks for visiting">
         <div class="closing-laptop-scaler">
           <div class="laptop">
+            <!-- Lid: the screen side shows the thank-you message, the back side with the MS logo
+                 faces up once the lid is closed. -->
             <div class="lid">
               <div class="lid-face screen-face">
                 <div class="screen-display">
@@ -80,6 +92,7 @@
                 <span class="lid-logo" aria-hidden="true">MS</span>
               </div>
             </div>
+            <!-- Base with the keyboard and trackpad. They are decoration, so they are hidden from screen readers. -->
             <div class="deck">
               <div class="keyboard" aria-hidden="true">
                 <div class="key-row key-row-function">
@@ -177,10 +190,11 @@
       </section>
     </main>
 
-    <!-- Shared footer links to the portfolio repository. -->
+    <!-- Footer, the same on every page: copyright, my GitHub profile and a link to this site's code. -->
     <footer class="site-footer">
-      <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
+      <!-- Copyright line with a link to my GitHub profile. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
+      <!-- The repository link is only an icon, so aria-label gives it a name for screen readers. -->
       <a class="github-link" href="https://github.com/maryamsharifova/maryamsharifova.github.io" aria-label="Visit the portfolio repository on GitHub" title="Portfolio repository on GitHub">
         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
           <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.61 1.21 3.25.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.77 1.15 2.99 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/>

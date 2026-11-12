@@ -1,11 +1,47 @@
-// Where the visitor's theme choice is stored. The name changed when light became the
-// default: choices saved under the old name were made while dark was the default, so they
-// are forgotten once and every visitor starts in light mode.
+// =====================================================================================
+// main.js - all the interactive behaviour of my portfolio site
+// =====================================================================================
+// Every page (index.html, about.html, projects.html, resume.html, contact.html) loads this
+// one file. Each feature first looks for its own elements and simply stops when the page
+// does not have them, so the same script is safe to run everywhere.
+//
+// How the file is organised, top to bottom:
+//   1. Theme saving: read the saved light/dark choice before the first paint.
+//   Then, inside one DOMContentLoaded handler:
+//   2. Theme toggle buttons (sun/moon) and saving the choice.
+//   3. Shared UI: floating nav, right-edge page dots and toast messages.
+//   4. Home navigation: smooth section links and highlighting the current section.
+//   5. Scroll reveals: content fades up as it enters the screen.
+//   6. Card spotlights that follow the pointer.
+//   7. Projects page: the pinned sideways track, waveform, photos and the logic-gate demo.
+//   8. Project windows: the macOS-style dialog with each project's details and #p1-#p6 links.
+//   9. Custom cursor and magnetic buttons (desktop only).
+//  10. Hero particles and the portrait's orbit tilt.
+//  11. About terminal: a small fake shell with a fixed set of commands.
+//  12. Resume quest timeline: a line that grows as the visitor scrolls.
+//  13. Closing laptop at the end of Contact: the lid shuts as the page ends.
+//  14. Security lab: the "Phishing or legit?" email game.
+//  15. Home laptop intro (only on index.html):
+//      a. constants for the balcony photo, perspective, laptop poses and timeline,
+//      b. the homepage copy on the screen and the dive into the hero (updateHeroScene),
+//      c. the typewriter line,
+//      d. the scroll loop (updateLaptop / requestLaptopUpdate),
+//      e. balcony photo placement and the camera maths,
+//      f. live photo details drawn on a canvas (createBalconyLife),
+//      g. fitting the closed and open poses on resize (fitIntroPoses),
+//      h. start-up.
+// =====================================================================================
+
+// ===== Theme saving =====
+// The localStorage key for the visitor's theme choice. It has a "-v2" suffix so values saved
+// under the plain "portfolio-theme" key (from when dark was the default) are ignored and every
+// visitor starts in light mode; that older key is also deleted below so it does not linger.
 const THEME_KEY = "portfolio-theme-v2";
 
 // Light is the default theme. Only a saved "dark" choice switches the page to dark, and it
 // happens here, before the first paint, so there is no flash of the wrong colours.
 // A saved "light" choice, or none at all, keeps the light default.
+// localStorage can throw (private mode, blocked storage), so the read is wrapped in try/catch.
 try {
   localStorage.removeItem("portfolio-theme");
   const savedTheme = localStorage.getItem(THEME_KEY);
@@ -16,12 +52,18 @@ try {
   console.warn("Could not read the saved theme preference.", error);
 }
 
+// Everything else waits until the HTML is parsed, so all the elements can be found.
 document.addEventListener("DOMContentLoaded", () => {
+  // The visitor's "reduce motion" setting. Every animation below checks it and either stops
+  // or jumps straight to its end state; several features also listen for it to change.
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+  // ===== Theme toggle buttons =====
   // Bind theme controls after the shared floating navigation has been created.
   const initializeThemeToggles = () => {
     const themeToggles = document.querySelectorAll(".theme-toggle");
+    // Keep the aria-label and tooltip of every toggle in step with the current theme, so
+    // screen readers and hover text describe what the button will do.
     const updateToggleLabels = () => {
       // The button names the theme it will switch to.
       const label = document.documentElement.dataset.theme === "dark"
@@ -36,8 +78,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     themeToggles.forEach((themeToggle) => {
       updateToggleLabels();
+      // A click flips the theme, updates the labels and saves the new choice.
       themeToggle.addEventListener("click", () => {
         // Light is the default, so dark mode is the only theme that needs the attribute.
+        // isDark is the theme we are switching TO: true when the page is light right now.
         const isDark = document.documentElement.dataset.theme !== "dark";
 
         if (isDark) {
@@ -48,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         updateToggleLabels();
 
+        // Save the choice for the next visit. Storage can be blocked, so a failure only warns.
         try {
           localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
         } catch (error) {
@@ -58,7 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updateToggleLabels();
   };
 
+  // ===== Shared UI: floating nav, page dots and toasts =====
   // Create the shared UI here so every page can use it without repeated markup.
+  // It builds the right-edge dots ("rail"), the floating nav (unless the page already has one,
+  // like Home) and a toast area for short messages.
   const createSharedUi = () => {
     const rail = document.createElement("nav");
     rail.className = "page-rail";
@@ -73,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["Lab", "resume.html#lab"],
       ["Contact", "contact.html"],
     ];
+    // The file name of this page (an empty path, like "/", means the home page).
     const currentPage = window.location.pathname.split("/").pop() || "index.html";
     // The long Home page holds every section, so its dots scroll there instead of opening pages.
     const isLongHome = Boolean(document.querySelector(".home-section"));
@@ -100,7 +149,8 @@ document.addEventListener("DOMContentLoaded", () => {
       rail.append(link);
     });
 
-    // Sun and moon drawings live here so the hidden page header is no longer needed.
+    // Sun and moon icons for the theme button, kept here once so every page's button uses the
+    // same artwork (CSS shows the sun or the moon depending on the theme).
     const themeIconMarkup = `
       <svg class="sun-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
         <circle cx="12" cy="12" r="4"></circle>
@@ -111,6 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
       </svg>
     `;
 
+    // Home already has its floating nav in index.html. On the other pages it is built here:
+    // one link per page plus the theme toggle button.
     const floatingNav = document.querySelector(".floating-nav") || document.createElement("nav");
     if (!floatingNav.classList.contains("floating-nav")) {
       floatingNav.className = "floating-nav";
@@ -132,6 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.append(floatingNav);
     }
 
+    // Mark the link of the page being viewed, so CSS and screen readers know where we are.
     floatingNav.querySelectorAll("a").forEach((link) => {
       if (link.getAttribute("href") === currentPage) {
         link.setAttribute("aria-current", "page");
@@ -145,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
       toggle.innerHTML = themeIconMarkup;
     });
 
+    // A polite live region: screen readers announce each toast without interrupting.
     const toastArea = document.createElement("div");
     toastArea.className = "toast-area";
     toastArea.setAttribute("aria-live", "polite");
@@ -154,6 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.append(rail, toastArea);
 
     // Keep brief confirmations available to page-specific controls.
+    // Shows `message` for 3 seconds: added, faded in a moment later (so the CSS transition
+    // runs), then faded out and removed after its 220ms exit transition.
     const showToast = (message) => {
       const toast = document.createElement("p");
       toast.className = "site-toast";
@@ -166,6 +222,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 3000);
     };
 
+    // Two ways for other code to show a toast: call window.showPortfolioToast(text), or
+    // dispatch a "portfolio:toast" event with { detail: { message } }.
     window.showPortfolioToast = showToast;
     window.addEventListener("portfolio:toast", (event) => {
       if (typeof event.detail?.message === "string") {
@@ -175,7 +233,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Reveal the right-edge page links only after the laptop hero reaches the page.
     const heroSection = document.querySelector(".portfolio-hero-section");
+    // The hero gets the "is-current" class once the laptop intro has handed over to the real
+    // page, so watching its class attribute tells us when to show the dots and nav.
     if (heroSection) {
+      // Show the dots only while the hero is the real page.
       const revealRail = () => rail.classList.toggle("is-visible", heroSection.classList.contains("is-current"));
       new MutationObserver(revealRail).observe(heroSection, { attributes: true, attributeFilter: ["class"] });
       revealRail();
@@ -189,15 +250,18 @@ document.addEventListener("DOMContentLoaded", () => {
       window.addEventListener("scroll", revealHomeNav, { passive: true });
       revealHomeNav();
     } else {
+      // Pages without the intro show the nav and dots straight away.
       floatingNav.classList.add("is-visible");
       rail.classList.add("is-visible");
     }
 
   };
 
+  // The toggles are bound after createSharedUi, because it may create the toggle button.
   createSharedUi();
   initializeThemeToggles();
 
+  // ===== Home navigation =====
   // On the long Home page, section links scroll smoothly and the nav follows the reader.
   // The separate pages have no .home-section, so their links keep opening pages.
   const initializeHomeNavigation = () => {
@@ -206,6 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sections = ["home", "about", "projects", "resume", "lab", "contact"]
       .map((id) => document.getElementById(id))
       .filter(Boolean);
+    // Turn a hash such as "#about" into its section element, or undefined if it is not one.
     const findSection = (hash) => sections.find((section) => `#${section.id}` === hash);
 
     // Glide to a section, or jump straight there when the visitor prefers less motion.
@@ -226,6 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Highlight the link for the section that crosses a thin band in the middle of the screen.
     const navLinks = [...document.querySelectorAll(".floating-nav a, .page-rail a, .hero-page-nav a")];
+    // Give aria-current only to the links pointing at section `id`, and clear it on the rest.
     const markCurrent = (id) => {
       navLinks.forEach((link) => {
         if (link.getAttribute("href") === `#${id}`) {
@@ -236,6 +302,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
+    // The rootMargin shrinks the viewport to a 1%-tall band at 45% of the height, so only one
+    // section can cross it at a time.
     if ("IntersectionObserver" in window) {
       const sectionObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
@@ -260,6 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeHomeNavigation();
 
+  // ===== Scroll reveals =====
   // Lift page content once it enters the viewport. Content already on screen stays visible.
   const initializeScrollReveals = () => {
     // Skip the closing laptop: its lid is already animated by scrolling, and a fade on it
@@ -267,6 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const revealItems = new Set(document.querySelectorAll("[data-reveal], .page-content > *:not(.closing-laptop)"));
     document.querySelectorAll("[data-reveal], .page-content > * > [data-reveal]").forEach((item) => revealItems.add(item));
 
+    // Group the items by their parent element, so the stagger below counts siblings only.
     const revealGroups = new Map();
     revealItems.forEach((item) => {
       item.classList.add("reveal-on-scroll");
@@ -283,12 +353,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // With reduced motion, or in an old browser without IntersectionObserver, show everything
+    // at once so no content stays hidden.
     if (reducedMotion.matches || !("IntersectionObserver" in window)) {
       revealItems.forEach((item) => item.classList.add("is-revealed"));
       return;
     }
 
-    // Show anything already on screen with the transition turned off.
+    // Show anything already on screen with the transition turned off, so the first screen
+    // appears instantly instead of fading in on page load.
     const revealVisibleContent = () => {
       revealItems.forEach((item) => {
         if (item.classList.contains("is-revealed")) return;
@@ -298,13 +371,19 @@ document.addEventListener("DOMContentLoaded", () => {
         item.style.transition = "none";
         item.classList.add("is-revealed");
       });
+      // Deliberate forced reflow: reading offsetHeight makes the browser apply the
+      // "is-revealed" styles now, while transitions are still off. Without it the browser
+      // would batch both changes and the items would still fade in.
       document.documentElement.offsetHeight;
+      // Turn transitions back on for the items switched off above.
       revealItems.forEach((item) => {
         if (item.style.transition === "none") item.style.transition = "";
       });
     };
     revealVisibleContent();
 
+    // Reveal each item the first time it comes near the screen, then stop watching it, so it
+    // never hides again when scrolling back up.
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -316,6 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // bottom edge, so the fade has already started by the time it scrolls into view.
     }, { threshold: 0, rootMargin: "0px 0px 15% 0px" });
     revealItems.forEach((item) => observer.observe(item));
+    // If the visitor turns on reduced motion while reading, show everything that is left.
     reducedMotion.addEventListener?.("change", () => {
       if (reducedMotion.matches) {
         revealItems.forEach((item) => item.classList.add("is-revealed"));
@@ -325,9 +405,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeScrollReveals();
 
+  // ===== Card spotlights =====
   // Let card spotlights follow the pointer without changing each card's content.
   document.querySelectorAll(".spotlight-card, .project-card").forEach((card) => {
     card.classList.add("spotlight-card");
+    // Pass the pointer's position inside the card to CSS, which centres a soft glow there.
     card.addEventListener("pointermove", (event) => {
       const bounds = card.getBoundingClientRect();
       card.style.setProperty("--spot-x", `${event.clientX - bounds.left}px`);
@@ -339,7 +421,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // cards (about.html). Set below; the About terminal uses it.
   let openProjectByNumber = null;
 
+  // ===== Projects page: sideways track, demos and project windows =====
   // Build small project demos and wire the case-study detail windows.
+  // Runs on projects.html and on Home (both have .projects-page).
   const initializeProjectPage = () => {
     const projectPage = document.querySelector(".projects-page");
     if (!projectPage) return;
@@ -350,6 +434,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const cards = [...projectPage.querySelectorAll(".project-card")];
     const progressCount = projectPage.querySelector(".project-progress-count");
     const progressBar = projectPage.querySelector(".project-progress-bar > span");
+    // State of the sideways track:
+    // whether it is on, how far the row of cards must slide (px), where the track starts on
+    // the page (px), the progress the scroll asks for (0-1), the progress drawn on screen
+    // (eases toward the target) and the pending animation frame (0 = none).
     let horizontalTrackEnabled = false;
     let trackDistance = 0;
     let trackStart = 0;
@@ -361,10 +449,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // allowed. Below 600px of height (phones and small tablets on their side) a pinned card
     // would be cut off, so the cards stack instead. The same limits are in style.css.
     const sidewaysTrackQuery = window.matchMedia("(min-width: 861px) and (min-height: 600px)");
+    // Switch the track on or off and measure it. The section is made as tall as one screen
+    // plus the sliding distance, so scrolling down that extra height slides the cards sideways
+    // while the sticky .projects-pin stays on screen.
     const updateHorizontalTrack = () => {
       horizontalTrackEnabled = sidewaysTrackQuery.matches && !reducedMotion.matches;
       projectPage.classList.toggle("has-horizontal-scroll", horizontalTrackEnabled);
       if (!horizontalTrackEnabled) {
+        // Stacked cards: undo every inline style the track set.
         trackSection.style.height = "";
         projectList.style.transform = "";
         displayedProgress = 0;
@@ -372,23 +464,31 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // How far the row must slide so the last card's right edge reaches the window's edge.
       trackDistance = Math.max(0, projectList.scrollWidth - stickyTrack.clientWidth);
       trackSection.style.height = `${window.innerHeight + trackDistance}px`;
+      // The track's top on the page; progress is how far the page has scrolled past it.
       trackStart = trackSection.getBoundingClientRect().top + window.scrollY;
+      // Jump straight to the right position after a resize instead of gliding to it.
       targetProgress = Math.min(1, Math.max(0, (window.scrollY - trackStart) / Math.max(1, trackDistance)));
       displayedProgress = targetProgress;
       renderHorizontalTrack();
     };
 
-    // Ease toward the actual scroll position instead of snapping between cards.
+    // Draw the track at displayedProgress: slide the row, update the "01 ——— 06" counter (and
+    // its label for screen readers) and stretch the progress bar.
     const renderHorizontalTrack = () => {
       projectList.style.transform = `translate3d(${-trackDistance * displayedProgress}px, 0, 0)`;
       const currentCard = Math.min(cards.length, Math.max(1, Math.round(displayedProgress * (cards.length - 1)) + 1));
+      // padStart turns 3 into "03" so the counter keeps the same width.
       progressCount.textContent = `${String(currentCard).padStart(2, "0")} ——— ${String(cards.length).padStart(2, "0")}`;
       progressCount.parentElement.setAttribute("aria-label", `Project ${currentCard} of ${cards.length}`);
       progressBar.style.transform = `scaleX(${displayedProgress})`;
     };
 
+    // One animation frame: ease toward the actual scroll position instead of snapping between
+    // cards. Each frame covers 10% of the remaining distance, and the loop stops once the
+    // drawn progress is within 0.001 of the target.
     const animateHorizontalTrack = () => {
       trackAnimationFrame = 0;
       if (!horizontalTrackEnabled) return;
@@ -400,6 +500,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    // Scroll handler: work out the new target progress and start the easing loop if it is
+    // not already running.
     const updateTrackTarget = () => {
       if (!horizontalTrackEnabled) return;
       // Measure the track's page position on every scroll. On the long Home page, content
@@ -412,6 +514,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!trackAnimationFrame) trackAnimationFrame = window.requestAnimationFrame(animateHorizontalTrack);
     };
 
+    // Measure once now, then again whenever the scroll, window size or motion setting changes.
+    // "passive" tells the browser the handler never cancels scrolling, so scrolling stays smooth.
     updateHorizontalTrack();
     window.addEventListener("scroll", updateTrackTarget, { passive: true });
     window.addEventListener("resize", updateHorizontalTrack);
@@ -432,6 +536,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Generate a varied waveform without relying on an external image or library.
     projectPage.querySelectorAll(".waveform-bars").forEach((waveform) => {
+      // 38 bars with random heights (14-96px) and random negative delays, so the CSS bounce
+      // animation starts at a different point for every bar.
       for (let index = 0; index < 38; index += 1) {
         const bar = document.createElement("span");
         const height = 14 + Math.random() * 82;
@@ -444,8 +550,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add a real project photo only when its file exists; the custom visual remains otherwise.
     const photoFiles = ["speech-api.jpg", "chatbot.png", "agrohub-leaf.jpg", "logic-gates.jpg", "hour-of-ai.jpg", "ev3-robot.jpg"];
     cards.forEach((card, index) => {
+      // Project cards are always visible (they slide in the track rather than fading in).
       card.classList.add("is-revealed");
       const photoPath = `images/projects/${photoFiles[index]}`;
+      // A HEAD request only asks whether the file exists, without downloading it, so a missing
+      // photo never shows a broken image icon.
       fetch(photoPath, { method: "HEAD" }).then((response) => {
         if (!response.ok) return;
         const image = document.createElement("img");
@@ -458,29 +567,37 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // ----- Logic gate demo -----
     // Rebuild the truth table and LED output for the selected inputs and gate.
     const circuit = projectPage.querySelector("[data-circuit]");
     if (circuit) {
+      // The two input switches, each 0 or 1.
       const inputValues = { a: 0, b: 0 };
       const inputButtons = [...circuit.querySelectorAll("[data-input]")];
       const gateSelect = circuit.querySelector(".gate-select");
       const tableBody = circuit.querySelector(".truth-table tbody");
       const bColumn = circuit.querySelector("[data-b-column]");
       const led = circuit.querySelector(".circuit-led");
+      // Return the gate's output (0 or 1) for inputs a and b. AND is the default case;
+      // NOT ignores b.
       const calculateOutput = (gate, a, b) => {
         if (gate === "NOT") return Number(!a);
         if (gate === "OR") return Number(Boolean(a || b));
         return Number(Boolean(a && b));
       };
 
+      // Redraw the whole demo from the current gate and inputs: the switch labels, the LED and
+      // a fresh truth table with the current row highlighted.
       const updateCircuit = () => {
         const gate = gateSelect.value;
         const currentOutput = calculateOutput(gate, inputValues.a, inputValues.b);
         const isNotGate = gate === "NOT";
+        // Every input combination: two rows for NOT (one input), four for AND and OR.
         const rows = isNotGate
           ? [[0, null], [1, null]]
           : [[0, 0], [0, 1], [1, 0], [1, 1]];
 
+        // Show each switch's value; input B is disabled for NOT, which has one input.
         inputButtons.forEach((button) => {
           const inputName = button.dataset.input;
           button.querySelector("span").textContent = String(inputValues[inputName]);
@@ -509,6 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       };
 
+      // Clicking a switch flips its input between 0 and 1.
       inputButtons.forEach((button) => {
         button.addEventListener("click", () => {
           const inputName = button.dataset.input;
@@ -520,6 +638,8 @@ document.addEventListener("DOMContentLoaded", () => {
       updateCircuit();
     }
 
+    // ----- Project windows -----
+    // One <dialog> is reused for all six projects; it is filled from the clicked card.
     // The titlebar path keeps each project window grounded in a familiar file layout.
     const dialog = document.querySelector(".project-dialog");
     if (dialog) {
@@ -530,6 +650,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const dialogPath = dialog.querySelector(".project-window-path");
       const dialogVisual = dialog.querySelector(".project-window-visual");
       const dialogHighlights = dialog.querySelector(".project-dialog-highlights");
+      // Folder names for the titlebar path and the bullet points for each window, in the same
+      // order as the cards on the page.
       const projectSlugs = ["speech-to-text", "local-llm-chatbot", "plant-health-agrohub", "logic-gates", "hour-of-ai", "lego-ev3-robot"];
       const highlights = [
         ["Benchmarked five Hugging Face models on a real Azerbaijani phone call.", "Compared WAV and MP4 audio inputs.", "SeamlessM4T v2 produced the most accurate transcript.", "Built a Python REST endpoint with FFmpeg conversion.", "Traced output differences to missing decoding parameters."],
@@ -540,8 +662,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ["Built a LEGO Mindstorms EV3 robot in ADA's MakerSpace.", "Programmed the robot with MakeCode blocks and JavaScript.", "Followed a predefined track autonomously.", "Used the gyro sensor for accurate turns."],
       ];
 
+      // Fill the window from `card` and open it. pointerX/pointerY (optional) are where the
+      // click happened; the window grows out of that point, or out of the card's centre when
+      // it was opened from the keyboard or a link.
       const openProjectWindow = (card, pointerX, pointerY) => {
         const projectIndex = cards.indexOf(card);
+        // Copy the card's text into the window.
         const cardBounds = card.getBoundingClientRect();
         dialogLabel.textContent = card.querySelector(".project-label").textContent;
         dialogTitle.textContent = card.querySelector("h2").textContent;
@@ -560,6 +686,9 @@ document.addEventListener("DOMContentLoaded", () => {
           dialogHighlights.append(item);
         });
 
+        // Copy the card's picture too. Its SVG uses ids (gradients, clip paths), and two
+        // elements with the same id would clash, so every id in the copy gets a "-window"
+        // suffix and every reference to it (url(#id) or href="#id") is renamed to match.
         const visualCopy = card.querySelector(".project-visual").cloneNode(true);
         const ids = new Map();
         visualCopy.querySelectorAll("[id]").forEach((element) => {
@@ -581,12 +710,14 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("project-dialog-open");
         // Hold the page still behind the window (style.css, html.project-window-open).
         document.documentElement.classList.add("project-window-open");
+        // The opening animation's transform-origin, relative to the window's own top-left.
         const windowBounds = dialog.getBoundingClientRect();
         const originX = Number.isFinite(pointerX) ? pointerX : cardBounds.left + cardBounds.width / 2;
         const originY = Number.isFinite(pointerY) ? pointerY : cardBounds.top + cardBounds.height / 2;
         dialog.style.setProperty("--dialog-origin", `${originX - windowBounds.left}px ${originY - windowBounds.top}px`);
       };
 
+      // Each card's "open" button opens its window (and gets the magnetic hover effect).
       projectPage.querySelectorAll(".project-open-button").forEach((button) => {
         button.dataset.magnetic = "";
         button.addEventListener("click", (event) => {
@@ -595,16 +726,20 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       cards.forEach((card) => {
+        // A click anywhere on the card opens it too, except on its own controls (such as the
+        // logic-gate switches), which do their own job.
         card.addEventListener("click", (event) => {
           if (event.target.closest("button, a, input, select, textarea")) return;
           openProjectWindow(card, event.clientX, event.clientY);
         });
+        // Enter on a focused card opens it, so keyboard users get the same window.
         card.addEventListener("keydown", (event) => {
           if (event.target === card && event.key === "Enter") {
             event.preventDefault();
             openProjectWindow(card);
           }
         });
+        // Tilt the card up to 3 degrees toward the pointer; it flattens again on leave.
         card.addEventListener("pointermove", (event) => {
           const bounds = card.getBoundingClientRect();
           const tiltX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -6;
@@ -621,9 +756,9 @@ document.addEventListener("DOMContentLoaded", () => {
       dialog.querySelector(".project-dialog-close").addEventListener("click", () => dialog.close());
       // Every way of closing (the red dot, Escape, a click outside, or the browser itself) ends
       // in this "close" event, so all clean-up happens here, once: the page's scroll lock and the
-      // cursor class come off, and the sideways track is measured again from where the page is
-      // now, so scrolling carries on past the last card into the next sections. (Nothing else is
-      // locked: there are no touch handlers and no inline overflow styles to undo.)
+      // cursor class come off, and the sideways track is measured again from the current scroll
+      // position, so scrolling carries on past the last card into the next sections. (Nothing
+      // else is locked: there are no touch handlers and no inline overflow styles to undo.)
       dialog.addEventListener("close", () => {
         document.body.classList.remove("project-dialog-open");
         document.documentElement.classList.remove("project-window-open");
@@ -672,6 +807,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // A project number from the URL (projects.html#p3, as the About terminal links to it).
       const requestedProject = document.getElementById(window.location.hash.slice(1));
       if (requestedProject?.matches(".project-card")) {
+        // Wait for the fonts, since they change the cards' widths and so the track's distance.
         const showOnce = () => {
           const fontsReady = document.fonts?.ready ?? Promise.resolve();
           fontsReady.then(() => showRequestedProject(requestedProject));
@@ -687,7 +823,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // The About terminal on Home opens projects here, in place, instead of going to
-      // projects.html (whose page ends after Projects, so it felt like the page was stuck there).
+      // projects.html, so the visitor stays on the long page where they were reading.
+      // Takes a number 1-6; returns true if a window opened, false if there is no such card.
       openProjectByNumber = (number) => {
         const card = cards[number - 1];
         if (!card) return false;
@@ -699,7 +836,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeProjectPage();
 
+  // ===== Custom cursor and magnetic buttons =====
   // Desktop cursor dot follows directly; its larger ring eases toward the pointer.
+  // Only for a real mouse (hover + fine pointer) and when motion is allowed.
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
   if (finePointer.matches && !reducedMotion.matches) {
     const cursorDot = document.createElement("span");
@@ -711,11 +850,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.append(cursorDot, cursorRing);
     document.body.classList.add("has-custom-cursor");
 
+    // Start off screen (-100px) until the first pointer move.
     let pointerX = -100;
     let pointerY = -100;
     let ringX = pointerX;
     let ringY = pointerY;
     let cursorAnimation = 0;
+    // One frame of the ring: move 18% of the way to the pointer, and keep going until it is
+    // within 0.2px, then stop so no frames are wasted while the mouse is still.
     const followCursor = () => {
       cursorAnimation = 0;
       ringX += (pointerX - ringX) * (reducedMotion.matches ? 1 : 0.18);
@@ -726,6 +868,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    // The dot jumps straight to the pointer; the ring's easing loop starts if it is idle.
     document.addEventListener("pointermove", (event) => {
       pointerX = event.clientX;
       pointerY = event.clientY;
@@ -736,6 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cursorAnimation = window.requestAnimationFrame(followCursor);
       }
     });
+    // The ring changes style over anything clickable, as a hint that it can be pressed.
     document.addEventListener("pointerover", (event) => {
       const interactive = event.target.closest("a, button, [role='button'], .spotlight-card");
       cursorRing.classList.toggle("is-interactive", Boolean(interactive));
@@ -744,6 +888,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Magnetic controls move a small fraction of the pointer distance, then spring back.
     if (!reducedMotion.matches) {
       document.querySelectorAll(".hero-button, [data-magnetic]").forEach((button) => {
+        // Offset from the button's centre, scaled down (25% across, 35% down) for CSS.
         button.addEventListener("pointermove", (event) => {
           const bounds = button.getBoundingClientRect();
           const x = event.clientX - bounds.left - bounds.width / 2;
@@ -759,7 +904,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Add the home-only particle canvas and orbit response.
+  // ===== Hero particles =====
+  // Add the home-only particle canvas and orbit response: drifting dots joined by faint lines,
+  // pulled gently toward the pointer, and the portrait's orbit tilting to face it.
   const particleHero = document.querySelector(".portfolio-hero");
   if (particleHero) {
     const particles = document.createElement("canvas");
@@ -775,6 +922,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let animationId = 0;
     let heroIsVisible = false;
 
+    // Match the canvas to its on-screen size (times the pixel ratio, capped at 2, for sharp
+    // dots on high-DPI screens) and create a fresh set of particles. The number of dots grows
+    // with the area: one per 16,000 square pixels, between 12 and 90.
     const resizeCanvas = () => {
       const bounds = particles.getBoundingClientRect();
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -791,28 +941,35 @@ document.addEventListener("DOMContentLoaded", () => {
         vy: (Math.random() - 0.5) * 0.22,
         radius: 0.8 + Math.random() * 0.9,
       }));
+      // A hidden canvas (zero size) gets no particles at all.
       if (!bounds.width || !bounds.height) {
         particleList = [];
       }
     };
 
+    // Cancel the pending frame, so nothing is drawn while the hero is off screen.
     const stopParticles = () => {
       window.cancelAnimationFrame(animationId);
       animationId = 0;
     };
 
+    // One frame: move every dot, draw the lines between close dots and to the pointer, then
+    // ask for the next frame. It stops by itself when the hero is hidden or motion is reduced.
     const drawParticles = () => {
       animationId = 0;
       if (!heroIsVisible || reducedMotion.matches || document.hidden) {
         return;
       }
 
+      // Read the colour from CSS every frame, so it follows the light/dark theme.
       const color = getComputedStyle(particleHero).getPropertyValue("--particle-color").trim();
       context.clearRect(0, 0, canvasWidth, canvasHeight);
       particleList.forEach((dot, index) => {
         const dx = pointer.x - dot.x;
         const dy = pointer.y - dot.y;
         const cursorDistance = Math.hypot(dx, dy);
+        // Within 180px the pointer pulls the dot a little; friction (0.995) then slows it, and
+        // dots leaving one edge come back in on the opposite edge.
         if (cursorDistance < 180 && cursorDistance > 0) {
           dot.vx += (dx / cursorDistance) * 0.004;
           dot.vy += (dy / cursorDistance) * 0.004;
@@ -826,6 +983,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (dot.y < 0) dot.y = canvasHeight;
         if (dot.y > canvasHeight) dot.y = 0;
 
+        // Join this dot to every later dot closer than 140px; the line fades with distance.
+        // Starting at index + 1 draws each pair only once.
         for (let otherIndex = index + 1; otherIndex < particleList.length; otherIndex += 1) {
           const other = particleList[otherIndex];
           const distance = Math.hypot(dot.x - other.x, dot.y - other.y);
@@ -840,6 +999,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
+        // The dot itself: brighter and larger near the pointer, with a line reaching to it.
         const nearCursor = cursorDistance < 180;
         context.globalAlpha = nearCursor ? 0.9 : 0.55;
         context.fillStyle = color;
@@ -858,6 +1018,7 @@ document.addEventListener("DOMContentLoaded", () => {
       animationId = window.requestAnimationFrame(drawParticles);
     };
 
+    // Start the loop only when it is allowed to run and is not already running.
     const startParticles = () => {
       if (heroIsVisible && !reducedMotion.matches && !document.hidden && !animationId) {
         animationId = window.requestAnimationFrame(drawParticles);
@@ -866,6 +1027,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (context) {
       resizeCanvas();
+      // Run only while the hero is on screen and the browser tab is visible, to save battery.
       const visibilityObserver = new IntersectionObserver((entries) => {
         heroIsVisible = entries.some((entry) => entry.isIntersecting);
         if (heroIsVisible) startParticles();
@@ -877,15 +1039,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (document.hidden) stopParticles();
         else startParticles();
       });
+      // Stop or restart when the reduced-motion setting changes.
       const updateParticleMotion = () => {
         if (reducedMotion.matches) stopParticles();
         else startParticles();
       };
+      // Older Safari only has addListener on media queries, so fall back to it.
       if (typeof reducedMotion.addEventListener === "function") {
         reducedMotion.addEventListener("change", updateParticleMotion);
       } else {
         reducedMotion.addListener(updateParticleMotion);
       }
+      // Track the pointer in canvas pixels for the particles, and tilt the portrait's orbit
+      // toward it (up to 15 degrees each way). The glow is strongest at the portrait's centre.
       particleHero.addEventListener("pointermove", (event) => {
         if (reducedMotion.matches) return;
         const bounds = particles.getBoundingClientRect();
@@ -901,6 +1067,7 @@ document.addEventListener("DOMContentLoaded", () => {
         portrait.style.setProperty("--orbit-tilt-y", `${relativeX * 30}deg`);
         portrait.style.setProperty("--portrait-glow-opacity", `${(1 - distance) * 0.4}`);
       });
+      // When the pointer leaves, move it far away (so no dot is attracted) and level the orbit.
       particleHero.addEventListener("pointerleave", () => {
         pointer = { x: -1000, y: -1000 };
         portrait.style.setProperty("--orbit-tilt-x", "0deg");
@@ -910,7 +1077,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ===== About terminal =====
   // Run a small fixed command set; terminal input is displayed, never executed.
+  // Everything is written with textContent, so typed text can never be turned into HTML.
   const initializeAboutTerminal = () => {
     const terminal = document.querySelector(".terminal-card");
     if (!terminal) return;
@@ -918,6 +1087,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const output = terminal.querySelector(".terminal-output");
     const form = terminal.querySelector(".terminal-form");
     const input = terminal.querySelector("#terminal-input");
+    // Commands entered so far, and where the Up/Down keys currently are in that list.
+    // (This local `history` hides window.history, which this function does not need.)
     const history = [];
     let historyIndex = 0;
     const projectNames = [
@@ -930,6 +1101,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
     const whoAmI = "Maryam Sharifova | Computer Engineering student at ADA University and AI & Cybersecurity intern at RAM Holding, Baku.";
 
+    // Add one line of text to the output (className picks the style: reply or echoed
+    // command) and scroll the output box to show it.
     const writeLine = (text, className = "terminal-system-line") => {
       const line = document.createElement("p");
       line.className = className;
@@ -938,6 +1111,8 @@ document.addEventListener("DOMContentLoaded", () => {
       output.scrollTop = output.scrollHeight;
     };
 
+    // Add a line holding a link. External links open in a new tab with rel="noopener", so
+    // the new page cannot control this one through window.opener.
     const writeLink = (label, href, newTab = false) => {
       const line = document.createElement("p");
       const link = document.createElement("a");
@@ -965,6 +1140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const writeProjectLink = (label, number) => {
       writeLink(label, `projects.html#p${number}`);
       output.lastElementChild.querySelector("a").addEventListener("click", (event) => {
+        // Ctrl/Cmd/Shift-clicks and middle clicks keep the browser's normal link behaviour.
         if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return;
         event.preventDefault();
         openProject(number);
@@ -978,8 +1154,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
+    // Handle one command typed (or sent by a chip button): echo it with a prompt, remember it
+    // for the Up/Down keys, then print the matching reply. Unknown commands get a hint.
     const runCommand = (rawCommand) => {
       const commandText = rawCommand.trim();
+      // Ignore empty input, like a real shell.
       if (!commandText) return;
 
       writeLine(`maryam@portfolio:~$ ${commandText}`, "terminal-command-line");
@@ -987,6 +1166,7 @@ document.addEventListener("DOMContentLoaded", () => {
       historyIndex = history.length;
       input.value = "";
 
+      // Commands are matched case-insensitively. "clear" empties the output and prints nothing.
       const command = commandText.toLowerCase();
       if (command === "clear") {
         output.replaceChildren();
@@ -1011,6 +1191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         writeLine("Try open 1, open 2 … open 6, or pick one below:");
         listProjectsToOpen();
       } else if (/^open\s+\d+$/i.test(commandText)) {
+        // "open N": open project N if it exists, otherwise explain the valid range.
         const projectNumber = Number.parseInt(commandText.split(/\s+/)[1], 10);
         if (projectNumber >= 1 && projectNumber <= projectNames.length) {
           openProject(projectNumber);
@@ -1038,6 +1219,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (command === "date") {
         writeLine(new Date().toLocaleString());
       } else if (command === "sudo" || command.startsWith("sudo ")) {
+        // A small joke for visitors who try to get admin rights.
         writeLine("Permission denied. This attempt has been logged by the SOC. Nice try.");
       } else {
         writeLine(`command not found: ${commandText} · type help`);
@@ -1064,12 +1246,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Pressing Enter submits the form; preventDefault stops the page from reloading.
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       runCommand(input.value);
     });
 
-    // Up and Down move through commands the visitor already entered.
+    // Up and Down move through commands the visitor already entered. Going past the newest
+    // command (index = history.length) gives an empty input again.
     input.addEventListener("keydown", (event) => {
       if (event.key === "ArrowUp" && history.length > 0) {
         event.preventDefault();
@@ -1085,7 +1269,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeAboutTerminal();
 
-  // Grow the mission line with the same 10% glide the laptop intro uses.
+  // ===== Resume quest timeline =====
+  // Grow the mission line with the same 10% glide the laptop intro uses, lighting each
+  // mission ("quest") as the line reaches it.
   const initializeQuestTimeline = () => {
     const timeline = document.querySelector(".quest-timeline");
     if (!timeline) return;
@@ -1095,15 +1281,19 @@ document.addEventListener("DOMContentLoaded", () => {
     let targetProgress = 0;
     let animationFrame = 0;
 
+    // Keep a value between 0 and 1.
     const clamp = (value) => Math.min(1, Math.max(0, value));
 
     // Progress is how far a point in the lower viewport has traveled through the list.
+    // That point is 68% down the screen; returns 0 (not reached) to 1 (passed the end).
     const readTarget = () => {
       const bounds = timeline.getBoundingClientRect();
       const reach = window.innerHeight * 0.68;
       return clamp((reach - bounds.top) / Math.max(1, timeline.offsetHeight));
     };
 
+    // Draw the line at currentProgress (CSS scales it with --line-progress) and light the
+    // missions it has reached.
     const renderTimeline = () => {
       timeline.style.setProperty("--line-progress", String(currentProgress));
       // Match the painted line, which stops a little short of the list's bottom.
@@ -1114,6 +1304,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
+    // One animation frame; it keeps asking for more frames until the line reaches its target.
     const animateTimeline = () => {
       animationFrame = 0;
       // Move 10% of the remaining distance each frame so the line glides.
@@ -1125,6 +1316,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    // Scroll/resize handler: set a new target and start the glide if it is not running.
     const requestTimelineUpdate = () => {
       const nextProgress = readTarget();
       // Away from the timeline the line is already empty or full, so there is nothing to redraw.
@@ -1135,6 +1327,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener("scroll", requestTimelineUpdate, { passive: true });
     window.addEventListener("resize", requestTimelineUpdate);
+    // addListener is the fallback for older Safari versions.
     if (typeof reducedMotion.addEventListener === "function") {
       reducedMotion.addEventListener("change", requestTimelineUpdate);
     } else {
@@ -1149,15 +1342,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initializeQuestTimeline();
 
+  // ===== Closing laptop on Contact =====
   // Close the small laptop at the end of Contact with the same 10% glide as the Home intro.
   const initializeClosingLaptop = () => {
     const section = document.querySelector(".closing-laptop");
     if (!section) return;
 
+    // 0 = open, 1 = closed; the drawn value eases toward the scroll's target.
     let currentProgress = 0;
     let targetProgress = 0;
     let animationFrame = 0;
+    // Keep a value between 0 and 1.
     const clamp = (value) => Math.min(1, Math.max(0, value));
+    // Smoothstep easing: slow at both ends, so the lid starts and stops gently.
     const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
 
     // Draw the lid at most 370px wide (70% of the window on phones). With the base widening a
@@ -1165,6 +1362,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // On short screens (phones on their side) the height decides instead: the open laptop's box
     // is about 1.02 design widths tall, and it must fit below the floating nav with the space
     // below it and the footer, so the closed lid also ends up clear of the nav at the page end.
+    // The laptop is built at a fixed width (--closing-design-width, 900px) in CSS and scaled
+    // down with --closing-scale, so all its parts keep their proportions.
     const sizeClosingLaptop = () => {
       const designWidth = Number.parseFloat(getComputedStyle(section).getPropertyValue("--closing-design-width")) || 900;
       const footer = document.querySelector(".site-footer");
@@ -1189,12 +1388,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // The lid swings from 10 degrees past upright down onto the base, and the shine on the
     // shared silver slides a little as it moves, like on the intro laptop.
+    // (-90deg is flat on the base; +10deg is just past upright.)
     const renderClosingLaptop = () => {
       const opening = 1 - easeInOut(currentProgress);
       section.style.setProperty("--lid-angle", `${-90 + 100 * opening}deg`);
       section.style.setProperty("--metal-sheen", `${70 - 40 * opening}%`);
     };
 
+    // One animation frame; it repeats until the lid reaches the target angle.
     const animateClosingLaptop = () => {
       animationFrame = 0;
       // Move 10% of the remaining distance each frame so the lid glides.
@@ -1206,6 +1407,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    // Scroll handler: set a new target and start the glide if it is not already running.
     const requestClosingUpdate = () => {
       const nextProgress = readTarget();
       // Until Contact is reached the lid stays open, so higher sections skip this work.
@@ -1220,6 +1422,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sizeClosingLaptop();
       requestClosingUpdate();
     });
+    // addListener is the fallback for older Safari versions.
     if (typeof reducedMotion.addEventListener === "function") {
       reducedMotion.addEventListener("change", requestClosingUpdate);
     } else {
@@ -1322,6 +1525,8 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     ];
 
+    // The game's elements: progress dots, the mail window, the answer buttons, the feedback
+    // box, the final result card and a hidden live region that reads results aloud.
     const dotList = game.querySelector(".lab-dots");
     const count = game.querySelector(".lab-count");
     const mailWindow = game.querySelector(".mail-window");
@@ -1343,6 +1548,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const restartButton = game.querySelector(".lab-restart");
     const announcer = game.querySelector(".lab-announcer");
 
+    // Index of the email on screen.
     let current = 0;
     // One entry per answered email: true for correct, false for wrong.
     let results = [];
@@ -1355,6 +1561,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Green for right, red for wrong, teal for the email on screen, plain for the rest.
+    // Also updates the "3 / 6" counter (capped so it never shows 7 / 6 after the last one).
     const updateProgress = () => {
       dots.forEach((dot, index) => {
         dot.className = "";
@@ -1366,6 +1573,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // The status bar at the bottom of the mail window, like a browser's link preview.
     const statusHint = "Hover over or tap a link to see where it goes.";
+    // Show "Link goes to <href>" in the status bar. The address is put in a <code> element
+    // with textContent, so it is shown as plain text.
     const showDestination = (href) => {
       status.replaceChildren();
       const label = document.createElement("span");
@@ -1376,6 +1585,8 @@ document.addEventListener("DOMContentLoaded", () => {
       status.append(label, " ", url);
       status.classList.add("is-showing");
     };
+    // Put the status bar back to its resting text: a hint if the email has links, or a note
+    // that it has none.
     const resetStatus = () => {
       // After the last answer `current` is one past the list, so stay on the last email.
       const email = emails[Math.min(current, emails.length - 1)];
@@ -1405,7 +1616,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return button;
     };
 
-    // Put the current email in the mail window.
+    // Put the current email in the mail window: avatar, sender, subject, and one paragraph
+    // per body part (a link part becomes a mail-link button).
     const showEmail = () => {
       const email = emails[current];
       // Initials of the sender's name, such as "IT" or "RO".
@@ -1428,6 +1640,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Check an answer, colour its dot and explain the clues.
+    // `choice` is "phishing" or "legit" (from the clicked button's data-answer).
     const answer = (choice) => {
       const email = emails[current];
       const correct = choice === email.answer;
@@ -1440,8 +1653,10 @@ document.addEventListener("DOMContentLoaded", () => {
       feedbackTitle.textContent = correct ? "Correct." : "Not quite.";
       feedbackText.textContent = `${verdict} ${email.clue}`;
       const isLast = current === emails.length - 1;
+      // Only the button's first text node is changed, so its arrow icon stays.
       nextButton.firstChild.textContent = isLast ? "See my score " : "Next email ";
 
+      // Swap the answer buttons for the feedback, and read the feedback to screen readers.
       answers.hidden = true;
       feedback.hidden = false;
       announcer.textContent = `${feedbackTitle.textContent} ${feedbackText.textContent}`;
@@ -1451,6 +1666,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // After the last email: the score, a rank and an encouraging line.
     const showResult = () => {
+      // filter(Boolean) keeps only the `true` (correct) answers.
       const correctCount = results.filter(Boolean).length;
       score.textContent = `${correctCount} / ${emails.length}`;
       if (correctCount === emails.length) {
@@ -1465,6 +1681,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       result.classList.toggle("is-perfect", correctCount === emails.length);
 
+      // Replace the mail window with the result card and move focus to the score.
       mailWindow.hidden = true;
       feedback.hidden = true;
       result.hidden = false;
@@ -1482,6 +1699,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
+    // "Next email" button: move on to the next email, or to the result after the last one.
     const nextEmail = () => {
       current += 1;
       if (current >= emails.length) {
@@ -1497,6 +1715,7 @@ document.addEventListener("DOMContentLoaded", () => {
       subject.focus({ preventScroll: true });
     };
 
+    // "Play again" button: clear the score and start from the first email.
     const restart = () => {
       current = 0;
       results = [];
@@ -1509,6 +1728,7 @@ document.addEventListener("DOMContentLoaded", () => {
       subject.focus({ preventScroll: true });
     };
 
+    // One listener on the answers container handles both answer buttons (event delegation).
     answers.addEventListener("click", (event) => {
       const button = event.target.closest("[data-answer]");
       if (button) answer(button.dataset.answer);
@@ -1549,6 +1769,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if ("IntersectionObserver" in window) {
       const resumeLinks = [...document.querySelectorAll('.floating-nav a[href="resume.html"], .page-rail a[href="resume.html"]')];
       const labLinks = [...document.querySelectorAll('.floating-nav a[href="resume.html#lab"], .page-rail a[href="resume.html#lab"]')];
+      // inLab true: mark the Lab links as current; false: mark the Resume links instead.
       const markReading = (inLab) => {
         resumeLinks.forEach((link) => (inLab ? link.removeAttribute("aria-current") : link.setAttribute("aria-current", "page")));
         labLinks.forEach((link) => (inLab ? link.setAttribute("aria-current", "location") : link.removeAttribute("aria-current")));
@@ -1563,11 +1784,17 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeSecurityLab();
 
 
+  // ===== Home laptop intro =====
+  // Only index.html has the intro: a photo of a balcony at night with a closed laptop on the
+  // table. Scrolling opens the lid, moves the camera in, and then dives into the screen until
+  // the homepage hero fills the window. Every other page stops here.
   const laptopIntro = document.querySelector(".laptop-intro");
   if (!laptopIntro) {
     return;
   }
 
+  // The intro's elements: the sticky stage, the wrapper that zooms during the dive, the
+  // laptop's glass, and the real hero (section, frame and content) that the dive ends on.
   const laptopStage = laptopIntro.querySelector(".laptop-stage");
   const laptopDive = laptopIntro.querySelector(".laptop-dive");
   const screenDisplay = laptopIntro.querySelector(".screen-display");
@@ -1583,18 +1810,23 @@ document.addEventListener("DOMContentLoaded", () => {
     "teach machines Azerbaijani",
     "turn logs into answers",
   ];
+  // Scroll loop state: the pending frame, the smoothed progress drawn on screen (0-1) and the
+  // progress the scroll position asks for.
   let animationFrame = 0;
   let currentProgress = 0;
   let targetProgress = 0;
   // The intro progress last drawn on the laptop; -1 means nothing has been drawn yet.
   let renderedProgress = -1;
+  // The dive's current zoom and offset (px), kept between frames for updateHeroScene.
   let diveScale = 1;
   let diveX = 0;
   let diveY = 0;
+  // Typewriter state: its timer, which phrase, how many characters, and whether deleting.
   let typingTimer = 0;
   let phraseIndex = 0;
   let characterIndex = 0;
   let deleting = false;
+  // The MARYAM key presses: whether they have played, and their pending timers.
   let keySequencePlayed = false;
   let keySequenceTimers = [];
 
@@ -1612,6 +1844,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Type MARYAM on the keyboard once the lid is nearly fully open.
+  // Each key is pressed 170ms after the previous one and released after 130ms. The timers are
+  // kept so resetKeySequence can cancel them if the lid closes again mid-way.
   const playKeySequence = () => {
     if (keySequencePlayed) {
       return;
@@ -1639,6 +1873,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
+  // ===== Laptop intro: constants =====
   // ----- Balcony photo -----
   // images/balcony-empty.jpg is 1376 x 768. Everything drawn on it is placed in these photo
   // pixels. The empty spot in the middle of the table, where the closed lid lies, is this box.
@@ -1652,6 +1887,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ----- Stage perspective (must match .laptop-stage in style.css) -----
   // One steady perspective for the whole intro; it never changes from frame to frame.
+  // PERSPECTIVE is the CSS perspective distance in px; the origin is given as shares of the
+  // stage's width and height (50% across, 45% down).
   const PERSPECTIVE = 3200;
   const PERSPECTIVE_ORIGIN_X = 0.5;
   const PERSPECTIVE_ORIGIN_Y = 0.45;
@@ -1663,8 +1900,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const CLOSED_YAW = 6;
   const CLOSED_CAMERA_WIDE = -9;
   const CLOSED_CAMERA_PORTRAIT = -17;
-  // The lid's depth on screen in the design's reference windows, in photo pixels: 133 px at
-  // 1600x900 (photo scale 1.172) and 96 px at 390x844 (photo scale 0.868).
+  // The lid's depth (its height on screen) in my two reference windows, in photo pixels:
+  // 133 px at 1600x900 (photo scale 1.172) and 96 px at 390x844 (photo scale 0.868).
   const LID_PHOTO_DEPTH_WIDE = 113.5;
   const LID_PHOTO_DEPTH_PORTRAIT = 110.6;
   // At the end of the camera move the laptop faces straight ahead, seen from 7 degrees above.
@@ -1695,6 +1932,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // The stage size and the laptop's own (untransformed) size, read once per fit.
   const stageSize = { width: 1, height: 1 };
   const laptopSize = { width: 1, height: 1, pivot: 0 };
+  // The 3D laptop itself, and the wrapper around the photo and its canvas that the camera
+  // zooms and pans.
   const laptopBody = laptopIntro.querySelector(".laptop");
   const balconyCamera = laptopIntro.querySelector(".balcony-camera");
 
@@ -1705,6 +1944,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 20-58%: the camera moves in on the laptop and its angle eases to face the screen.
   // 57-60%: the sharp homepage layer takes over from the copy on the glass.
   // 58-100%: the dive into the homepage, while the balcony fades out.
+  // (Progress 0 is the top of the intro, 1 is where the hero reaches the top of the window.)
   const LID_START = 0.2;
   const LID_END = 0.46;
   const DIVE_START = 0.58;
@@ -1714,13 +1954,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Keep animation inputs inside the 0-to-1 range.
   const clamp = (value) => Math.min(1, Math.max(0, value));
 
-  // Convert a progress range into a 0-to-1 value.
+  // Convert a progress range into a 0-to-1 value: 0 before `start`, 1 after `end`, and a
+  // straight line in between. Each part of the timeline uses this for its own window.
   const progressBetween = (progress, start, end) => clamp((progress - start) / (end - start));
 
-  // Ease in and out so camera movement does not start or stop abruptly.
+  // Ease in and out so camera movement does not start or stop abruptly (the smoothstep curve
+  // 3t^2 - 2t^3: flat at 0 and 1, fastest in the middle).
   const easeInOut = (progress) => progress * progress * (3 - 2 * progress);
 
   // Convert the current page scroll into the 0-to-1 sticky intro timeline.
+  // The intro section is much taller than the window and its stage is sticky, so the distance
+  // that can be scrolled while the stage stays pinned is the intro's height minus the stage's.
+  // The intro's top moving above the window (a negative top) is how far we are through it.
   const readScrollProgress = () => {
     const scrollDistance = laptopIntro.offsetHeight - laptopStage.offsetHeight;
     return scrollDistance > 0
@@ -1728,7 +1973,7 @@ document.addEventListener("DOMContentLoaded", () => {
       : 0;
   };
 
-  // Restore the screen window to normal page flow after the dive has passed.
+  // ===== Laptop intro: the homepage on the screen and the dive =====
   // A copy of the homepage inside the 3D glass. It tilts with the lid, so while the lid opens
   // the homepage always has the screen's exact shape. It is a still picture: inert, hidden
   // from screen readers, and without the particle canvas. Once the lid is fully open, the
@@ -1759,16 +2004,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Where the window's shape differs from the glass's 16:10 (a phone, a very wide monitor), the
   // page leaves a margin on two sides of the glass. That margin is painted in the homepage's own
   // background colour (.screen-homepage, .portfolio-hero-frame.is-active), so it reads as part
-  // of the page. (An earlier version scaled the page to cover the glass instead; it reached
-  // full size early on such windows and then stood still while the screen kept zooming.)
+  // of the page. Fitting inside (rather than covering the glass) matters there: a covering
+  // page would reach full size too early and then stand still while the screen kept zooming.
+  // Returns the scale factor for a page of pageWidth x pageHeight inside the glass.
   const fitScale = (glassWidth, glassHeight, pageWidth, pageHeight) => Math.min(
     glassWidth / pageWidth,
     glassHeight / pageHeight,
   );
 
   // The real hero's size and place on the page: the hero section's box. It is the window
-  // without the scrollbar (100vw would include it, which made the scaled homepage 17px wider
-  // than the real one on Windows) and inside the notch padding on phones held sideways.
+  // without the scrollbar (100vw would include it, which would make the scaled homepage 17px
+  // wider than the real one on Windows) and inside the notch padding on phones held sideways.
   // Both homepage layers are laid out at exactly this size (style.css reads these values), and
   // the full-screen layer at the end of the dive sits exactly here, so the hand-over to the
   // real page is the same picture at the same place.
@@ -1780,6 +2026,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let heroPageWidth = 0;
   let heroPageHeight = 0;
   const realHero = heroCanvas;
+  // Read the hero's width, height and left edge, keep them for the dive, and pass them to CSS
+  // as custom properties on <html> so both homepage layers are laid out at that size.
   const measureHeroPage = () => {
     const box = heroSection.getBoundingClientRect();
     heroPageWidth = box.width;
@@ -1815,6 +2063,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return corner;
   });
 
+  // Restore the screen window to normal page flow after the dive has passed: the hero frame
+  // loses every inline style and class the dive gave it, so it is the ordinary page section.
+  // The "is-current" class also tells the shared UI to show the dots.
   const showHeroInPage = () => {
     heroSection.classList.add("is-current");
     heroFrame.classList.remove("is-active", "is-fullscreen");
@@ -1837,6 +2088,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Measure the real screen and fit the undistorted hero inside its changing bounds.
+  // progress is the whole intro's 0-1 value; diveProgress is the eased 0-1 value of the dive
+  // alone (58-100%). Each frame it: hands over to the real page once the hero is reached;
+  // otherwise zooms the laptop so its screen grows toward the window, and places the flat
+  // homepage layer exactly over the glass, clipped to the glass's outline.
   const updateHeroScene = (progress, diveProgress) => {
     const heroSectionTop = heroSection.getBoundingClientRect().top + window.scrollY;
 
@@ -1848,6 +2103,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Still in the intro: the hero frame becomes a fixed layer drawn over the laptop, and the
+    // nav and dots stay hidden.
     heroSection.classList.remove("is-current");
     floatingNav.classList.remove("is-visible");
     heroFrame.classList.add("is-active");
@@ -1877,9 +2134,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const screenRect = screenDisplay.getBoundingClientRect();
     if (diveProgress > 0) {
+      // The zoom happens around the stage's centre.
       const viewportRect = laptopStage.getBoundingClientRect();
       const centerX = viewportRect.left + viewportRect.width / 2;
       const centerY = viewportRect.top + viewportRect.height / 2;
+      // Where the screen's centre would be with no dive transform: undo last frame's zoom and
+      // offset (screen point = centre + (base - centre) * scale + offset, solved for base).
       const baseCenterX = centerX + (
         screenRect.left + screenRect.width / 2 - centerX - diveX
       ) / diveScale;
@@ -1892,6 +2152,7 @@ document.addEventListener("DOMContentLoaded", () => {
         heroPageWidth / (screenRect.width / diveScale),
         heroPageHeight / (screenRect.height / diveScale),
       );
+      // Zoom grows in a straight line from 1 to finalScale with the eased dive progress.
       diveScale = 1 + (finalScale - 1) * diveProgress;
       // The camera move leaves the screen a little off the window's middle (the open laptop
       // sits at 56% on wide screens, lower on phones). While the screen grows, its centre
@@ -1901,6 +2162,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const endY = viewportRect.top + heroPageHeight / 2;
       const goalX = baseCenterX + (centerX - baseCenterX) * diveProgress;
       const goalY = baseCenterY + (endY - baseCenterY) * diveProgress;
+      // The offset that puts the zoomed screen centre exactly on that goal point.
       diveX = goalX - (centerX + (baseCenterX - centerX) * diveScale);
       diveY = goalY - (centerY + (baseCenterY - centerY) * diveScale);
       laptopDive.style.setProperty("--dive-scale", `${diveScale}`);
@@ -1918,8 +2180,10 @@ document.addEventListener("DOMContentLoaded", () => {
       heroPageWidth,
       heroPageHeight,
     ));
+    // Round the layer's corners like the glass, in proportion to its size.
     const radius = Math.min(alignedScreenRect.width * 0.012, alignedScreenRect.height * 0.024);
 
+    // Lay the flat homepage layer exactly over the glass's bounding box.
     heroFrame.style.left = `${alignedScreenRect.left}px`;
     heroFrame.style.top = `${alignedScreenRect.top}px`;
     heroFrame.style.width = `${alignedScreenRect.width}px`;
@@ -1928,6 +2192,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clip the flat homepage layer to the glass's real outline, so it never covers the bezel
     // or spills past the laptop. During the dive the outline blends into the plain rectangle,
     // so the switch to the full-size page at the end has nothing left to jump.
+    // `square` goes 0 -> 1 over the last 40% of the dive; each corner of the clip polygon moves
+    // from the measured glass corner toward the box corner by that share.
     const square = progressBetween(diveProgress, 0.6, 1);
     const boxCorners = [[0, 0], [alignedScreenRect.width, 0], [alignedScreenRect.width, alignedScreenRect.height], [0, alignedScreenRect.height]];
     const outline = screenCorners.map((corner, index) => {
@@ -1963,7 +2229,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // ===== Laptop intro: typewriter =====
   // Add or remove one character, then pause or switch phrases as needed.
+  // It schedules itself again with setTimeout, so it runs as a chain of single steps.
   const typeNextCharacter = () => {
     if (reducedMotion.matches) {
       typedPhrase.textContent = phrases[0];
@@ -2017,7 +2285,10 @@ document.addEventListener("DOMContentLoaded", () => {
     typingTimer = window.setTimeout(typeNextCharacter, 450);
   };
 
+  // ===== Laptop intro: scroll loop =====
   // Smooth the scroll target, then update the laptop, screen, and homepage hero.
+  // Runs once per animation frame while the smoothed progress is catching up with the scroll.
+  // It only sets CSS custom properties; style.css turns them into the 3D transforms.
   const updateLaptop = () => {
     animationFrame = 0;
     targetProgress = readScrollProgress();
@@ -2047,6 +2318,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const keyboardReveal = progressBetween(opening, 0.35, 0.85);
     // Fade the logo as the lid lifts.
     const logoFade = progressBetween(progress, 0.22, 0.33);
+    // The dive (58-100%), eased.
     const diveProgress = easeInOut(progressBetween(progress, DIVE_START, 1));
 
     // Once the intro is finished the laptop pose stops changing. Skip restyling its many
@@ -2060,6 +2332,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Move the camera: the photo and the laptop zoom and pan together, so the laptop stays on
     // its spot on the table. Its angle eases from the low table view to facing the screen.
     // Everything here is worked out from values fitted on resize; nothing reads layout.
+    // The table spot (tableX, tableY) goes through the same camera as the photo, the size
+    // grows with the zoom, the 6-degree turn eases to 0 and the tilt eases to OPEN_CAMERA.
     const camera = cameraAt(move);
     setPhotoCamera(camera, move);
     placeLaptop(
@@ -2069,6 +2343,7 @@ document.addEventListener("DOMContentLoaded", () => {
       CLOSED_YAW * (1 - move),
       closedCamera + (OPEN_CAMERA - closedCamera) * move,
     );
+    // The lid goes from -90deg (shut) to +8deg (just past upright).
     laptopIntro.style.setProperty("--lid-angle", `${-90 + 98 * opening}deg`);
     laptopIntro.style.setProperty("--screen-power", screenPower);
     laptopIntro.style.setProperty("--keyboard-reveal", keyboardReveal);
@@ -2086,6 +2361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     laptopIntro.style.setProperty("--cue-opacity", `${1 - cueFade}`);
     // The whole balcony fades out during the dive. Its live details stop once it is gone.
     laptopIntro.style.setProperty("--balcony-opacity", `${1 - diveProgress}`);
+    // ?. because balconyLife is null if the canvas could not be created.
     balconyLife?.setShown(diveProgress < 1);
 
     // Play the keys once above 90%; re-arm only after closing below 30%.
@@ -2106,6 +2382,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Start or retarget the smoothing loop after scroll and resize events.
+  // At most one frame is ever pending, however many scroll events arrive.
   const requestLaptopUpdate = () => {
     targetProgress = readScrollProgress();
     if (!animationFrame) {
@@ -2137,6 +2414,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const top = portrait ? height - photoHeight : (height - photoHeight) / 2;
     Object.assign(photoBox, { left, top, width: photoWidth, height: photoHeight });
 
+    // Hand the photo's box to CSS (the photo and its canvas are positioned with these).
     const style = laptopIntro.style;
     style.setProperty("--scene-left", `${left}px`);
     style.setProperty("--scene-top", `${top}px`);
@@ -2145,6 +2423,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Blend the photo's top edge into the sky colour only when sky shows above it.
     style.setProperty("--sky-blend", top > 0 ? `${Math.min(top, photoHeight * 0.08)}px` : "0px");
 
+    // Photo pixels to stage pixels: photo's left/top + photo pixel * scale.
     const lid = {
       left: left + PHOTO_LID.left * scale,
       right: left + PHOTO_LID.right * scale,
@@ -2161,6 +2440,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Keep a camera pan inside the photo: every screen edge the photo covered at the start stays
   // covered at this zoom, so no empty band ever opens beside or under it. (On phones the top
   // is plain sky colour anyway, so only the sides and bottom are held.)
+  // Takes the zoom and the wanted pan; returns the nearest allowed pan as { x, y }.
+  // After the camera, the photo's left edge is at left * zoom + pan; for it to stay at or left
+  // of the screen's edge (0) the pan may be at most -zoom * left. The right, top and bottom
+  // edges work the same way against the stage's width and height. An edge is only held if
+  // the photo covered it at the start (0.5px allows for rounding).
   const clampPan = (zoom, panX, panY) => {
     const { left, top, width, height } = photoBox;
     let x = panX;
@@ -2176,6 +2460,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // p * zoom + pan. Zoom and pan both change in a straight line with the eased move value, so
   // the laptop's spot glides in a straight line too, and since the start and the end both keep
   // the photo covering the screen, every point between them does as well.
+  // Returns { zoom, panX, panY } for that point.
   const cameraAt = (move) => ({
     zoom: 1 + (endZoom - 1) * move,
     panX: endPanX * move,
@@ -2185,6 +2470,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Apply the camera to the photo and its live details, with the focus pull: blur up to 3px and
   // 12% darker at the end of the move. The filter sits inside the zoom, so its radius is divided
   // by the zoom to look the same on screen. At rest there is no filter at all.
+  // (CSS applies transforms right to left, so this scales first and then pans, which matches
+  // the formula p * zoom + pan in cameraAt.)
   const setPhotoCamera = (camera, move) => {
     balconyCamera.style.transform = `translate(${camera.panX}px, ${camera.panY}px) scale(${camera.zoom})`;
     balconyCamera.style.filter = move > 0
@@ -2197,15 +2484,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // (read right to left): move to the turning point, turn on the table, move back, tilt.
   // The base starts at the hinge (half the lid's height below the centre) and reaches toward
   // the viewer by the lid's height, so its middle is half that height out.
+  // Returns { x, y, z } in px: x right, y down, z toward the viewer (as in CSS 3D).
   const baseCentre = (yawDegrees, cameraDegrees) => {
     const half = laptopSize.height / 2;
+    // Degrees to radians, for Math.sin and Math.cos.
     const yaw = (yawDegrees * Math.PI) / 180;
     const tilt = (cameraDegrees * Math.PI) / 180;
+    // The base's middle before any pose: at the hinge height (y = half) and half a lid
+    // height toward the viewer (z = half), measured from the turning point (minus the pivot).
     let x = 0;
     let y = half;
     let z = half - laptopSize.pivot;
+    // Turn on the table: a rotation around the vertical (Y) axis mixes x and z.
     [x, z] = [x * Math.cos(yaw) + z * Math.sin(yaw), -x * Math.sin(yaw) + z * Math.cos(yaw)];
+    // Move back from the turning point.
     z += laptopSize.pivot;
+    // Camera tilt: a rotation around the horizontal (X) axis mixes y and z.
     [y, z] = [y * Math.cos(tilt) - z * Math.sin(tilt), y * Math.sin(tilt) + z * Math.cos(tilt)];
     return { x, y, z };
   };
@@ -2220,6 +2514,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // That keeps the laptop's size in step with the photo's zoom.
   const placeLaptop = (size, screenX, screenY, yawDegrees, cameraDegrees) => {
     const base = baseCentre(yawDegrees, cameraDegrees);
+    // CSS perspective: a point z px toward the viewer looks d / (d - z) times bigger, and is
+    // pushed away from the perspective origin by the same factor.
     const enlarge = PERSPECTIVE / (PERSPECTIVE - base.z);
     const scale = size / enlarge;
     // Undo the perspective for that one point, then subtract where the pose itself puts it.
@@ -2227,6 +2523,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const originY = stageSize.height * PERSPECTIVE_ORIGIN_Y;
     const flatX = originX + (screenX - originX) / enlarge;
     const flatY = originY + (screenY - originY) / enlarge;
+    // The laptop starts centred in the stage; shift it so the scaled base point lands on
+    // (flatX, flatY). style.css reads all five values in the .laptop transform.
     const style = laptopIntro.style;
     style.setProperty("--laptop-scale", String(scale));
     style.setProperty("--lid-shift", `${flatX - stageSize.width / 2 - scale * base.x}px`);
@@ -2238,6 +2536,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Balcony scene: live details =====
   // Small, slow movements drawn over the photo on one canvas, in photo pixels (the canvas is
   // 1376 x 768 and is stretched with the photo, so everything stays aligned through the zoom).
+  // It draws: the laptop's contact shadow, twinkling stars, city lights, glints on the bay,
+  // breathing lamps and flickering candles, the Flame Towers' LED bands and coffee steam.
+  // Returns { refresh, setShown } for the rest of the intro, or null if there is no canvas.
   const createBalconyLife = () => {
     const canvas = laptopIntro.querySelector(".balcony-canvas");
     const photo = laptopIntro.querySelector(".balcony-photo");
@@ -2247,15 +2548,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // A fixed-seed random number generator, so the stars and lights are the same every visit.
+    // It is the Park-Miller generator: multiply by 16807 modulo 2^31 - 1, and scale the result
+    // to a number from 0 to 1, like Math.random().
     let seed = 20261110;
     const random = () => {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
+    // A seeded random number between low and high.
     const between = (low, high) => low + (high - low) * random();
 
     // Soft round light, drawn once and stamped wherever a glow is needed (much cheaper than a
     // new gradient per light). One warm and one cool white version.
+    // Returns a 64x64 canvas with a radial gradient from the full colour to transparent.
     const makeGlow = (red, green, blue) => {
       const sprite = document.createElement("canvas");
       sprite.width = 64;
@@ -2271,6 +2576,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const warmGlow = makeGlow(255, 196, 132);
     const whiteGlow = makeGlow(235, 242, 255);
+    // Draw a glow sprite centred at (x, y) with this radius and opacity. Nearly invisible
+    // glows are skipped to save drawing time.
     const stamp = (sprite, x, y, radius, alpha) => {
       if (alpha <= 0.002) return;
       context.globalAlpha = Math.min(1, alpha);
@@ -2282,6 +2589,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // address the browser blocks it; the stars then use random spots in the sky area and the
     // city lights are left out.
     let pixels = null;
+    // Draw the photo onto a hidden canvas at its real size and keep its RGBA pixel data
+    // (4 numbers per pixel). If the browser refuses, pixels stays null.
     const readPhoto = () => {
       try {
         const reader = document.createElement("canvas");
@@ -2294,10 +2603,14 @@ document.addEventListener("DOMContentLoaded", () => {
         pixels = null;
       }
     };
+    // The [red, green, blue] of the photo pixel at (x, y). Pixels are stored row by row,
+    // four values each, so the index is (y * width + x) * 4.
     const colourAt = (x, y) => {
       const index = (Math.round(y) * PHOTO_WIDTH + Math.round(x)) * 4;
       return [pixels[index], pixels[index + 1], pixels[index + 2]];
     };
+    // Perceived brightness (0-255) at (x, y), using the standard luminance weights: the eye
+    // is most sensitive to green and least to blue.
     const brightnessAt = (x, y) => {
       const [red, green, blue] = colourAt(x, y);
       return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
@@ -2305,6 +2618,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Areas with a life of their own, left out of the stars and city lights.
     const TOWER_AREA = { left: 795, right: 945, top: 268, bottom: 382 };
     const PLANT_AREA = { left: 932, right: 1082, top: 428, bottom: 590 };
+    // True when (x, y) is inside the rectangle `area`.
     const inside = (area, x, y) => x >= area.left && x <= area.right && y >= area.top && y <= area.bottom;
     // Open sky: right of the roof overhang (its edge runs from x 448 at the top to x 345 at
     // y 190) and right of the curved balcony wall below that, above the skyline.
@@ -2314,11 +2628,17 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Stars: dark sky pixels, more of them high up where the sky is darkest.
+    // Random spots are tried (at most 4000 tries) until 90 stars are found. Note: this runs
+    // when createBalconyLife is called, before start() calls readPhoto, so `pixels` is still
+    // null here and the brightness test is skipped (see the note above start()).
     const stars = [];
     for (let attempt = 0; attempt < 4000 && stars.length < 90; attempt += 1) {
       const x = between(350, PHOTO_WIDTH - 2);
+      // random() ** 1.5 favours small values, so more stars land near the top of the sky.
       const y = 2 + 296 * random() ** 1.5;
       if (!inOpenSky(x, y) || (pixels && brightnessAt(x, y) > 52)) continue;
+      // Each star has its own size (about 1 in 8 is bigger), brightness, twinkle speed and
+      // starting point in the twinkle, so they do not all pulse together.
       stars.push({
         x,
         y,
@@ -2331,9 +2651,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // City lights: the brightest little points in the city band behind the railing, each a
     // local peak so one light gets one twinkle. Their own colour is used for the glow.
+    // (Like the stars, this needs `pixels`, which is still null at this point.)
     const cityLights = [];
     if (pixels) {
       const found = [];
+      // Scan every second pixel of the band; keep points brighter than 150 that are at least
+      // as bright as their four neighbours 2px away (a local peak).
       for (let y = 342; y <= 500; y += 2) {
         for (let x = 560; x <= PHOTO_WIDTH - 4; x += 2) {
           if (inside(TOWER_AREA, x, y) || inside(PLANT_AREA, x, y)) continue;
@@ -2344,7 +2667,8 @@ document.addEventListener("DOMContentLoaded", () => {
           found.push({ x, y, colour: colourAt(x, y) });
         }
       }
-      // Shuffle and keep up to 150, spread over the whole band.
+      // Shuffle and keep up to 150, spread over the whole band (a Fisher-Yates shuffle, so
+      // the first 150 are a fair random pick, not just the top rows).
       for (let index = found.length - 1; index > 0; index -= 1) {
         const other = Math.floor(random() * (index + 1));
         [found[index], found[other]] = [found[other], found[index]];
@@ -2362,6 +2686,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // City lights are tinted copies of a small white glow, one per colour, made on first use.
     const tintedGlows = new Map();
+    // Return the glow sprite for this colour, creating and caching it the first time.
+    // "source-in" paints the colour only where the white glow already is, keeping its shape.
     const glowIn = (tint) => {
       if (!tintedGlows.has(tint)) {
         const sprite = document.createElement("canvas");
@@ -2378,6 +2704,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Light on the bay: short glints on the water (x 1185-1370, y 400-417) drifting sideways.
+    // Each glint is a thin line with its own length, drift speed (px per second, either way)
+    // and shimmer speed.
     const glints = Array.from({ length: 46 }, () => ({
       x: between(1188, 1370),
       y: between(401, 416.5),
@@ -2388,6 +2716,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
 
     // Lamps and candles: a slow breath for all, plus a faster uneven flicker for the flames.
+    // Positions and radii are in photo pixels; `glow` is the base opacity and `flicker` how
+    // strongly it flickers. Each gets a random phase so they do not move in step.
     const lamps = [
       { x: 210, y: 298, radius: 92, glow: 0.2, flicker: 0.03 }, // desk lamp
       { x: 208, y: 372, radius: 72, glow: 0.2, flicker: 0.03 }, // table lamp, left
@@ -2398,6 +2728,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ].map((lamp) => ({ ...lamp, phase: between(0, Math.PI * 2) }));
 
     // Steam from the coffee (surface around 966, 568): soft puffs rising, curling, fading.
+    // Each puff lives 5 seconds. Their birth times are spread evenly over one life, so a new
+    // puff starts about every 0.2 seconds and the column of steam never has gaps.
     const STEAM_LIFE = 5;
     const steam = Array.from({ length: 24 }, (_, index) => ({
       born: -(index / 24) * STEAM_LIFE,
@@ -2413,6 +2745,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // slightly out of step with the others. Drawn on a small canvas covering the three towers.
     const FLAME_AREA = { left: 796, top: 270, width: 148, height: 112 };
     const FLAME_STRENGTH = 0.27;
+    // Each tower: its outline in photo pixels (traced from the photo), how fast the bands
+    // rise (px per second), the gap between bands (px) and a phase so the towers differ.
     const towers = [
       // left tower, around x 801-845, y 275-377
       {
@@ -2432,6 +2766,8 @@ document.addEventListener("DOMContentLoaded", () => {
         speed: 5.7, spacing: 24, phase: 4.3,
       },
     ];
+    // A small off-screen canvas and one reusable ImageData buffer for the towers, so each
+    // frame only fills numbers in an array instead of allocating new memory.
     const flameCanvas = document.createElement("canvas");
     flameCanvas.width = FLAME_AREA.width;
     flameCanvas.height = FLAME_AREA.height;
@@ -2442,6 +2778,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Soften a mask by about 2px: a small box blur run twice across and twice down, which is
     // close to a gaussian. Done once here, never per frame (and without canvas filters, which
     // not every browser supports).
+    // Takes a mask (one 0-1 value per pixel) and returns a new, softened Float32Array.
+    // Passes 0 and 2 average each pixel with its left and right neighbours; 1 and 3 with the
+    // ones above and below.
     const feather = (mask) => {
       const width = FLAME_AREA.width;
       const height = FLAME_AREA.height;
@@ -2467,6 +2806,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Each tower's own feathered mask, and its foot and tip, so the bands fade at both ends.
+    // The mask is made by filling the outline on the small canvas and reading back each
+    // pixel's alpha (0-255) as a coverage value from 0 to 1.
     towers.forEach((tower) => {
       flamePaint.clearRect(0, 0, FLAME_AREA.width, FLAME_AREA.height);
       flamePaint.beginPath();
@@ -2488,13 +2829,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     flamePaint.clearRect(0, 0, FLAME_AREA.width, FLAME_AREA.height);
 
+    // 0 below edge0, 1 above edge1, and a smooth S-curve in between (same curve as easeInOut).
     const smoothstep = (edge0, edge1, value) => {
       const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
       return t * t * (3 - 2 * t);
     };
 
+    // Draw the towers' light at `time` (seconds). For every pixel of the small canvas it
+    // works out the brightest band from any tower there, writes an orange pixel with that
+    // strength, then copies the canvas onto the scene in one drawImage call.
     const drawFlames = (time) => {
       const data = flameImage.data;
+      // Start from a fully transparent buffer each frame.
       data.fill(0);
       for (let row = 0; row < FLAME_AREA.height; row += 1) {
         const y = FLAME_AREA.top + row;
@@ -2503,6 +2849,7 @@ document.addEventListener("DOMContentLoaded", () => {
           let glow = 0;
           for (const tower of towers) {
             const mask = tower.mask[index];
+            // Skip pixels outside this tower.
             if (mask < 0.004) continue;
             // 0 at the tower's foot, 1 at its tip; fade in over the lowest 18% and out over the
             // top 30%, so no band starts or ends on a line.
@@ -2521,6 +2868,7 @@ document.addEventListener("DOMContentLoaded", () => {
             glow = Math.max(glow, wave * wave * wave * breath * ends * mask);
           }
           if (glow <= 0) continue;
+          // Warm orange (255, 150, 64); only the alpha carries the band's strength.
           const offset = index * 4;
           data[offset] = 255;
           data[offset + 1] = 150;
@@ -2539,6 +2887,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // edge. (A 230-pixel radius makes it reach a little past the 390-pixel-wide laptop, so it
     // shows around the edges; most of it lies under the laptop.)
     const SHADOW = { x: 658, y: 655, radius: 230, squash: 0.22 };
+    // A round gradient drawn in a squashed coordinate system becomes an ellipse. save() and
+    // restore() undo the translate and scale afterwards.
     const drawContactShadow = () => {
       context.save();
       context.globalAlpha = 1;
@@ -2554,13 +2904,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Draw one moment of the scene. "still" draws a calm frame for reduced motion.
+    // `time` is in seconds. Most effects use sine waves of time, each with its own speed and
+    // phase, so the movement is smooth and loops forever without any stored state.
     const draw = (time, still = false) => {
       context.clearRect(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+      // The shadow darkens the table, so it is drawn normally.
       context.globalCompositeOperation = "source-over";
       drawContactShadow();
 
       // Lights add to the photo's own light.
+      // ("lighter" adds colours together, which is how real light overlaps.)
       context.globalCompositeOperation = "lighter";
+      // Stars: the twinkle is squared so they spend more time dim and flash briefly.
       stars.forEach((star) => {
         const twinkle = still ? 0.7 : 0.5 + 0.5 * Math.sin(time * star.speed + star.phase);
         stamp(whiteGlow, star.x, star.y, star.size * 2.2, star.glow * twinkle * twinkle);
@@ -2570,6 +2925,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const wave = still ? 0.4 : 0.5 + 0.5 * Math.sin(time * light.speed + light.phase);
         stamp(glowIn(light.tint), light.x, light.y, light.size, 0.12 + 0.38 * wave ** 3);
       });
+      // Bay glints drift sideways and wrap around inside the water's width; the double
+      // modulo keeps the result positive when the drift is to the left.
       glints.forEach((glint) => {
         const shine = still ? 0.5 : 0.5 + 0.5 * Math.sin(time * glint.speed + glint.phase);
         const span = 1370 - 1188;
@@ -2578,6 +2935,8 @@ document.addEventListener("DOMContentLoaded", () => {
         context.fillStyle = "rgb(255 236 205)";
         context.fillRect(x, glint.y, glint.length, 0.9);
       });
+      // Lamps: a slow 7% breath, plus a flicker made of three sine waves at unrelated speeds,
+      // so it never visibly repeats. The flicker also changes the glow's size slightly.
       lamps.forEach((lamp) => {
         const breath = still ? 0 : 0.07 * Math.sin(time * 0.8 + lamp.phase);
         const flicker = still ? 0 : lamp.flicker * (
@@ -2589,11 +2948,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // The towers' LED light adds to the glass, like the other lights.
+      // (The still frame uses a fixed moment, 4 seconds in, where the bands look balanced.)
       drawFlames(still ? 4 : time);
+      // Steam is soft white over the scene, not added light, so switch back to normal drawing.
       context.globalCompositeOperation = "source-over";
 
       // Steam: each puff rises about 24 photo pixels a second, curls side to side more as it
       // climbs, grows, and fades in and out over its life.
+      // Its opacity follows sin(pi * life), which is 0 at birth, highest halfway and 0 again
+      // at the end, so puffs never pop in or out.
       steam.forEach((puff) => {
         let age = (time - puff.born) % STEAM_LIFE;
         if (still) age = (puff.born + STEAM_LIFE) % STEAM_LIFE;
@@ -2607,17 +2970,24 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ----- One animation loop, running only while it can be seen -----
+    // frame: the pending animation frame (0 = none); ready: the photo has loaded;
+    // onScreen: the intro is in view; shown: the balcony has not faded out in the dive.
     let frame = 0;
     let ready = false;
     let onScreen = true;
     let shown = true;
+    // The loop may run only when all of these are true, motion is allowed and the tab is
+    // visible. Pausing otherwise saves battery, since the canvas work is the heaviest here.
     const shouldRun = () => ready && onScreen && shown && !reducedMotion.matches && !document.hidden;
+    // One frame: requestAnimationFrame passes the time in milliseconds; draw uses seconds.
     const loop = (now) => {
       frame = 0;
       if (!shouldRun()) return;
       draw(now / 1000);
       frame = window.requestAnimationFrame(loop);
     };
+    // Start or stop the loop to match shouldRun(). Called whenever one of its conditions
+    // changes (visibility, tab, motion setting, the dive, a refit).
     const refresh = () => {
       if (!ready) return;
       if (reducedMotion.matches) {
@@ -2649,13 +3019,15 @@ document.addEventListener("DOMContentLoaded", () => {
       reducedMotion.addListener(refresh);
     }
 
-    // Start once the photo has loaded (its pixels choose the stars and lights).
+    // Start once the photo has loaded. readPhoto fills `pixels` here, but the stars and city
+    // lights above were already picked when createBalconyLife ran, while `pixels` was null.
     const start = () => {
       if (ready) return;
       readPhoto();
       ready = true;
       refresh();
     };
+    // The photo may already be loaded (from the cache); otherwise wait for its load event.
     if (photo.complete && photo.naturalWidth > 0) {
       start();
     } else {
@@ -2675,8 +3047,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
-  // Note: stars and city lights are chosen inside createBalconyLife only after the photo has
-  // loaded, because they depend on its pixels.
+  // The live details' controls ({ refresh, setShown }). It is created at start-up, after the
+  // first fit, and stays null if the canvas is missing (every use is written as balconyLife?.).
   let balconyLife = null;
 
   // ===== Fitting the two ends of the camera move =====
@@ -2689,6 +3061,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // End: the camera zoom and pan that put the open laptop near the middle (56% of the height)
   // at the largest size that fits, or on phones near where it is (78%) at a 1.12 zoom, with
   // the photo still covering the screen.
+  // It works by trying poses for real and measuring them with getBoundingClientRect, so the
+  // live inline styles are saved first and put back at the end.
   const fitIntroPoses = () => {
     const savedIntroStyle = laptopIntro.getAttribute("style") || "";
     const savedDiveStyle = laptopDive.getAttribute("style") || "";
@@ -2714,6 +3088,7 @@ document.addEventListener("DOMContentLoaded", () => {
     laptopDive.removeAttribute("style");
 
     // The outline of some parts on screen, relative to the stage's top-left corner.
+    // Returns one box around all the elements, with its edges, size and centre.
     const boxOf = (elements) => {
       const box = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
       elements.forEach((element) => {
@@ -2739,11 +3114,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Measured boxes are converted back to photo pixels with the inverse of the cover maths
     // (photo pixel = (screen pixel - photo's left or top) / photo scale). On load and resize
     // only, never in the animation loop.
-    // Reference values from the design: at 1600x900 the lid's box is centred at about
-    // (765, 753), 457 x 133 px; at 390x844 at about (198, 735), 339 x 96 px.
+    // My reference values: at 1600x900 the lid's box is centred at about (765, 753),
+    // 457 x 133 px; at 390x844 at about (198, 735), 339 x 96 px.
+    // Measure with the lid shut.
     laptopIntro.style.setProperty("--lid-angle", "-90deg");
     closedCamera = portrait ? CLOSED_CAMERA_PORTRAIT : CLOSED_CAMERA_WIDE;
     const photoScale = photoBox.width / PHOTO_WIDTH;
+    // Convert a box in stage pixels to photo pixels.
     const toPhoto = (box) => ({
       left: (box.left - photoBox.left) / photoScale,
       right: (box.right - photoBox.left) / photoScale,
@@ -2751,11 +3128,13 @@ document.addEventListener("DOMContentLoaded", () => {
       bottom: (box.bottom - photoBox.top) / photoScale,
     });
     const lidElement = [laptopIntro.querySelector(".lid")];
+    // What the lid should cover, in photo pixels: the empty spot's width and centre.
     const goal = {
       width: PHOTO_LID.right - PHOTO_LID.left,
       x: (PHOTO_LID.left + PHOTO_LID.right) / 2,
       y: (PHOTO_LID.top + PHOTO_LID.bottom) / 2,
     };
+    // First guesses: the size that makes the laptop as wide as the spot, placed at its centre.
     let size = (goal.width * photoScale) / Math.max(1, laptopSize.width);
     let spotX = target.left + (target.right - target.left) / 2;
     let spotY = target.top + (target.bottom - target.top) / 2;
@@ -2766,6 +3145,7 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let pass = 0; pass < passes; pass += 1) {
         placeLaptop(size, spotX, spotY, CLOSED_YAW, tilt);
         const box = toPhoto(boxOf(lidElement));
+        // Scale by how far off the width is, and move by how far off the centre is.
         size *= goal.width / Math.max(1, box.right - box.left);
         spotX += (goal.x - (box.left + box.right) / 2) * photoScale;
         spotY += (goal.y - (box.top + box.bottom) / 2) * photoScale;
@@ -2775,13 +3155,15 @@ document.addEventListener("DOMContentLoaded", () => {
       return box.bottom - box.top;
     };
 
-    // The design's tilt (-9 or -17 degrees) gives exactly the reference look at 1600x900 and
+    // The base tilt (-9 or -17 degrees) gives exactly the reference look at 1600x900 and
     // 390x844. On other window shapes the perspective shows the lid a little deeper or
     // flatter, so the tilt is nudged until the lid has the same depth in the photo as in the
     // reference: 133 px at 1600x900 is 113.5 photo pixels, 96 px at 390x844 is 110.6. (At the
     // reference sizes this lands back on -9 and -17 degrees.) A steeper (more negative) tilt
     // shows more of the lid, so halve the range of tilts until the depth matches.
     const depthGoal = portrait ? LID_PHOTO_DEPTH_PORTRAIT : LID_PHOTO_DEPTH_WIDE;
+    // Binary search between a tilt 30 degrees steeper and 20 degrees flatter: 12 halvings
+    // narrow a 50-degree range to about 0.01 degrees.
     let steep = closedCamera - 30;
     let flat = closedCamera + 20;
     for (let step = 0; step < 12; step += 1) {
@@ -2808,6 +3190,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .map((value) => value.toFixed(1)).join(" ")}`;
 
     // ----- End: open, facing the screen, camera moved in -----
+    // Measure with the lid fully open, using the visible parts (screen, deck, front edge).
     laptopIntro.style.setProperty("--lid-angle", "8deg");
     const openParts = laptopIntro.querySelectorAll(".lid-face, .deck, .deck-wall-front");
     const endX = stageRect.width / 2;
@@ -2818,6 +3201,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let goalX = endX;
     let goalY = endY;
     let pan = { x: 0, y: 0 };
+    // Five passes: put the table spot at the goal through the camera (kept inside the photo),
+    // measure the open laptop, grow the zoom to fit (wide screens), and move the goal by how
+    // far the laptop's centre is from where it should be.
     for (let pass = 0; pass < 5; pass += 1) {
       pan = clampPan(zoom, goalX - zoom * tableX, goalY - zoom * tableY);
       placeLaptop(closedSize * zoom, tableX * zoom + pan.x, tableY * zoom + pan.y, 0, OPEN_CAMERA);
@@ -2841,14 +3227,18 @@ document.addEventListener("DOMContentLoaded", () => {
     sceneStyle.forEach(([name, value]) => laptopIntro.style.setProperty(name, value));
     laptopDive.setAttribute("style", savedDiveStyle);
     [balconyCamera.style.transform, balconyCamera.style.filter] = savedCamera;
+    // Force the next updateLaptop to redraw everything, even at the same progress.
     renderedProgress = -1;
   };
 
+  // ===== Laptop intro: events and start-up =====
   window.addEventListener("scroll", requestLaptopUpdate, { passive: true });
   // Refit when the stage changes size. The stage is 100svh tall, so it keeps its size while a
   // phone's address bar slides during a touch scroll; the photo and laptop then stay put.
   let fittedWidth = 0;
   let fittedHeight = 0;
+  // On resize: re-measure the hero, refit the poses only if the stage really changed size
+  // (fitting is the slow part), refit the screen copy, and redraw.
   window.addEventListener("resize", () => {
     // The real hero's size comes first: the homepage layers and the dive's end zoom use it.
     measureHeroPage();

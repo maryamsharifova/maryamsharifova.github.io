@@ -1,5 +1,48 @@
-/* Fonts are linked from each page head so they are ready before the first frame. */
+/* ==========================================================================
+   style.css: the one stylesheet for the whole portfolio
+   ==========================================================================
+   Shared by index.html (Home), about.html, projects.html, resume.html and contact.html.
+   Home is one long page: the 3D laptop intro, the hero, then every other section in turn.
+   The separate pages reuse the same section classes on their own.
 
+   js/main.js adds state classes (is-current, is-revealed, is-active, is-fullscreen,
+   is-visible, has-horizontal-scroll, ...) and sets custom properties (--laptop-scale,
+   --lid-angle, --scene-*, --hero-fit-scale, ...) as the page scrolls. The values written
+   here for those properties are only starting values or fallbacks.
+   The fonts (Space Grotesk, Inter, JetBrains Mono) are linked from each page's head, so they
+   are ready before the first frame.
+
+   Order of the file:
+    1. Page transitions (a short fade between pages)
+    2. Theme variables: light colours by default, dark-mode overrides
+    3. Base styles
+    4. Shared theme control (gradient text and the sun/moon theme button)
+    5. Light-mode adjustments
+    6. Shared page layout (one content width and side margin for every page)
+    7. Home: spacing between the sections
+    8. Home intro: the sticky stage, greeting, side labels, scroll cue, the balcony photo,
+       and the intro laptop's own colours, sizes and logo
+    9. The 3D laptop shared by both laptops: camera, hinged lid, screen, back, deck,
+       keyboard, trackpad, deck walls, logo and camera notch
+   10. Homepage hero: the copy on the laptop screen, the full-width hero (top bar, text,
+       buttons, portrait, corner labels) and the floating nav, then its phone and
+       short-screen rules
+   11. Page headings, shared footer and keyboard focus ring
+   12. Intro: responsive rules and reduced motion
+   13. Part 2: scroll reveals, spotlight cards, page rail, toasts, custom cursor, hero effects
+   14. Part 3: About page and the interactive terminal
+   15. Part 4: project cards and their animated demos
+   16. Resume (player card, missions, certificates) and Contact
+   17. Closing laptop at the end of Contact, then the Resume and Contact phone rules
+   18. Projects: the pinned sideways track and the project window (dialog)
+   19. Security lab: the "Phishing or legit?" game
+   20. Short screens (phones held sideways), last so they win over the rules above
+
+   Most parts keep their own phone (max-width) and prefers-reduced-motion rules right after
+   them, so everything about one part is in one place.
+   ========================================================================== */
+
+/* ===== Page transitions ===== */
 /* A short fade when a link opens another page. Scrolling never changes pages. */
 @view-transition {
   navigation: auto;
@@ -15,6 +58,7 @@
   animation: none;
 }
 
+/* The page being left fades out and lifts a little; the new one fades in and rises into place. */
 ::view-transition-old(root) {
   animation: 320ms cubic-bezier(0.4, 0, 1, 1) both page-leave;
 }
@@ -53,6 +97,7 @@
   animation: none;
 }
 
+/* Visitors who ask their system for less motion get an instant page change, with no fade. */
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
     navigation: none;
@@ -68,6 +113,7 @@
    private window. Only the theme button (data-theme="dark", below) makes the site dark. */
 :root {
   color-scheme: only light;
+  /* Page colours and the navy-to-blue accent palette. */
   --color-page: #f7f8fa;
   --color-surface: #ffffff;
   --color-surface-hover: #eef2f4;
@@ -79,6 +125,7 @@
   --color-teal: #0889b0;
   --color-blue: #1c9fd0;
   --color-gradient-start: #0d1020;
+  /* Homepage hero colours (also used by the copy of the hero on the laptop screen). */
   --hero-background: #f7f8fa;
   --hero-foreground: #17191c;
   --hero-copy-muted: rgb(23 25 28 / 76%);
@@ -88,9 +135,11 @@
   --portrait-label: rgb(8 80 110 / 86%);
   --hero-primary-button: #0d1020;
   --hero-primary-text: #ffffff;
+  /* main.js reads this to colour the hero's network dots on its canvas. */
   --particle-color: rgb(13 16 32 / 30%);
-  /* Brushed aluminium: a mid-grey base that darkens toward one edge, a soft highlight,
-     and a moving sheen band (see .back-face), instead of a near-white shell. */
+  /* Laptop metal, used as is by the closing laptop (the Home intro laptop overrides it with a
+     darker grey). Brushed aluminium: a mid-grey base that darkens toward one edge, a soft
+     highlight, and a moving sheen band (see .back-face), so the shell reads as metal. */
   --laptop-edge: #a6abb0;
   --laptop-silver-base: #a4a9ae;
   --laptop-silver-dark: #7d8389;
@@ -104,6 +153,7 @@
   --laptop-edge-light: rgb(255 255 255 / 34%);
   --laptop-metal-shadow: rgb(30 34 38 / 26%);
   --laptop-glint: rgb(255 255 255 / 26%);
+  /* Keyboard, trackpad, logo and screen-frame colours, shared by both laptops. */
   --keyboard-frame: #767b80;
   --keyboard-well: #242629;
   --keyboard-key-top: #484c50;
@@ -125,12 +175,14 @@
   --screen-frame: #17181a;
   /* Outline color of the big AI and SEC letters beside the intro laptop. */
   --detail-outline: rgb(40 45 52 / 46%);
+  /* The three fonts: headings, body text, and small labels and code. */
   --font-heading: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-label: "JetBrains Mono", monospace;
 }
 
-/* Dark mode: the visitor switched to it with the theme button (saved in localStorage). */
+/* Dark mode: the visitor switched to it with the theme button (main.js saves the choice in
+   localStorage). Only these colours change; the laptop metal and the fonts stay the same. */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --color-page: #0b0b0c;
@@ -154,6 +206,7 @@
 }
 
 /* ===== Base styles ===== */
+/* Widths and heights include padding and border, so every box is the size it says. */
 * {
   box-sizing: border-box;
 }
@@ -167,6 +220,7 @@ body {
 }
 
 body {
+  /* The narrowest phone the layout is built for. */
   min-width: 320px;
   min-height: 100vh;
   /* svh is the height with the phone's browser bars showing, so nothing hides behind them.
@@ -176,6 +230,7 @@ body {
      camera notch and the rounded corners. These insets (0 everywhere else) keep the content
      clear of them; the page colour still fills the edges. */
   padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  /* A column, so the main content (flex: 1) pushes the footer to the bottom of short pages. */
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -183,14 +238,17 @@ body {
   color: var(--color-text);
   font-family: var(--font-body);
   line-height: 1.6;
+  /* Fade smoothly when the theme switches. */
   transition: background-color 180ms ease, color 180ms ease;
 }
 
+/* Links take the colour of the text around them; each component styles its own links. */
 a {
   color: inherit;
 }
 
-/* ===== Shared theme control ===== */
+/* ===== Shared theme control and gradient text ===== */
+/* Headline words filled with the navy-to-blue gradient. */
 .gradient-text {
   /* Clip the gradient to the text instead of filling the whole element. */
   background: linear-gradient(110deg, var(--color-navy), var(--color-ocean), var(--color-teal), var(--color-blue));
@@ -203,6 +261,7 @@ a {
   background-image: linear-gradient(110deg, var(--color-gradient-start) 4%, var(--color-ocean) 42%, var(--color-teal) 70%, var(--color-blue));
 }
 
+/* The round sun/moon button. main.js switches data-theme on <html> when it is clicked. */
 .theme-toggle {
   width: 2.5rem;
   height: 2.5rem;
@@ -231,6 +290,7 @@ a {
   stroke-width: 1.7;
 }
 
+/* Each button shows the theme it switches to: a moon in light mode, a sun in dark mode. */
 .moon-icon {
   display: none;
 }
@@ -244,8 +304,9 @@ a {
 }
 
 /* ===== Light-mode adjustments ===== */
-/* Light is the default theme, but a few parts were first designed on dark backgrounds.
-   These rules only apply when the page is not in dark mode, so dark mode is unchanged. */
+/* Light is the default theme, but a few parts use colours chosen for dark backgrounds (the
+   bright cyan accent, the dark floating nav). These rules apply only when the page is not in
+   dark mode, so dark mode is unchanged. */
 
 /* The bright cyan accent (#6fd0ea) is too faint as text on white, so text that uses it
    switches to the deeper site teal. Bars, dots, and glows keep the bright cyan. */
@@ -301,6 +362,9 @@ a {
   --site-content-width: calc(100% - 2 * var(--site-gutter));
 }
 
+/* The main box of every section and separate page. flex: 1 fills the body column, so the
+   footer stays at the bottom. Top and bottom padding: 16% of the window height, kept between
+   5rem and 10rem. */
 .page-content {
   width: var(--site-content-width);
   flex: 1;
@@ -310,7 +374,8 @@ a {
 
 /* ===== Home: one long page with every section after the hero ===== */
 /* One shared gap above and below each section, so the page flows evenly from hero to footer.
-   The 4.5rem minimum keeps a section heading clear of the floating nav pill. */
+   It is 10% of the window height, kept between 4.5rem and 7rem; the 4.5rem minimum keeps a
+   section heading clear of the floating nav pill. */
 .home-intro-page {
   --home-section-space: clamp(4.5rem, 10vh, 7rem);
 }
@@ -336,14 +401,18 @@ a {
 }
 
 /* Without the sideways track (phones, short screens under 600px, reduced motion) Projects is
-   an ordinary section, so its panel takes the same shared gap as the others. */
+   an ordinary section, so its panel takes the same shared gap as the others. The same limits
+   are used by the Projects track rules below and by main.js. */
 @media (max-width: 860px), (max-height: 599px), (prefers-reduced-motion: reduce) {
   .home-intro-page .projects-pin {
     padding-block: var(--home-section-space);
   }
 }
 
-/* ===== Home intro and scroll-driven 3D laptop ===== */
+/* ===== Home intro: sticky stage and scroll-driven 3D laptop ===== */
+/* The intro section is 4.2 screens tall, but its stage (below) is sticky, so the visitor
+   scrolls through those screens while the stage stays put and the laptop opens and dives in.
+   main.js turns the scroll position into the custom properties set here. */
 .laptop-intro {
   height: 420svh;
   /* Starting pose: closed, small, lying flat on the photo's table, seen from a low angle and
@@ -353,7 +422,8 @@ a {
   --camera-angle: -9deg;
   --laptop-yaw: 6deg;
   --laptop-scale: 0.4;
-  /* Half the deck's depth: the turn pivots around the middle of the laptop, not its hinge. */
+  /* Half the deck's depth: the turn pivots around the middle of the laptop, not its hinge.
+     The width is the laptop's (see .laptop); 0.322 is half of its 10.3 / 16 shape. */
   --laptop-pivot: calc(min(84vw, 118vh, 980px) * 0.322);
   --lid-angle: -90deg;
   /* Where the laptop sits on screen, as a plain sideways and vertical move in pixels. */
@@ -372,6 +442,8 @@ a {
   --laptop-metal-shadow: rgb(0 0 0 / 34%);
   --laptop-glint: rgb(255 255 255 / 11%);
   --keyboard-frame: #33363b;
+  /* 0 to 1 values main.js raises as the lid opens: screen brightness and key labels. The
+     logo's opacity and shine position move the same way. */
   --screen-power: 0;
   --keyboard-reveal: 0;
   --logo-opacity: 1;
@@ -386,10 +458,13 @@ a {
 }
 
 .laptop-stage {
+  /* Sticky: pinned to the top of the window for the whole tall intro section, one screen
+     high (svh, so the phone's browser bars never cover it). */
   position: sticky;
   top: 0;
   height: 100svh;
-  /* Sticky positioning needs clipping, not overflow: hidden. */
+  /* clip cuts off the zooming laptop at the stage's edges. Unlike overflow: hidden it does not
+     turn the stage into a scroll box, so nothing inside can scroll it by accident. */
   overflow: clip;
   display: grid;
   place-items: center;
@@ -398,14 +473,16 @@ a {
      keep the laptop on its spot of the photo. */
   perspective: 3200px;
   perspective-origin: 50% 45%;
-  /* The stage itself stays flat, so its layers (back photo, 3D laptop, front photo, text)
-     stack by z-index rather than by 3D depth: the front photo must hide the 3D laptop.
-     The perspective above still applies to the laptop, and .laptop-dive keeps the lid,
-     screen and deck in one shared 3D scene of their own. */
+  /* The stage itself stays flat, so its layers (balcony photo, 3D laptop, text) stack by
+     z-index rather than by 3D depth: the laptop must always sit above the photo and below
+     the greeting, whatever its 3D pose. The perspective above still applies to the laptop,
+     and .laptop-dive keeps the lid, screen and deck in one shared 3D scene of their own. */
   transform-style: flat;
 }
 
-/* This wrapper zooms the entire 3D laptop toward the browser window. */
+/* This wrapper zooms the entire 3D laptop toward the browser window at the end of the intro.
+   main.js sets --dive-x, --dive-y and --dive-scale. preserve-3d lets the laptop's parts keep
+   their real 3D depth inside it instead of being flattened onto this layer. */
 .laptop-dive {
   position: relative;
   z-index: 1;
@@ -419,6 +496,8 @@ a {
 }
 
 /* ===== Intro heading and typed line ===== */
+/* The greeting at the top of the stage. main.js fades it (--intro-opacity) and lifts it
+   (--intro-shift) as soon as scrolling starts. */
 .intro-copy {
   position: absolute;
   z-index: 1;
@@ -431,6 +510,7 @@ a {
   transform: translateY(var(--intro-shift));
 }
 
+/* Small mono labels: 1% of the window width, kept between about 9px and 11.5px. */
 .intro-label,
 .detail-caption,
 .scroll-cue {
@@ -447,16 +527,20 @@ a {
 .intro-title {
   margin: 0;
   font-family: var(--font-heading);
-  /* The 10vh cap keeps the greeting clear of the laptop in short windows. */
+  /* Grows with the width (6.4vw, from 2.4rem to 5rem), but never taller than 10% of the window
+     height, so the greeting stays clear of the laptop in short windows. */
   font-size: min(clamp(2.4rem, 6.4vw, 5rem), 10vh);
   letter-spacing: -0.06em;
   line-height: 1.1;
 }
 
+/* The greeting's gradient word skips the navy start colour. (Over the night photo on Home it
+   is turned plain white, see below.) */
 .intro-title .gradient-text {
   background-image: linear-gradient(110deg, var(--color-ocean), var(--color-teal), var(--color-blue));
 }
 
+/* The line main.js types out letter by letter; min-height keeps its space while it is empty. */
 .typed-line {
   min-height: 1.8em;
   margin: 0.8rem 0 0;
@@ -465,6 +549,7 @@ a {
   font-size: clamp(0.75rem, 1.7vw, 1.05rem);
 }
 
+/* The blinking text cursor: steps(2) switches it on and off with no fade in between. */
 .typed-caret {
   display: inline-block;
   width: 2px;
@@ -482,6 +567,8 @@ a {
 }
 
 /* ===== Intro side labels ===== */
+/* The big outlined AI and SEC letters on each side of the laptop. They fade with the
+   greeting. */
 .intro-detail {
   position: absolute;
   z-index: 1;
@@ -494,12 +581,15 @@ a {
 
 /* Each label slides outward, toward its own screen edge, while it fades. */
 .intro-detail-left {
+  /* 4% of the width from the edge, or the edge of a centred 78rem column on very wide
+     screens, whichever is further in. */
   left: max(4vw, calc((100% - 78rem) / 2));
   align-items: flex-start;
   transform: translateX(calc(-1 * var(--detail-shift)));
 }
 
 .intro-detail-right {
+  /* The same distance as the left label, from the right edge. */
   right: max(4vw, calc((100% - 78rem) / 2));
   align-items: flex-end;
   text-align: right;
@@ -509,7 +599,8 @@ a {
 .detail-title {
   color: transparent;
   font-family: var(--font-heading);
-  /* The 13vh cap keeps the letters in proportion on short, wide windows. */
+  /* Grows with the width (7vw, from 3rem to 6rem), but never taller than 13% of the window
+     height, so the letters keep their proportions on short, wide windows. */
   font-size: min(clamp(3rem, 7vw, 6rem), 13vh);
   font-weight: 600;
   letter-spacing: -0.08em;
@@ -525,6 +616,8 @@ a {
 }
 
 /* ===== Scroll cue ===== */
+/* The "scroll" hint with a pulsing line, centred near the bottom. On Home it is moved onto
+   the laptop (see .laptop-intro .scroll-cue). */
 .scroll-cue {
   position: absolute;
   z-index: 1;
@@ -540,6 +633,7 @@ a {
   transform: translateX(-50%);
 }
 
+/* The line stretches and shrinks from its top edge, so it points the way down. */
 .scroll-cue-line {
   width: 1px;
   height: 2rem;
@@ -583,11 +677,16 @@ a {
   position: absolute;
   inset: 0;
   transform-origin: 0 0;
+  /* It changes on every scroll frame, so the browser keeps it on its own layer. */
   will-change: transform, filter;
 }
 
-/* main.js sets the photo's box in pixels, so the laptop can be fitted to the table.
-   Until then, a plain centred cover crop. The canvas of live details lies exactly on it. */
+/* The photo's box in pixels, worked out by main.js (--scene-left, --scene-top, --scene-width,
+   --scene-height). On wide screens it is the same maths as background-size: cover: scaled up
+   until it covers the stage, then centred. On portrait phones it is a fixed share of the height
+   at the bottom. Knowing the exact box lets main.js fit the laptop onto the photo's table.
+   Before the script runs, the fallbacks give a plain cover crop. The canvas of live details
+   lies exactly on the photo. */
 .balcony-photo,
 .balcony-canvas {
   position: absolute;
@@ -595,6 +694,7 @@ a {
   top: var(--scene-top, 0px);
   width: var(--scene-width, 100%);
   height: var(--scene-height, 100%);
+  /* The cover crop is often wider than the stage, so no width limit may squeeze it. */
   max-width: none;
 }
 
@@ -627,7 +727,8 @@ a {
   content: "";
 }
 
-/* White text over the night photo, in both themes. */
+/* White text over the night photo, in both themes. z-index 3 lifts it above the photo (0) and
+   the laptop (1). */
 .laptop-intro .intro-copy,
 .laptop-intro .intro-detail,
 .laptop-intro .scroll-cue {
@@ -660,7 +761,8 @@ a {
 }
 
 /* The hint sits just above the laptop on the table (main.js sets --cue-x and --cue-bottom),
-   so its line points down at the lid it opens. */
+   so its line points down at the lid it opens. translate(-50%, -100%) centres it on --cue-x
+   and puts its bottom edge on --cue-bottom. */
 .laptop-intro .scroll-cue {
   top: var(--cue-bottom, 96%);
   bottom: auto;
@@ -672,7 +774,7 @@ a {
   background: linear-gradient(#fff, transparent);
 }
 
-/* ===== The intro laptop's lid ===== */
+/* ===== Home intro laptop: darker lid, sizes in laptop units, chrome logo ===== */
 /* The lid's back: a darker space grey, lighter in the upper middle and darker toward the
    edges, with a soft diagonal shine on top. The shine's angle (--lid-shine-angle, set by
    main.js) turns slightly, from 96 to 106 degrees, as the lid opens. */
@@ -689,16 +791,19 @@ a {
     radial-gradient(130% 110% at 50% 20%, #80838b 0%, #65686f 45%, #4d4f55 100%);
 }
 
-/* Thicknesses in proportion to the laptop. The shared laptop sizes its edges, lid thickness
-   and corners in rem, which is right at the full 980px size, but on a phone (a 330px laptop)
-   those edges were three times too thick for its size and made it look squat. Here one unit is
-   1/61.25 of the laptop's width: exactly 1rem at 980px, so desktop is unchanged. Only the Home
-   intro laptop uses this; the closing laptop on Contact keeps its own sizes. */
+/* Thicknesses in proportion to the laptop. The shared laptop rules size the edges, lid
+   thickness and corners in rem, which suits the full 980px laptop but would make a small phone
+   laptop (about 330px) look thick and squat. Here one unit is 1/61.25 of the laptop's width:
+   exactly 1rem at 980px, so the big laptop looks the same and the small one keeps its shape.
+   --laptop-width matches .laptop: 84% of the window width or 118% of its height, whichever is
+   smaller, at most 980px. Only the Home intro laptop uses this; the closing laptop on Contact
+   is always built at full size, so it keeps the rem sizes. */
 .laptop-intro {
   --laptop-width: min(84vw, 118vh, 980px);
   --laptop-unit: calc(var(--laptop-width) / 61.25);
 }
 
+/* The corners, back face, lid edge strip and deck walls, rescaled to laptop units. */
 .laptop-intro .lid-face,
 .laptop-intro .deck {
   border-radius: calc(var(--laptop-unit) * 1.35);
@@ -727,7 +832,7 @@ a {
 }
 
 /* The keyboard and trackpad stand 0.2 units above the base, always below the shut lid
-   (0.5 units). Left in rem, they poked through the thinner lid of a small phone laptop. */
+   (0.5 units), so they never show through the lid of a small phone laptop. */
 .laptop-intro .keyboard,
 .laptop-intro .trackpad {
   transform: translateZ(calc(var(--laptop-unit) * 0.2));
@@ -759,23 +864,30 @@ a {
     0 -0.035em 0.04em rgb(0 0 0 / 45%);
 }
 
+/* ===== Shared 3D laptop (Home intro and the closing laptop on Contact) =====
+   The laptop is built from flat HTML boxes turned in 3D: the lid stands on a hinge, the deck
+   is tipped flat below it (rotateX 90deg), and thin strips make the edges. Every wrapper uses
+   transform-style: preserve-3d so all parts share one 3D space, and the parent's perspective
+   makes nearer parts look bigger. --lid-angle, --camera-angle, --laptop-scale and the other
+   pose values are set per laptop (.laptop-intro, .closing-laptop) and moved by main.js. */
+
 /* ===== Laptop: overall camera and placement ===== */
 .laptop {
   position: relative;
   z-index: 1;
+  /* 84% of the window width or 118% of its height, whichever is smaller, never over 980px. */
   width: min(84vw, 118vh, 980px);
   aspect-ratio: 16 / 10.3;
   margin: 0;
   transform-origin: 50% 50%;
-  /* Apply the camera tilt and turn to the whole laptop after positioning and scaling.
-     The turn sits between two translateZ steps, so it spins around the middle of the
-     laptop's footprint on the desk rather than around the hinge. */
+  /* Read the list from the bottom up: turn the laptop (rotateY), tilt it toward the camera
+     (rotateX), shrink it, then move it into place. The turn sits between two translateZ
+     steps, so it spins around the middle of the laptop's footprint rather than the hinge.
+     scale() is flat: width and height shrink, depth does not. Under the stage's perspective
+     the full depth tips a laptop low on the screen a little more toward the viewer, which
+     gives the closed laptop on the table its look; main.js's placement maths assumes this. */
   transform:
     translate(var(--lid-shift, 0px), var(--lid-lift))
-    /* A flat scale: width and height shrink, depth does not. Under the stage's perspective the
-       full depth tips a laptop low on the screen a little more toward the viewer, which gives
-       the closed laptop on the table its look (the design values, e.g. scale(0.385) with a
-       9 degree tilt, assume this). main.js's placement maths assumes it too. */
     scale(var(--laptop-scale))
     rotateX(var(--camera-angle))
     translateZ(var(--laptop-pivot, 0px))
@@ -791,11 +903,13 @@ a {
   aspect-ratio: 16 / 10.3;
   /* The bottom edge stays attached to the deck as the screen opens. */
   transform-origin: 50% 100%;
+  /* Opens the lid around that hinge: -90deg lies shut on the deck, 0deg stands upright. */
   transform: rotateX(var(--lid-angle));
   transform-style: preserve-3d;
 }
 
-/* Both lid faces occupy the same space; hide each face from its reverse side. */
+/* Both lid faces fill the same box. backface-visibility: hidden hides each one when it faces
+   away, so the screen shows from the front and the metal back from behind. */
 .lid-face {
   position: absolute;
   inset: 0;
@@ -810,6 +924,7 @@ a {
 .screen-face {
   padding: 2% 2% 2.8%;
   background: var(--screen-frame);
+  /* A hair in front of the lid's middle, so the screen never flickers against the back. */
   transform: translateZ(0.1rem);
 }
 
@@ -817,6 +932,8 @@ a {
   position: relative;
   width: 100%;
   height: 100%;
+  /* The glass is a size container: 1cqi is 1% of its width, so things sized in cqi (the rim,
+     the thank-you screen) scale with the laptop. */
   container-type: inline-size;
   overflow: hidden;
   /* A very thin dark rim between the glass and the bezel. */
@@ -842,7 +959,8 @@ a {
 
 /* ===== Laptop: silver back face ===== */
 .back-face {
-  /* Turn the silver shell outward while the screen face points inward. */
+  /* rotateY(180deg) turns the silver shell to face backwards, and translateZ then pushes it
+     half the lid's thickness behind the screen, which gives the lid real depth. */
   transform: rotateY(180deg) translateZ(0.5rem);
   background-color: var(--laptop-silver-base);
   /* Smooth aluminium, layered top to bottom:
@@ -891,7 +1009,8 @@ a {
   border: 1px solid var(--laptop-edge);
   border-radius: 1.35rem;
   background-color: var(--laptop-silver-base);
-  /* The same smooth metal and fine grain as the lid; its faint sheen runs the other way so the faces differ. */
+  /* The same smooth metal and fine grain as the lid; its faint sheen runs the other way, so
+     the two faces look different. */
   background-image:
     linear-gradient(
       65deg,
@@ -903,7 +1022,9 @@ a {
     var(--metal-grain),
     linear-gradient(180deg, var(--laptop-silver-base) 35%, var(--laptop-silver-dark));
   box-shadow: inset 0 0 0 1px var(--laptop-glint), inset 0 -0.4rem 1rem var(--laptop-metal-shadow);
-  /* Tip the deck down from the lid's hinge so it lies flat beneath the screen. */
+  /* The deck starts directly below the lid (top: 100%) and tips down from its top edge, the
+     hinge, so it lies flat beneath the screen. preserve-3d lets the keyboard, trackpad and
+     walls inside it stand out in 3D. */
   transform: rotateX(90deg);
   transform-origin: 50% 0%;
   transform-style: preserve-3d;
@@ -925,11 +1046,12 @@ a {
   display: flex;
   flex-direction: column;
   gap: 0.19rem;
+  /* Raised just above the deck surface so the two never flicker together. */
   transform: translateZ(0.2rem);
   transform-style: preserve-3d;
 }
 
-/* Let the teal keywell glow appear in step with the key labels. */
+/* A teal glow around the keyboard that fades in with the key labels (--keyboard-reveal). */
 .keyboard::after {
   position: absolute;
   z-index: 1;
@@ -959,6 +1081,7 @@ a {
   border-radius: 0.22rem;
   background: linear-gradient(180deg, var(--keyboard-key-top), var(--keyboard-key-bottom));
   box-shadow: inset 0 1px 0 var(--keyboard-key-highlight), 0 1px 1px var(--keyboard-key-shadow);
+  /* The labels fade in as --keyboard-reveal goes from 0 to 1 (used as the colour's alpha). */
   color: rgb(var(--keyboard-key-label-rgb) / var(--keyboard-reveal));
   font-family: var(--font-body);
   font-size: clamp(0.35rem, 0.75vw, 0.56rem);
@@ -967,6 +1090,8 @@ a {
   transition: color 180ms ease, transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
 }
 
+/* main.js types MARYAM once the lid is nearly open: each key sinks a little (negative
+   translateZ) and lights up cyan while it is pressed. */
 .key.is-pressed {
   transform: translateZ(-0.2cqi);
   background: #6fd0ea;
@@ -974,6 +1099,8 @@ a {
   color: #06202a;
 }
 
+/* Key widths are flex ratios against a normal key (1): a shorter function row and wider
+   Tab, Enter, Shift, modifier and space keys. */
 .key-row-function {
   flex: 0.72;
 }
@@ -1026,6 +1153,7 @@ a {
   border-radius: 0.65rem;
   background: linear-gradient(145deg, var(--trackpad-glass), var(--trackpad-shadow));
   box-shadow: inset 0 0 0 1px var(--laptop-glint);
+  /* Raised to the same height as the keyboard. */
   transform: translateZ(0.2rem);
 }
 
@@ -1035,6 +1163,8 @@ a {
   z-index: 1;
   display: block;
   background: linear-gradient(180deg, var(--laptop-silver-highlight), var(--laptop-silver-base));
+  /* The edge strips are folded out of the deck below; each is only drawn when seen from
+     outside. */
   backface-visibility: hidden;
 }
 
@@ -1087,6 +1217,8 @@ a {
     var(--chrome-logo-shadow) 78%,
     var(--chrome-logo-light) 100%
   );
+  /* The gradient is 220% wide; main.js slides it (--logo-shimmer) so the shine moves. The
+     background is clipped to the letters, which are left transparent. */
   background-position: var(--logo-shimmer) center;
   background-size: 220% 100%;
   background-clip: text;
@@ -1136,9 +1268,10 @@ a {
   transform: translate(-50%, -50%);
 }
 
-/* The copy on the homepage layer only shows while that layer is shrunk into the laptop screen.
-   It sits above every part of the homepage, and it is removed as soon as the homepage fills the
-   window or becomes the real page, so it never covers the page or the navigation. */
+/* A second notch on the homepage layer that grows out of the laptop screen. It only shows
+   while that layer is shrunk into the screen (is-active but not is-fullscreen). z-index 30
+   puts it above every part of the homepage, and it is hidden as soon as the homepage fills the
+   window, so it never covers the page or the navigation. */
 .hero-frame-notch {
   z-index: 30;
   display: none;
@@ -1155,15 +1288,15 @@ a {
      hero's natural height into --hero-page-height), so nothing is ever cut off. */
   min-height: var(--hero-page-height, 100svh);
   /* Overlap the intro's last screen. The laptop animation finishes one screen before the
-     intro section ends, and that screen used to be a dead stretch where the finished hero
-     sat pinned while nothing moved. Pulling the hero up by one screen makes it take over
-     exactly when the dive ends, so scrolling runs straight on into About. */
+     intro section ends, so pulling the hero up by one screen makes it take over exactly when
+     the dive ends, and scrolling runs straight on into About with no still stretch. */
   margin-top: -100svh;
   /* No background of its own: while the intro still runs, this section slides up over the
      laptop stage and must stay see-through. Once it is the real page, its hero frame
      (absolutely filling it) paints the hero background. */
 }
 
+/* is-current (main.js): the dive is over and the hero is the real page, in the normal flow. */
 .portfolio-hero-section.is-current .portfolio-hero-frame {
   /* In the normal flow, so the section is exactly as tall as the hero. */
   position: relative;
@@ -1181,6 +1314,9 @@ a {
   transform: none;
 }
 
+/* The homepage layer used by the intro. It is hidden at first; main.js adds is-active while
+   it grows out of the laptop screen and is-fullscreen for the last frame. z-index 20 keeps it
+   above the rest of the hero section. */
 .portfolio-hero-frame {
   position: absolute;
   z-index: 20;
@@ -1208,8 +1344,11 @@ a {
   background: var(--hero-background);
   color: var(--hero-foreground);
   font-family: var(--font-body);
+  /* Centred in the frame, then scaled by main.js (--hero-fit-scale) to fit the laptop glass. */
   transform: translate(-50%, -50%) scale(var(--hero-fit-scale, 0.5));
   transform-origin: center;
+  /* isolation starts a new stacking context, so the hero's z-index -1 background
+     stays inside the hero instead of slipping behind the page. */
   isolation: isolate;
 }
 
@@ -1238,6 +1377,8 @@ a {
   inset: 0 auto auto var(--hero-page-left, 0px);
   width: var(--hero-page-width, 100%);
   height: var(--hero-page-height, 100%);
+  /* !important beats the rounded corners main.js sets inline while the frame is on the
+     laptop screen. */
   border-radius: 0 !important;
   overflow: visible;
   opacity: 1;
@@ -1260,6 +1401,8 @@ a {
   background: var(--hero-background);
 }
 
+/* The hero background: two soft glows and a faint 42px grid, behind everything (z-index -1).
+   The mask fades it all out toward the edges. */
 .hero-atmosphere {
   position: absolute;
   z-index: -1;
@@ -1278,14 +1421,15 @@ a {
 /* ===== Full-width hero =====
    The hero uses the whole screen: its top bar, content and corner labels use the shared site
    layout (--site-content-width, see "Shared page layout"), so they line up exactly with every
-   section below instead of sitting in a narrower column of their own. Text, buttons, the photo and the top bar scale with the screen, each
-   with a height limit (svh) so a wide but short window (1366x768, 2560x1080) still fits the
-   hero in one screen. The laptop screen in the intro shows this same element at the real hero's
-   size, so the layout is identical there and the dive still ends on a perfect match.
+   section below. Text, buttons, the photo and the top bar scale with the screen, each with a
+   height limit (svh) so a wide but short window (1366x768, 2560x1080) still fits the hero in
+   one screen. The laptop screen in the intro shows this same element at the real hero's size,
+   so the layout is identical there and the dive ends on a perfect match.
    Phones keep their own stacked layout (the max-width: 44rem rules further down). */
 .portfolio-hero {
   /* Height of the top bar, and the space kept free below the content for the corner labels.
-     Both shrink on short screens (svh), with a floor that still clears the bar and labels. */
+     Both are 9% of the screen height (svh), so they shrink on short screens, with a floor
+     (3.6rem and 3rem) that still clears the bar and labels, and a 7rem cap. */
   --hero-bar-height: clamp(3.6rem, 9svh, 7rem);
   --hero-foot-space: clamp(3rem, 9svh, 7rem);
 }
@@ -1349,6 +1493,7 @@ a {
   color: #6fd0ea;
 }
 
+/* The hero's theme button grows a little on big monitors (2.2vw), from 2.5rem to 3.4rem. */
 .hero-theme-toggle {
   width: clamp(2.5rem, 2.2vw, 3.4rem);
   height: clamp(2.5rem, 2.2vw, 3.4rem);
@@ -1365,9 +1510,11 @@ a {
 .hero-main {
   width: var(--site-content-width);
   /* The screen's height minus the bar and the labels' space, so the content is centred in one
-     screen. (svh rather than %, because the hero's own height now follows its content.) */
+     screen. (svh rather than %, because the hero's own height follows its content.) */
   min-height: calc(100svh - var(--hero-bar-height) - var(--hero-foot-space));
   display: grid;
+  /* The text column a little wider than the photo column; minmax(0, ...) lets both shrink
+     below their content's width. The gap is 5% of the width, from 2rem to 9rem. */
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   align-items: center;
   gap: clamp(2rem, 5vw, 9rem);
@@ -1379,6 +1526,7 @@ a {
   margin: 0 0 1.4em;
   color: #6fd0ea;
   font-family: var(--font-label);
+  /* By the width or the height, whichever is smaller, between about 10px and 17px. */
   font-size: clamp(0.6rem, min(0.72vw, 1.4svh), 1.05rem);
   letter-spacing: 0.1em;
 }
@@ -1400,6 +1548,7 @@ a {
   background-image: linear-gradient(105deg, #0b4f73, #0889b0 48%, #1c9fd0);
 }
 
+/* Dark mode: a light start colour, so the first letters stay readable on the dark hero. */
 :root[data-theme="dark"] .hero-title .gradient-text {
   background-image: linear-gradient(105deg, #dce5eb, #0889b0 48%, #1c9fd0);
 }
@@ -1423,6 +1572,8 @@ a {
   font-size: clamp(0.85rem, min(0.95vw, 1.8svh), 1.45rem);
 }
 
+/* Buttons with data-magnetic lean toward the cursor: main.js sets --magnetic-x and
+   --magnetic-y from the pointer position, and translate3d moves the button by that much. */
 .hero-button,
 [data-magnetic] {
   min-height: 3rem;
@@ -1472,6 +1623,7 @@ a {
   border-color: rgb(111 208 234 / 58%);
 }
 
+/* The arrow inside a hero button nudges up and right on hover. */
 .hero-button > span {
   display: inline-block;
   transition: transform 180ms ease;
@@ -1503,7 +1655,8 @@ a {
   border-radius: 50%;
 }
 
-/* The three rings and their glowing dots are still. The whole portrait still tilts toward the cursor. */
+/* The three rings and their glowing dots do not move on their own; the whole portrait tilts
+   toward the cursor instead (see .hero-portrait in Part 2). */
 .portrait-ring-outer {
   inset: 0;
   border-style: dashed;
@@ -1565,6 +1718,7 @@ a {
   border-radius: inherit;
 }
 
+/* The photo sits above the dark fallback background and is cropped to fill the circle. */
 .profile-photo {
   z-index: 1;
   object-fit: cover;
@@ -1579,6 +1733,7 @@ a {
   white-space: nowrap;
 }
 
+/* Three small labels on the outer ring, centred on its top, left and bottom edges. */
 .portrait-label-top {
   top: -1%;
   left: 50%;
@@ -1598,11 +1753,13 @@ a {
 }
 
 /* How far the corner labels sit above the hero's bottom edge. About's top spacing on Home is
-   worked out from it (see .home-intro-page), so the two always agree. */
+   worked out from it (see .home-intro-page), so the two always agree. It is 2.6% of the
+   screen height, kept between 1.5rem and 2.6rem. */
 :root {
   --hero-footer-bottom: clamp(1.5rem, 2.6svh, 2.6rem);
 }
 
+/* The small corner labels along the bottom edge of the hero. */
 .hero-footer {
   position: absolute;
   /* The same edges as the top bar and the content: the shared side margin. */
@@ -1617,7 +1774,10 @@ a {
   letter-spacing: 0.1em;
 }
 
-/* Show the compact site navigation after the homepage is on screen. */
+/* ===== Floating navigation pill ===== */
+/* The compact site navigation, fixed at the top centre. It stays hidden until main.js adds
+   is-visible (once the homepage is on screen). z-index 50 keeps it above the page content, and
+   view-transition-name lets it stay still while pages fade (see "Page transitions"). */
 .floating-nav {
   position: fixed;
   z-index: 50;
@@ -1633,6 +1793,7 @@ a {
   background: rgb(15 17 20 / 78%);
   box-shadow: 0 0.7rem 2rem rgb(0 0 0 / 28%);
   backdrop-filter: blur(1rem);
+  /* Hidden: see-through, not clickable, and 0.5rem higher, so it slides down as it appears. */
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, -0.5rem);
@@ -1677,6 +1838,9 @@ a {
   height: 0.95rem;
 }
 
+/* ===== Hero and nav on phones (up to 44rem, about 704px wide) ===== */
+/* The hero stacks: the top bar becomes two centred rows (brand, then links) and the photo
+   sits above the text. */
 @media (max-width: 44rem) {
   .hero-topbar {
     min-height: 5.2rem;
@@ -1737,6 +1901,7 @@ a {
   }
 
   .hero-title {
+    /* By the width or the height, whichever is smaller, from 2.2rem to 4.2rem. */
     font-size: clamp(2.2rem, min(12vw, 7svh), 4.2rem);
   }
 
@@ -1841,6 +2006,7 @@ a {
     grid-row: auto;
   }
 
+  /* Text on the left, photo on the right again, as on desktop. */
   .hero-portrait {
     /* At most half the height, and never more than 30% of the width, at the right margin. */
     width: min(50svh, 30vw);
@@ -1910,6 +2076,8 @@ a {
   }
 }
 
+/* ===== Page headings (shared by every section) ===== */
+/* The small uppercase label above a heading. */
 .eyebrow {
   margin: 0 0 1rem;
   color: var(--color-text-muted);
@@ -1919,6 +2087,7 @@ a {
   text-transform: uppercase;
 }
 
+/* The big section heading: 10% of the width, from 3rem to 6.5rem. */
 .page-title {
   margin: 0;
   font-family: var(--font-heading);
@@ -1943,6 +2112,7 @@ a {
   font-size: 0.85rem;
 }
 
+/* The copyright line and profile link; they wrap onto two lines on narrow phones. */
 .site-footer p {
   margin: 0;
   display: flex;
@@ -1966,6 +2136,7 @@ a {
   color: var(--color-blue);
 }
 
+/* The round GitHub icon button. */
 .github-link {
   display: inline-flex;
   width: 2.5rem;
@@ -1986,12 +2157,17 @@ a {
   fill: currentColor;
 }
 
+/* ===== Keyboard focus ===== */
+/* A clear blue ring on whatever has keyboard focus, on every page. Mouse clicks do not show it,
+   because :focus-visible only matches keyboard focus. */
 :focus-visible {
   outline: 2px solid var(--color-blue);
   outline-offset: 3px;
 }
 
-/* ===== Responsive layout ===== */
+/* ===== Intro: responsive layout and reduced motion ===== */
+/* Phones (up to 44rem wide): there is no room for the AI and SEC labels, the greeting moves
+   down a little, and the laptop gets smaller rounded corners to suit its smaller size. */
 @media (max-width: 44rem) {
   .intro-detail {
     display: none;
@@ -2052,7 +2228,8 @@ a {
   }
 }
 
-/* Keep the static layout usable when visitors prefer less motion. */
+/* Reduced motion: the caret and the scroll line stop blinking and pulsing, and the keys do not
+   animate when pressed. */
 @media (prefers-reduced-motion: reduce) {
   .typed-caret,
   .scroll-cue-line {
@@ -2075,11 +2252,16 @@ a {
   transition-delay: var(--reveal-delay, 0ms);
 }
 
+/* main.js adds is-revealed when the element scrolls into view; --reveal-delay staggers the
+   items of one group. */
 .reveal-on-scroll.is-revealed {
   opacity: 1;
   transform: translateY(0);
 }
 
+/* ===== Spotlight cards ===== */
+/* A glowing border that follows the cursor. main.js sets --spot-x and --spot-y to the pointer's
+   position inside the card. isolation keeps the glow layer's z-index inside the card. */
 .spotlight-card {
   position: relative;
   isolation: isolate;
@@ -2097,6 +2279,8 @@ a {
   opacity: 0;
   pointer-events: none;
   transition: opacity 180ms ease;
+  /* Two masks combined with xor (exclude): the whole box minus the content box, so only the
+     1px padding ring, the border, shows the glow. */
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -2111,7 +2295,9 @@ a {
   opacity: 1;
 }
 
-/* Page shortcuts stay at the right edge on wide screens. */
+/* ===== Page rail (dots at the right edge) ===== */
+/* Page shortcuts at the right edge on wide screens. z-index 60 keeps them above the floating nav
+   and the page. They stay hidden until main.js adds is-visible. */
 .page-rail {
   position: fixed;
   z-index: 60;
@@ -2150,6 +2336,7 @@ a {
   opacity: 1;
 }
 
+/* The tooltip: the link's aria-label, shown to the left of the dot on hover or focus. */
 .page-rail a::after {
   position: absolute;
   top: 50%;
@@ -2174,6 +2361,9 @@ a {
   transform: translateY(-50%) translateX(0);
 }
 
+/* ===== Toast messages ===== */
+/* Short status messages from main.js, in the bottom-right corner. z-index 100 keeps them
+   above the page; only the custom cursor is higher. */
 .toast-area {
   position: fixed;
   z-index: 100;
@@ -2204,7 +2394,10 @@ a {
   transform: translateY(0);
 }
 
-/* The pointer decoration is only created for precise desktop pointers. */
+/* ===== Custom cursor ===== */
+/* A dot and a ring that follow the mouse. Only for a real mouse or trackpad (hover and a fine
+   pointer); main.js then adds has-custom-cursor to <body> and the normal cursor is hidden.
+   The negative margins centre each shape on the pointer, and z-index 200 keeps it on top. */
 @media (hover: hover) and (pointer: fine) {
   body.has-custom-cursor,
   body.has-custom-cursor a,
@@ -2245,6 +2438,7 @@ a {
     opacity: 1;
   }
 
+  /* The ring grows over links and buttons. */
   .custom-cursor-ring.is-interactive {
     width: 68px;
     height: 68px;
@@ -2253,7 +2447,8 @@ a {
     background: rgb(28 159 208 / 8%);
   }
 
-  /* The dialog is in the top layer, so the custom dot cannot be seen there. */
+  /* The project window is a <dialog> in the browser's top layer, above everything, so the
+     custom dot cannot show over it. The normal cursor comes back while it is open. */
   body.project-dialog-open.has-custom-cursor,
   body.project-dialog-open.has-custom-cursor .project-dialog,
   body.project-dialog-open.has-custom-cursor .project-dialog * {
@@ -2272,7 +2467,9 @@ a {
   }
 }
 
-/* Home effects use theme variables while keeping the blue accent consistent. */
+/* ===== Hero effects: network dots, layer order, portrait tilt ===== */
+/* The canvas of moving network dots behind the hero text (main.js draws them in
+   --particle-color, so they follow the theme). */
 .hero-particles {
   position: absolute;
   z-index: 0;
@@ -2282,6 +2479,7 @@ a {
   pointer-events: none;
 }
 
+/* The top bar and content sit above the dots (0) and the background (-1). */
 .hero-topbar,
 .hero-main {
   position: relative;
@@ -2290,11 +2488,13 @@ a {
 
 /* The corner labels keep their absolute position (see .hero-footer above), so they always sit
    at the hero's bottom edge, at the same distance (--hero-footer-bottom) on every screen.
-   Before, a shared position: relative here moved them up to wherever the content ended. */
+   Only their z-index is set here, to lift them above the dots. */
 .hero-footer {
   z-index: 1;
 }
 
+/* The portrait tilts toward the cursor: main.js sets --orbit-tilt-x and --orbit-tilt-y,
+   perspective(900px) gives the tilt depth, and preserve-3d keeps the rings in that 3D space. */
 .hero-portrait {
   transform: perspective(900px) rotateX(var(--orbit-tilt-x, 0deg)) rotateY(var(--orbit-tilt-y, 0deg));
   transition: transform 220ms ease-out;
@@ -2308,6 +2508,8 @@ a {
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
 }
 
+/* On hover each label grows a little. Each keeps its own centring translate, so that is
+   repeated before scale(). */
 .portrait-label-top:hover {
   transform: translateX(-50%) scale(1.22);
 }
@@ -2334,6 +2536,7 @@ a {
   }
 }
 
+/* Reduced motion: content is shown at once with no slide or fade, and there is no spotlight. */
 @media (prefers-reduced-motion: reduce) {
   .reveal-on-scroll {
     opacity: 1;
@@ -2396,6 +2599,7 @@ a {
   font-size: 1.1rem;
 }
 
+/* Skills as small pills that lift on hover. */
 .skill-list {
   display: flex;
   flex-wrap: wrap;
@@ -2423,6 +2627,8 @@ a {
 }
 
 /* ===== Part 3: dark interactive portfolio terminal ===== */
+/* The terminal stays dark in both themes, like a real one, so its colours are fixed values
+   instead of theme variables. */
 .terminal-card {
   margin-top: clamp(3rem, 8vw, 6rem);
   overflow: hidden;
@@ -2442,6 +2648,7 @@ a {
   border-bottom: 1px solid #293034;
 }
 
+/* The three window buttons: close, minimise and zoom. */
 .terminal-window-dots {
   display: flex;
   gap: 0.38rem;
@@ -2583,6 +2790,9 @@ a {
   }
 }
 
+/* ===== Screen-reader-only text ===== */
+/* Hidden on screen but still read by screen readers (for example the terminal input's
+   label). */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -2593,6 +2803,7 @@ a {
   clip-path: inset(50%);
 }
 
+/* Phones (up to 760px wide): less padding and smaller terminal text. */
 @media (max-width: 760px) {
   .about-page {
     /* Clear the floating navigation pill on a phone. */
@@ -2630,6 +2841,7 @@ a {
   }
 }
 
+/* Reduced motion: no hover lift on skills and terminal commands. */
 @media (prefers-reduced-motion: reduce) {
   .skill-list li,
   .terminal-command {
@@ -2638,6 +2850,8 @@ a {
 }
 
 /* ===== Part 4: project cards and custom project visuals ===== */
+/* The shared look of a project card. Its size and the sideways track are set in
+   "Projects: pinned sideways track" further down. */
 .project-card {
   display: grid;
   align-items: center;
@@ -2720,6 +2934,7 @@ a {
   transform: translate(2px, -2px);
 }
 
+/* The animated demo panel on each card (also reused in the project window). */
 .project-visual {
   position: relative;
   min-width: 0;
@@ -2732,6 +2947,7 @@ a {
     var(--color-page);
 }
 
+/* The small label row across the top of each demo. */
 .visual-topline {
   position: absolute;
   z-index: 2;
@@ -2776,6 +2992,8 @@ a {
   border-radius: 999px;
   background: linear-gradient(#6fd0ea, #0889b0);
   animation: waveform-breathe 950ms ease-in-out infinite alternate;
+  /* main.js gives every bar a random negative delay, so the bars move out of step like
+     speech. */
   animation-delay: var(--bar-delay, 0ms);
   transform-origin: center;
 }
@@ -2891,6 +3109,7 @@ a {
   color: #6fd0ea;
 }
 
+/* The pink detection label over the plant. */
 .detection-tag {
   position: absolute;
   top: 42%;
@@ -2904,6 +3123,7 @@ a {
   font-size: 0.62rem;
 }
 
+/* A glowing line that sweeps down over the plant and back up. */
 .plant-scan-line {
   position: absolute;
   z-index: 1;
@@ -2950,6 +3170,7 @@ a {
   color: #6fd0ea;
 }
 
+/* An input that is switched on (1) glows. */
 .circuit-input[aria-pressed="true"] {
   border-color: #6fd0ea;
   box-shadow: 0 0 1rem rgb(111 208 234 / 22%);
@@ -2979,6 +3200,7 @@ a {
   box-shadow: inset 0 0 0.3rem #000;
 }
 
+/* main.js adds is-on when the gate's output is 1. */
 .circuit-led.is-on > span {
   background: #6fd0ea;
   box-shadow: 0 0 1rem rgb(111 208 234 / 90%);
@@ -3014,6 +3236,7 @@ a {
   font-weight: 500;
 }
 
+/* The truth-table row that matches the current inputs is highlighted. */
 .truth-table tr.is-current td {
   background: rgb(8 137 176 / 16%);
   color: #6fd0ea;
@@ -3024,6 +3247,8 @@ a {
   padding: 4rem 1rem 2rem 2rem;
 }
 
+/* MakeCode-style blocks snap into place one after another, then fade and repeat. They start
+   hidden and only animate once the card has scrolled into view (is-revealed). */
 .code-block {
   position: relative;
   width: max-content;
@@ -3044,6 +3269,7 @@ a {
   animation-delay: var(--block-delay, 0s);
 }
 
+/* Each block's start delay (0.75s apart), indent and colour. */
 .block-start { --block-delay: 0s; background: #5ec6ed; }
 .block-repeat { --block-delay: 0.75s; margin-left: 1.25rem; background: #a777ed; }
 .block-icon { --block-delay: 1.5s; margin-left: 2rem; background: #59c694; }
@@ -3056,6 +3282,7 @@ a {
   78%, 100% { opacity: 0; transform: translateX(0.4rem) scale(0.98); }
 }
 
+/* The certificate badge pops up after the last block, on the same 6s loop. */
 .certificate-chip {
   position: absolute;
   right: 1rem;
@@ -3102,6 +3329,7 @@ a {
   overflow: visible;
 }
 
+/* The grey road under the moving dashed line. */
 .robot-track > path:first-child {
   fill: none;
   stroke: var(--color-border);
@@ -3117,6 +3345,7 @@ a {
   animation: track-dash 1.2s linear infinite;
 }
 
+/* A still copy of the robot, shown only for reduced motion (see below). */
 .ev3-robot-static {
   display: none;
 }
@@ -3125,6 +3354,7 @@ a {
   to { stroke-dashoffset: -34; }
 }
 
+/* Phones (up to 760px wide): the card's text sits above its demo. */
 @media (max-width: 760px) {
   .projects-page {
     padding-block: 3rem;
@@ -3154,6 +3384,8 @@ a {
   }
 }
 
+/* Reduced motion: the demos stand still in their finished state, and the moving robot is
+   swapped for the still one. */
 @media (prefers-reduced-motion: reduce) {
   .waveform-bars span,
   .plant-scan-line,
@@ -3244,6 +3476,7 @@ a {
 /* Soft teal-blue player card. The avatar colors stay the same in both themes. */
 .player-card {
   display: grid;
+  /* The avatar, then the name and toolkit, then the skill meters (at least 15rem wide). */
   grid-template-columns: auto minmax(0, 1.45fr) minmax(15rem, 0.85fr);
   gap: clamp(1.2rem, 3vw, 2.2rem);
   align-items: center;
@@ -3329,6 +3562,7 @@ a {
   background: rgb(18 72 140 / 22%);
 }
 
+/* Light mode: a lighter tint and dark navy text, so the AI tags stay readable on white. */
 :root:not([data-theme="dark"]) .toolkit-ai li {
   background: rgb(18 72 140 / 12%);
   color: #12325f;
@@ -3346,6 +3580,7 @@ a {
   list-style: none;
 }
 
+/* The name and rank on the first row, the pips (small filled bars) across the second. */
 .skill-meters li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3414,7 +3649,8 @@ a {
   list-style: none;
 }
 
-/* Track stays visible; the colored line grows from the eased scroll progress. */
+/* A grey track with a coloured line on top. main.js sets --line-progress (0 to 1, eased)
+   from the scroll position, and the line grows to that share of the track's height. */
 .quest-timeline::before,
 .quest-timeline::after {
   position: absolute;
@@ -3435,6 +3671,8 @@ a {
   background: linear-gradient(#0889b0, #1c9fd0);
 }
 
+/* Missions start faded and slightly to the right; main.js adds is-lit when the line reaches
+   them. */
 .quest {
   position: relative;
   padding-bottom: 1.8rem;
@@ -3450,6 +3688,7 @@ a {
   transform: none;
 }
 
+/* The dot on the timeline for each mission. */
 .quest-node {
   position: absolute;
   top: 0.28rem;
@@ -3523,6 +3762,7 @@ a {
   margin-bottom: 0.2rem;
 }
 
+/* The certificate score cards and the languages card. */
 .cert-card,
 .language-card {
   padding: 1.15rem 1.2rem;
@@ -3574,7 +3814,8 @@ a {
   letter-spacing: 0.05em;
 }
 
-/* Contact cards stay readable in both themes. */
+/* ===== Contact ===== */
+/* The Contact cards use the theme colours, so they stay readable in both themes. */
 .contact-intro {
   max-width: 56rem;
 }
@@ -3651,6 +3892,7 @@ a.contact-value:hover,
   transform: translate(2px, -2px);
 }
 
+/* The big Contact heading: 13% of the width, from 4.2rem to 8.5rem. */
 .contact-intro .page-title {
   font-size: clamp(4.2rem, 13vw, 8.5rem);
   line-height: 0.92;
@@ -3660,7 +3902,8 @@ a.contact-value:hover,
   text-decoration: none;
 }
 
-/* A wider gradient so the colors slide across the heading on hover. */
+/* A gradient 220% as wide as the heading, so the colours slide across it on hover. Both theme
+   selectors are listed too, so this beats the theme-specific .gradient-text rules. */
 .talk-link.gradient-text,
 :root:not([data-theme="dark"]) .talk-link.gradient-text,
 :root[data-theme="dark"] .talk-link.gradient-text {
@@ -3743,7 +3986,8 @@ a.contact-value:hover,
   /* Room for the drawn laptop: the lid plus the base below it, seen slightly from above. */
   height: calc(var(--closing-design-width) * var(--closing-scale) * 1.02);
   margin-top: clamp(3.5rem, 9vw, 6rem);
-  /* Scroll room below, so the lid can always finish closing before the page ends. */
+  /* Scroll room below (16% of the window height, at least 5rem), so the lid can always
+     finish closing before the page ends. */
   margin-bottom: max(5rem, 16vh);
   /* A gentle perspective for the small laptop, seen from in front and a little above. */
   perspective: 1800px;
@@ -3760,7 +4004,9 @@ a.contact-value:hover,
   --metal-sheen: 30%;
 }
 
-/* Holds the full-size laptop, centred, and scales it as one piece from its top edge. */
+/* Holds the full-size laptop, centred, and scales it as one piece from its top edge.
+   scale3d shrinks the depth too (unlike the intro's flat scale), so the small laptop keeps the
+   big one's proportions; preserve-3d keeps its parts in 3D. */
 .closing-laptop-scaler {
   position: absolute;
   top: calc(var(--closing-design-width) * var(--closing-scale) * 0.04);
@@ -3779,7 +4025,7 @@ a.contact-value:hover,
 
 /* The thank-you screen. It is the laptop's own screen, so it looks the same in light and dark
    mode: a clean, plain, very light background with one soft aurora glow behind the text only.
-   All sizes are in cqi, the glass's own width, so the design scales with the laptop. */
+   All sizes are in cqi, the glass's own width, so the whole screen scales with the laptop. */
 .closing-screen {
   position: absolute;
   z-index: 2;
@@ -3860,6 +4106,7 @@ a.contact-value:hover,
   }
 }
 
+/* ===== Resume and Contact on phones (up to 760px wide) and with reduced motion ===== */
 @media (max-width: 760px) {
   .resume-page,
   .contact-page {
@@ -3895,6 +4142,7 @@ a.contact-value:hover,
   }
 }
 
+/* Reduced motion: no hover nudges, mission slides or heading colour slide. */
 @media (prefers-reduced-motion: reduce) {
   .resume-open > span,
   .contact-card-note > span,
@@ -3906,7 +4154,11 @@ a.contact-value:hover,
   }
 }
 
-/* ===== Pinned project track ===== */
+/* ===== Projects: pinned sideways track =====
+   On wide, tall screens the cards move sideways while the page scrolls down. main.js adds
+   has-horizontal-scroll, makes the section one screen tall plus the row's extra width, and
+   moves .project-list left (translate3d) as the visitor scrolls through that height. The
+   panel (.projects-pin) is sticky, so it stays on screen the whole time. */
 .projects-page {
   width: 100%;
   margin: 0;
@@ -3929,11 +4181,13 @@ a.contact-value:hover,
 }
 
 .projects-page.has-horizontal-scroll .projects-pin {
+  /* Pinned to the top of the window while the tall section scrolls past. */
   position: sticky;
   top: 0;
   height: 100vh;
   /* The visible height with browser bars showing, so the pinned card is never under them. */
   height: 100svh;
+  /* Cut off the cards outside the screen; clip, unlike hidden, makes no scroll box. */
   min-height: 0;
   overflow: clip;
 }
@@ -3981,6 +4235,7 @@ a.contact-value:hover,
   background: var(--color-border);
 }
 
+/* The bar fills from the left: main.js sets scaleX (0 to 1) from the track's progress. */
 .project-progress-bar > span {
   width: 100%;
   height: 100%;
@@ -3990,6 +4245,7 @@ a.contact-value:hover,
   transform-origin: left center;
 }
 
+/* One row as wide as all the cards together. will-change keeps the sideways move smooth. */
 .project-list {
   width: max-content;
   display: flex;
@@ -4003,6 +4259,8 @@ a.contact-value:hover,
 
 .project-card {
   position: relative;
+  /* 80% of the window width, at most 980px. The height leaves 15rem for the heading, the
+     nav and the margins, at most 600px. */
   width: min(980px, 80vw);
   height: min(600px, calc(100svh - 15rem));
   min-height: 0;
@@ -4011,6 +4269,8 @@ a.contact-value:hover,
   gap: clamp(1rem, 2.5vw, 2.5rem);
   padding: clamp(1rem, 2.2vw, 2rem);
   cursor: pointer;
+  /* The card tilts toward the cursor: main.js sets --card-tilt-x and --card-tilt-y, and
+     perspective(1100px) gives the tilt depth. */
   transform: perspective(1100px) rotateX(var(--card-tilt-x, 0deg)) rotateY(var(--card-tilt-y, 0deg));
   transition: transform 220ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -4020,6 +4280,7 @@ a.contact-value:hover,
   outline-offset: 4px;
 }
 
+/* Long text scrolls inside the card instead of making it taller. */
 .project-copy {
   max-height: 100%;
   overflow-y: auto;
@@ -4058,6 +4319,7 @@ a.contact-value:hover,
   aspect-ratio: auto;
 }
 
+/* A real project photo, when there is one, covers the animated demo and its labels. */
 .project-photo {
   position: absolute;
   z-index: 4;
@@ -4072,11 +4334,15 @@ a.contact-value:hover,
   display: block;
 }
 
+/* Without the track (before main.js runs, or when it is turned off) the panel is only as
+   tall as its content. */
 .projects-page:not(.has-horizontal-scroll) .projects-pin {
   min-height: auto;
 }
 
 /* ===== macOS-style project window ===== */
+/* A <dialog> that main.js opens when a card is clicked. --dialog-origin is the click point,
+   used as the transform origin, so the window grows out of the card. */
 .project-dialog {
   width: min(72rem, calc(100% - 2rem));
   max-width: 72rem;
@@ -4102,6 +4368,7 @@ a.contact-value:hover,
   to { opacity: 1; transform: scale(1); }
 }
 
+/* The dimmed, blurred page behind the open window. */
 .project-dialog::backdrop {
   background: rgb(4 7 9 / 74%);
   backdrop-filter: blur(7px);
@@ -4116,6 +4383,8 @@ a.contact-value:hover,
 .project-window-titlebar {
   min-height: 3rem;
   display: grid;
+  /* Dots on the left, the path in the middle and an empty right column of the same width,
+     so the path stays truly centred. */
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding-inline: 1rem;
@@ -4161,6 +4430,7 @@ a.contact-value:hover,
   transform: translate(-50%, -50%);
 }
 
+/* An x appears on the red dot on hover, as on a Mac. */
 .project-dialog-close:hover::after {
   position: absolute;
   inset: 0;
@@ -4182,6 +4452,8 @@ a.contact-value:hover,
   font-size: 0.68rem;
 }
 
+/* The demo on the left, the details on the right; the content scrolls if it is taller than
+   the window. */
 .project-window-content {
   min-height: 0;
   display: grid;
@@ -4252,6 +4524,7 @@ a.contact-value:hover,
   margin-top: 0.9rem;
 }
 
+/* ===== Projects on phones, short screens and with reduced motion ===== */
 /* Stacked cards instead of the pinned sideways track: on narrow screens, on screens under
    600px tall (a pinned card would be cut off at the bottom; main.js uses the same limits),
    and for reduced motion. */
@@ -4347,6 +4620,7 @@ a.contact-value:hover,
   }
 }
 
+/* Reduced motion: no card tilt transition and no window opening animation. */
 @media (prefers-reduced-motion: reduce) {
   .project-card,
   .project-dialog[open] {
@@ -4355,12 +4629,12 @@ a.contact-value:hover,
   }
 }
 
+/* ===== Scroll lock while a project window is open ===== */
 /* While a project window is open the page behind it does not scroll. The lock is on <html>,
-   which is what actually scrolls the page. (It used to be overflow: hidden on <body>, but since
-   <html> clips sideways overflow, that never reached the page: it only turned the body into
-   its own scroll box, which detached the sticky project track.) scrollbar-gutter keeps the
-   scrollbar's space, so nothing shifts sideways. main.js removes the class whenever the
-   window closes, however it was closed. */
+   which is what scrolls the page. <html> clips sideways overflow, so overflow: hidden on <body>
+   would not reach the page: it would only turn the body into its own scroll box and detach the
+   sticky project track. scrollbar-gutter keeps the scrollbar's space, so nothing shifts
+   sideways. main.js removes the class whenever the window closes, however it was closed. */
 html.project-window-open {
   overflow: hidden;
   scrollbar-gutter: stable;
@@ -4369,8 +4643,8 @@ html.project-window-open {
 /* ===== Security lab: "Phishing or legit?" game ===== */
 /* A section like Resume and Contact, with the game centred below its heading. The red and green
    tints are set once here and redefined for dark mode, so the answer buttons, feedback box and
-   progress dots stay readable in both themes. */
-/* Width and side margins come from .page-content (the shared site layout). */
+   progress dots stay readable in both themes. Width and side margins come from .page-content
+   (the shared site layout). */
 .lab-page {
   padding-block: clamp(4rem, 10vh, 7rem);
 }
@@ -4451,6 +4725,7 @@ html.project-window-open {
   gap: 0.75rem;
 }
 
+/* One dot per email: teal for the current one, then green or red for each answer. */
 .lab-dots {
   display: flex;
   gap: 0.4rem;
@@ -4502,6 +4777,7 @@ html.project-window-open {
   box-shadow: 0 1.2rem 3rem rgb(13 16 32 / 8%);
 }
 
+/* Dark mode: a deeper shadow, so the card still stands out from the dark page. */
 :root[data-theme="dark"] .mail-window {
   box-shadow: 0 1.2rem 3rem rgb(0 0 0 / 35%);
 }
@@ -4558,6 +4834,7 @@ html.project-window-open {
   font-weight: 700;
 }
 
+/* Dark mode: the bright cyan reads better than the teal on a dark surface. */
 :root[data-theme="dark"] .mail-avatar {
   color: #6fd0ea;
 }
@@ -4624,6 +4901,7 @@ html.project-window-open {
   touch-action: manipulation;
 }
 
+/* Dark mode: a lighter cyan link colour. */
 :root[data-theme="dark"] .mail-link {
   color: #72d9f2;
 }
@@ -4817,6 +5095,8 @@ html.project-window-open {
   line-height: 1;
 }
 
+/* The score receives focus when the result appears, so screen readers announce it; it needs
+   no visible ring. */
 .lab-score:focus {
   outline: none;
 }
@@ -4834,6 +5114,7 @@ html.project-window-open {
   letter-spacing: 0.06em;
 }
 
+/* Dark mode: the bright cyan for the rank badge text. */
 :root[data-theme="dark"] .lab-rank {
   color: #6fd0ea;
 }
@@ -4853,7 +5134,8 @@ html.project-window-open {
   line-height: 1.6;
 }
 
-/* Phones: a tighter card, and the answer buttons stack. */
+/* ===== Security lab on phones and with reduced motion ===== */
+/* Phones (up to 760px wide): tighter padding in the mail window. */
 @media (max-width: 760px) {
   .mail-head,
   .mail-body {
@@ -4865,6 +5147,8 @@ html.project-window-open {
   }
 }
 
+/* Very narrow phones (up to 30rem, 480px): the answer buttons stack, and the kicker is hidden
+   to leave room for the progress dots. */
 @media (max-width: 30rem) {
   .lab-answers {
     grid-template-columns: minmax(0, 1fr);
@@ -4884,6 +5168,7 @@ html.project-window-open {
   }
 }
 
+/* Reduced motion: no hover lift and no colour fades. */
 @media (prefers-reduced-motion: reduce) {
   .lab-answer,
   .lab-dots li {

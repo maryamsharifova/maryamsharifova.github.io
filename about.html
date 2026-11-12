@@ -1,4 +1,10 @@
 <!doctype html>
+<!--
+  about.html: the About page of my portfolio.
+  Order: head, intro heading, bio with skill chips, the portfolio terminal, footer.
+  It shares css/style.css and js/main.js with every page. main.js also adds the floating
+  navigation, the page dots on the right edge and the toast area, so they are not written here.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -8,16 +14,18 @@
     <meta name="color-scheme" content="only light">
     <meta name="description" content="About Maryam Sharifova.">
     <title>About | Maryam Sharifova</title>
-    <!-- The site's shared styles and behavior keep every page consistent. -->
+    <!-- Fonts from Google Fonts, then the stylesheet and script that every page of the site shares. -->
     <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/style.css">
+    <!-- main.js loads here in the head (not at the end of body) so a saved dark theme is applied
+         before the first paint; the rest of the script waits for DOMContentLoaded. -->
     <script src="js/main.js"></script>
   </head>
   <body>
-    <!-- Main About page content. -->
+    <!-- Main content. Elements with data-reveal are faded in by main.js as they scroll into view. -->
     <main class="page-content about-page">
       <!-- Intro heading sets the theme for the biography below. -->
       <section class="page-intro about-intro" aria-labelledby="about-title">
@@ -50,8 +58,10 @@
         </div>
       </section>
 
-      <!-- The terminal safely simulates portfolio commands in the browser. -->
+      <!-- Portfolio terminal: main.js reads the typed command (or a chip's data-command) and prints
+           the answer in the output log. It is only a simulation; nothing runs on a real machine. -->
       <section class="terminal-card" aria-labelledby="terminal-title" data-reveal>
+        <!-- Window bar with decorative dots (aria-hidden) and the terminal's title. -->
         <div class="terminal-header">
           <div class="terminal-window-dots" aria-hidden="true">
             <span></span><span></span><span></span>
@@ -77,9 +87,13 @@
           <button class="terminal-command" type="button" data-command="date">date</button>
           <button class="terminal-command" type="button" data-command="clear">clear</button>
         </div>
+        <!-- Output log: role="log" with aria-live makes screen readers read each new answer, and
+             tabindex="0" lets keyboard users focus it to scroll back through older output. -->
         <div class="terminal-output" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
           <p class="terminal-welcome">Welcome to Maryam's portfolio terminal. Type <strong>help</strong> to explore.</p>
         </div>
+        <!-- Command line. Pressing Enter submits the form, which main.js catches instead of reloading
+             the page. The prompt text is aria-hidden because the hidden label already names the input. -->
         <form class="terminal-form" autocomplete="off">
           <label class="sr-only" for="terminal-input">Enter a portfolio command</label>
           <span aria-hidden="true">maryam@portfolio:~$</span>
@@ -88,10 +102,11 @@
       </section>
     </main>
 
-    <!-- Shared footer links to the portfolio repository. -->
+    <!-- Footer, the same on every page: copyright, my GitHub profile and a link to this site's code. -->
     <footer class="site-footer">
-      <!-- Copyright, public GitHub profile, and the portfolio repository icon. -->
+      <!-- Copyright line with a link to my GitHub profile. -->
       <p>&copy; 2026 MARYAM SHARIFOVA <a class="footer-profile" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">github.com/maryamsharifova</a></p>
+      <!-- The repository link is only an icon, so aria-label gives it a name for screen readers. -->
       <a class="github-link" href="https://github.com/maryamsharifova/maryamsharifova.github.io" aria-label="Visit the portfolio repository on GitHub" title="Portfolio repository on GitHub">
         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
           <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.32-3.76-1.32-.5-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.61 1.21 3.25.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.77 1.15 2.99 0 4.29-2.61 5.23-5.1 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/>
