@@ -95,7 +95,6 @@
   --laptop-silver-base: #a4a9ae;
   --laptop-silver-dark: #7d8389;
   --laptop-silver-highlight: rgb(255 255 255 / 20%);
-  --laptop-silver-shadow: rgb(36 40 44 / 22%);
   --laptop-sheen: rgb(255 255 255 / 15%);
   /* A very fine, barely visible grain: random grey noise at 6% opacity, used on both laptops.
      Noise has no regular pattern, so unlike stripes or dot grids it cannot form lines or moiré
@@ -119,9 +118,6 @@
   --metal-logo: #7d858b;
   --metal-logo-glint: rgb(255 255 255 / 70%);
   --metal-logo-shadow: rgb(50 55 60 / 45%);
-  --desk-surface-center: #d9dcdf;
-  --desk-surface-edge: #f7f8fa;
-  --desk-shadow: rgb(70 78 84 / 14%);
   --chrome-logo-highlight: #ffffff;
   --chrome-logo-light: #d9e0e4;
   --chrome-logo-mid: #68737a;
@@ -154,9 +150,6 @@
   --hero-primary-button: #f4f4f5;
   --hero-primary-text: #101113;
   --particle-color: rgb(190 214 224 / 45%);
-  --desk-surface-center: #202224;
-  --desk-surface-edge: #0b0b0c;
-  --desk-shadow: rgb(0 0 0 / 22%);
   --detail-outline: rgb(232 236 240 / 46%);
 }
 
@@ -352,7 +345,6 @@ a {
 
 /* ===== Home intro and scroll-driven 3D laptop ===== */
 .laptop-intro {
-  height: 420vh;
   height: 420svh;
   /* Starting pose: closed, small, lying flat on the photo's table, seen from a low angle and
      turned slightly right. main.js works out the exact size and position for the current
@@ -391,13 +383,11 @@ a {
   --intro-shift: 0vh;
   --detail-shift: 0vw;
   --cue-opacity: 1;
-  --desk-glow-opacity: 0;
 }
 
 .laptop-stage {
   position: sticky;
   top: 0;
-  height: 100vh;
   height: 100svh;
   /* Sticky positioning needs clipping, not overflow: hidden. */
   overflow: clip;
@@ -571,40 +561,7 @@ a {
   }
 }
 
-/* ===== Desk lighting ===== */
-.desk-surface {
-  position: absolute;
-  z-index: 0;
-  top: 70%;
-  left: 50%;
-  width: 112%;
-  height: 24%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, var(--desk-surface-center) 0%, var(--desk-surface-edge) 72%, transparent 100%);
-  box-shadow: 0 2rem 5rem var(--desk-shadow);
-  filter: blur(0.8rem);
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.desk-surface::after {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse at 42% 52%, rgb(43 181 216 / 26%), transparent 58%),
-    radial-gradient(ellipse at 62% 48%, rgb(31 127 184 / 24%), transparent 64%);
-  content: "";
-  filter: blur(1.2rem);
-  opacity: var(--desk-glow-opacity);
-}
-
 /* ===== Balcony scene behind the intro ===== */
-/* The photo has its own table, so the drawn desk and its floor shadow are hidden. */
-.laptop-intro .desk-surface {
-  display: none;
-}
-
 /* The background layer fills the stage, under the 3D laptop. Stacking, bottom to top: the
    balcony (0), the 3D laptop (1), then the greeting, side labels and hint (3). */
 .balcony-layer {
@@ -1194,8 +1151,6 @@ a {
 /* ===== Homepage hero: full-screen canvas and laptop-screen window ===== */
 .portfolio-hero-section {
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
   /* At least one screen, and as tall as the hero's content needs (main.js measures the real
      hero's natural height into --hero-page-height), so nothing is ever cut off. */
   min-height: var(--hero-page-height, 100svh);
@@ -1203,7 +1158,6 @@ a {
      intro section ends, and that screen used to be a dead stretch where the finished hero
      sat pinned while nothing moved. Pulling the hero up by one screen makes it take over
      exactly when the dive ends, so scrolling runs straight on into About. */
-  margin-top: -100vh;
   margin-top: -100svh;
   /* No background of its own: while the intro still runs, this section slides up over the
      laptop stage and must stay see-through. Once it is the real page, its hero frame
@@ -1248,9 +1202,7 @@ a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 100vw;
   width: var(--hero-page-width, 100vw);
-  min-height: 100vh;
   min-height: 100svh;
   overflow: hidden;
   background: var(--hero-background);
@@ -1283,7 +1235,6 @@ a {
    (the hero section's box, measured by main.js), so swapping to the real page moves nothing. */
 .portfolio-hero-frame.is-fullscreen {
   position: fixed;
-  inset: 0;
   inset: 0 auto auto var(--hero-page-left, 0px);
   width: var(--hero-page-width, 100%);
   height: var(--hero-page-height, 100%);
@@ -2055,10 +2006,6 @@ a {
     font-size: min(clamp(2.2rem, 9vw, 3.2rem), 10svh);
   }
 
-  .desk-surface {
-    top: 70%;
-  }
-
   .lid-face,
   .deck {
     border-radius: 0.9rem;
@@ -2427,12 +2374,6 @@ a {
   font-size: clamp(2.8rem, 7vw, 5.4rem);
 }
 
-.page-subtitle {
-  margin: 0.75rem 0 0;
-  color: var(--color-text-muted);
-  font-family: var(--font-heading);
-  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
-}
 
 .about-overview {
   display: grid;
@@ -2563,7 +2504,6 @@ a {
   /* 300px on most screens. On short screens it takes what is left of the window after the
      terminal's header, command chips, input line and the nav (about 16rem), but never less
      than 8.5rem, so the whole terminal fits on one screen. */
-  height: 300px;
   height: clamp(8.5rem, 100svh - 16rem, 300px);
   overflow: auto;
   padding: 1rem;
@@ -2698,17 +2638,9 @@ a {
 }
 
 /* ===== Part 4: project cards and custom project visuals ===== */
-.project-list {
-  display: grid;
-  gap: clamp(1.25rem, 3vw, 2rem);
-}
-
 .project-card {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   align-items: center;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  padding: clamp(1.15rem, 3vw, 2.25rem);
   border: 1px solid var(--color-border);
   border-radius: 1.2rem;
   background: var(--color-surface);
@@ -2731,7 +2663,6 @@ a {
   margin: 0;
   color: var(--color-text);
   font-family: var(--font-heading);
-  font-size: clamp(1.45rem, 2.6vw, 2.15rem);
   letter-spacing: -0.035em;
   line-height: 1.15;
 }
@@ -2739,8 +2670,6 @@ a {
 .project-copy > p:not(.project-label) {
   margin: 1rem 0 0;
   color: var(--color-text-muted);
-  font-size: 0.93rem;
-  line-height: 1.75;
 }
 
 .project-tags,
@@ -2767,7 +2696,6 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 1.3rem;
   padding: 0.55rem 0.9rem;
   border: 1px solid var(--color-border);
   border-radius: 0.55rem;
@@ -2795,8 +2723,6 @@ a {
 .project-visual {
   position: relative;
   min-width: 0;
-  min-height: 20rem;
-  aspect-ratio: 1.45;
   margin: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
@@ -4078,7 +4004,6 @@ a.contact-value:hover,
 .project-card {
   position: relative;
   width: min(980px, 80vw);
-  height: min(600px, calc(100vh - 15rem));
   height: min(600px, calc(100svh - 15rem));
   min-height: 0;
   flex: 0 0 min(980px, 80vw);
@@ -4185,7 +4110,6 @@ a.contact-value:hover,
 .project-window {
   display: flex;
   flex-direction: column;
-  max-height: min(84vh, 52rem);
   max-height: min(84dvh, 52rem);
 }
 
@@ -4410,7 +4334,6 @@ a.contact-value:hover,
   }
 
   .project-card {
-    height: min(600px, calc(100vh - 14rem));
     height: min(600px, calc(100svh - 14rem));
   }
 

@@ -326,7 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeScrollReveals();
 
   // Let card spotlights follow the pointer without changing each card's content.
-  document.querySelectorAll(".spotlight-card, .card, .project-card, [data-spotlight]").forEach((card) => {
+  document.querySelectorAll(".spotlight-card, .project-card").forEach((card) => {
     card.classList.add("spotlight-card");
     card.addEventListener("pointermove", (event) => {
       const bounds = card.getBoundingClientRect();
@@ -2603,7 +2603,6 @@ document.addEventListener("DOMContentLoaded", () => {
         stamp(whiteGlow, x, y, 5 + life * 15, 0.085 * Math.sin(Math.PI * life));
       });
 
-      // No film grain: the photo stays clean and sharp. Only the soft vignette (CSS) remains.
       context.globalAlpha = 1;
     };
 
