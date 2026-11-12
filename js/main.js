@@ -2546,14 +2546,20 @@ document.addEventListener("DOMContentLoaded", () => {
       return null;
     }
 
-    // A fixed-seed random number generator, so the stars and lights are the same every visit.
+    // Make a fixed-seed random number generator, so the scene is the same on every visit.
     // It is the Park-Miller generator: multiply by 16807 modulo 2^31 - 1, and scale the result
-    // to a number from 0 to 1, like Math.random().
-    let seed = 20261110;
-    const random = () => {
-      seed = (seed * 16807) % 2147483647;
-      return (seed - 1) / 2147483646;
+    // to a number from 0 to 1, like Math.random(). Returns a function that gives the next
+    // number each time it is called.
+    const seededRandom = (startSeed) => {
+      let seed = startSeed;
+      return () => {
+        seed = (seed * 16807) % 2147483647;
+        return (seed - 1) / 2147483646;
+      };
     };
+    // The generator for everything set up straight away (bay glints, lamps, steam). The stars
+    // and city lights have their own (see pickSkyAndCity), because they are picked later.
+    const random = seededRandom(20261110);
     // A seeded random number between low and high.
     const between = (low, high) => low + (high - low) * random();
 
@@ -2584,9 +2590,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ----- Picking spots from the photo, once -----
-    // Reading pixels needs the page to be served (Live Server, GitHub Pages). From a file://
-    // address the browser blocks it; the stars then use random spots in the sky area and the
-    // city lights are left out.
+    // Once the photo has loaded, start() reads its pixels and then picks the stars and city
+    // lights from them (pickSkyAndCity), so the stars sit on dark sky and the city lights sit
+    // on the real lights of the photo. Reading pixels needs the page to be served (Live Server,
+    // GitHub Pages). From a file:// address the browser blocks it; the stars then use random
+    // spots in the open-sky area and the city lights are left out.
     let pixels = null;
     // Draw the photo onto a hidden canvas at its real size and keep its RGBA pixel data
     // (4 numbers per pixel). If the browser refuses, pixels stays null.
@@ -2626,33 +2634,44 @@ document.addEventListener("DOMContentLoaded", () => {
       return y < 190 ? x > 456 - y * 0.55 : x > 525;
     };
 
-    // Stars: dark sky pixels, more of them high up where the sky is darkest.
-    // Random spots are tried (at most 4000 tries) until 90 stars are found. Note: this runs
-    // when createBalconyLife is called, before start() calls readPhoto, so `pixels` is still
-    // null here and the brightness test is skipped (see the note above start()).
+    // The stars and city lights, filled in by pickSkyAndCity once the photo's pixels have been
+    // read. They stay empty until then, which is fine: nothing is drawn before start() runs.
     const stars = [];
-    for (let attempt = 0; attempt < 4000 && stars.length < 90; attempt += 1) {
-      const x = between(350, PHOTO_WIDTH - 2);
-      // random() ** 1.5 favours small values, so more stars land near the top of the sky.
-      const y = 2 + 296 * random() ** 1.5;
-      if (!inOpenSky(x, y) || (pixels && brightnessAt(x, y) > 52)) continue;
-      // Each star has its own size (about 1 in 8 is bigger), brightness, twinkle speed and
-      // starting point in the twinkle, so they do not all pulse together.
-      stars.push({
-        x,
-        y,
-        size: between(0.7, 1.7) * (random() < 0.12 ? 1.6 : 1),
-        glow: between(0.35, 0.85),
-        speed: between(0.6, 2.2),
-        phase: between(0, Math.PI * 2),
-      });
-    }
-
-    // City lights: the brightest little points in the city band behind the railing, each a
-    // local peak so one light gets one twinkle. Their own colour is used for the glow.
-    // (Like the stars, this needs `pixels`, which is still null at this point.)
     const cityLights = [];
-    if (pixels) {
+
+    // Pick the stars and city lights. It runs once, from start(), right after readPhoto, so
+    // `pixels` holds the photo when it can be read (and is null when the browser blocks it).
+    // It has its own seeded generator, so the picks are the same on every visit.
+    const pickSkyAndCity = () => {
+      const pickRandom = seededRandom(20261110);
+      const pickBetween = (low, high) => low + (high - low) * pickRandom();
+
+      // Stars: dark sky pixels, more of them high up where the sky is darkest. Random spots
+      // are tried (at most 4000 tries) until 90 stars are found. A spot must be in the open
+      // sky and, when the pixels could be read, dark enough (brightness 52 or less), so no
+      // star lands on a cloud of light near the horizon. Without pixels, any open-sky spot
+      // is used.
+      for (let attempt = 0; attempt < 4000 && stars.length < 90; attempt += 1) {
+        const x = pickBetween(350, PHOTO_WIDTH - 2);
+        // pickRandom() ** 1.5 favours small values, so more stars land near the top of the sky.
+        const y = 2 + 296 * pickRandom() ** 1.5;
+        if (!inOpenSky(x, y) || (pixels && brightnessAt(x, y) > 52)) continue;
+        // Each star has its own size (about 1 in 8 is bigger), brightness, twinkle speed and
+        // starting point in the twinkle, so they do not all pulse together.
+        stars.push({
+          x,
+          y,
+          size: pickBetween(0.7, 1.7) * (pickRandom() < 0.12 ? 1.6 : 1),
+          glow: pickBetween(0.35, 0.85),
+          speed: pickBetween(0.6, 2.2),
+          phase: pickBetween(0, Math.PI * 2),
+        });
+      }
+
+      // City lights: the brightest little points in the city band behind the railing, each a
+      // local peak so one light gets one twinkle. Their own colour is used for the glow.
+      // They can only be found in the pixels, so without them there are no city lights.
+      if (!pixels) return;
       const found = [];
       // Scan every second pixel of the band; keep points brighter than 150 that are at least
       // as bright as their four neighbours 2px away (a local peak).
@@ -2669,7 +2688,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Shuffle and keep up to 150, spread over the whole band (a Fisher-Yates shuffle, so
       // the first 150 are a fair random pick, not just the top rows).
       for (let index = found.length - 1; index > 0; index -= 1) {
-        const other = Math.floor(random() * (index + 1));
+        const other = Math.floor(pickRandom() * (index + 1));
         [found[index], found[other]] = [found[other], found[index]];
       }
       found.slice(0, 150).forEach((light) => {
@@ -2677,12 +2696,12 @@ document.addEventListener("DOMContentLoaded", () => {
         cityLights.push({
           ...light,
           tint: `rgb(${red} ${green} ${blue})`,
-          size: between(1.6, 3.4),
-          speed: between(0.4, 1.6),
-          phase: between(0, Math.PI * 2),
+          size: pickBetween(1.6, 3.4),
+          speed: pickBetween(0.4, 1.6),
+          phase: pickBetween(0, Math.PI * 2),
         });
       });
-    }
+    };
     // City lights are tinted copies of a small white glow, one per colour, made on first use.
     const tintedGlows = new Map();
     // Return the glow sprite for this colour, creating and caching it the first time.
@@ -3018,11 +3037,12 @@ document.addEventListener("DOMContentLoaded", () => {
       reducedMotion.addListener(refresh);
     }
 
-    // Start once the photo has loaded. readPhoto fills `pixels` here, but the stars and city
-    // lights above were already picked when createBalconyLife ran, while `pixels` was null.
+    // Start once the photo has loaded: read its pixels, pick the stars and city lights from
+    // them, then let the loop (or the still frame for reduced motion) begin drawing.
     const start = () => {
       if (ready) return;
       readPhoto();
+      pickSkyAndCity();
       ready = true;
       refresh();
     };
