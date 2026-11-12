@@ -10,7 +10,7 @@ Balcony photo generated with Gemini.
 
 ## Pages
 
-- **Home** (`index.html`) — scroll-driven laptop introduction on a "living photo" of a night balcony in Baku, with twinkling stars and city lights, the Flame Towers' LED flames, flickering lamps and steam from a coffee cup. The 3D laptop lies on the table, the lid opens, the camera moves in, the lock screen powers on, and the view glides into the portfolio hero. Below the hero, the same About, Projects, Resume, and Contact content follows on one long page.
+- **Home** (`index.html`) — scroll-driven laptop introduction on a "living photo" of a night balcony in Baku, with twinkling stars and city lights, the Flame Towers' LED flames, flickering lamps and steam from a coffee cup. The 3D laptop lies on the table, the lid opens, the camera moves in, the screen powers on, and the view glides into the portfolio hero. Below the hero, the same About, Projects, Resume, Security lab ("Phishing or legit?"), and Contact content follows on one long page.
 - **About** (`about.html`) — short biography, skills, and a browser-only terminal with a fixed set of commands.
 - **Projects** (`projects.html`) — six case studies. On a wide screen the cards pin and slide sideways. Each one opens in a macOS-style window.
 - **Resume** (`resume.html`) — a game-style player card, a mission timeline, certifications, and languages. The PDF resume is in `assets/`.
@@ -30,7 +30,7 @@ Every page has dark and light mode, a floating navigation pill, and a layout tha
 ├── css/
 │   └── style.css          # Shared layout, themes, and responsive styles
 ├── js/
-│   └── main.js            # Theme, laptop motion, projects, terminal, and resume timeline
+│   └── main.js            # Theme, Home intro and live photo, projects, terminal, timeline, lab
 ├── assets/
 │   └── Maryam_Sharifova_CV.pdf
 └── images/
