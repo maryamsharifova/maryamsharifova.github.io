@@ -886,22 +886,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Magnetic controls move a small fraction of the pointer distance, then spring back.
-    if (!reducedMotion.matches) {
-      document.querySelectorAll(".hero-button, [data-magnetic]").forEach((button) => {
-        // Offset from the button's centre, scaled down (25% across, 35% down) for CSS.
-        button.addEventListener("pointermove", (event) => {
-          const bounds = button.getBoundingClientRect();
-          const x = event.clientX - bounds.left - bounds.width / 2;
-          const y = event.clientY - bounds.top - bounds.height / 2;
-          button.style.setProperty("--magnetic-x", `${x * 0.25}px`);
-          button.style.setProperty("--magnetic-y", `${y * 0.35}px`);
-        });
-        button.addEventListener("pointerleave", () => {
-          button.style.setProperty("--magnetic-x", "0px");
-          button.style.setProperty("--magnetic-y", "0px");
-        });
+    // (This whole block only runs when reduced motion is off, so no extra check is needed.)
+    document.querySelectorAll(".hero-button, [data-magnetic]").forEach((button) => {
+      // Offset from the button's centre, scaled down (25% across, 35% down) for CSS.
+      button.addEventListener("pointermove", (event) => {
+        const bounds = button.getBoundingClientRect();
+        const x = event.clientX - bounds.left - bounds.width / 2;
+        const y = event.clientY - bounds.top - bounds.height / 2;
+        button.style.setProperty("--magnetic-x", `${x * 0.25}px`);
+        button.style.setProperty("--magnetic-y", `${y * 0.35}px`);
       });
-    }
+      button.addEventListener("pointerleave", () => {
+        button.style.setProperty("--magnetic-x", "0px");
+        button.style.setProperty("--magnetic-y", "0px");
+      });
+    });
   }
 
   // ===== Hero particles =====

@@ -534,12 +534,6 @@ a {
   line-height: 1.1;
 }
 
-/* The greeting's gradient word skips the navy start colour. (Over the night photo on Home it
-   is turned plain white, see below.) */
-.intro-title .gradient-text {
-  background-image: linear-gradient(110deg, var(--color-ocean), var(--color-teal), var(--color-blue));
-}
-
 /* The line main.js types out letter by letter; min-height keeps its space while it is empty. */
 .typed-line {
   min-height: 1.8em;
@@ -1716,10 +1710,7 @@ a {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-}
-
-/* The photo sits above the dark fallback background and is cropped to fill the circle. */
-.profile-photo {
+  /* Above the dark fallback background, and cropped to fill the circle. */
   z-index: 1;
   object-fit: cover;
 }
@@ -2185,10 +2176,6 @@ a {
   .lid-face,
   .deck {
     border-radius: 0.9rem;
-  }
-
-  .screen-display {
-    border-radius: 1cqi;
   }
 }
 
@@ -2812,7 +2799,6 @@ a {
   }
 
   .about-overview {
-    grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
 
@@ -3178,7 +3164,6 @@ a {
 
 .gate-select {
   padding-inline: 0.5rem;
-  cursor: pointer;
 }
 
 .circuit-led {
