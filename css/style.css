@@ -2269,6 +2269,7 @@ a {
   /* Two masks combined with xor (exclude): the whole box minus the content box, so only the
      1px padding ring, the border, shows the glow. */
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
 }
