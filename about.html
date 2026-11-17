@@ -69,7 +69,7 @@
           <h2 id="terminal-title">maryam@portfolio: ~</h2>
           <span class="terminal-hint">try a command</span>
         </div>
-        <!-- One chip for every command that "help" lists. "open" shows the six projects to pick from. -->
+        <!-- One chip for every command that "help" lists, then the "sudo" easter egg. "open" shows the six projects to pick from. -->
         <div class="terminal-shortcuts" role="group" aria-label="Terminal commands">
           <button class="terminal-command" type="button" data-command="help">help</button>
           <button class="terminal-command" type="button" data-command="whoami">whoami</button>
@@ -86,6 +86,8 @@
           <button class="terminal-command" type="button" data-command="cat about.txt">cat about.txt</button>
           <button class="terminal-command" type="button" data-command="date">date</button>
           <button class="terminal-command" type="button" data-command="clear">clear</button>
+          <!-- The easter egg: a playful red chip that runs "sudo", like typing it. -->
+          <button class="terminal-command terminal-command-sudo" type="button" data-command="sudo">sudo</button>
         </div>
         <!-- Output log: role="log" with aria-live makes screen readers read each new answer, and
              tabindex="0" lets keyboard users focus it to scroll back through older output. -->

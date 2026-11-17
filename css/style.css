@@ -2695,6 +2695,65 @@ a {
   transform: translateY(-2px);
 }
 
+/* The "sudo" easter-egg chip: same size and shape as the others, but with a soft red border
+   and text so it reads as the playful one. The terminal is dark in both themes, so these fixed
+   colours stay readable in light and dark mode. */
+.terminal-command-sudo {
+  border-color: #6b3237;
+  background: #1d1517;
+  color: #ff9a9a;
+}
+
+.terminal-command-sudo:hover,
+.terminal-command-sudo:focus-visible {
+  border-color: #e0565f;
+  background: #2a1a1d;
+}
+
+/* The sudo alarm. main.js adds is-alarmed to the terminal for one flash and shake, then
+   removes it. position: relative lets the flash layer (::after) cover just the terminal. */
+.terminal-card {
+  position: relative;
+}
+
+/* A soft red layer over the whole terminal. It is invisible until the alarm fades it in and
+   out once, and pointer-events: none keeps every chip, link and the input clickable. */
+.terminal-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(255 70 80 / 22%);
+  box-shadow: inset 0 0 0 2px rgb(255 98 106 / 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.terminal-card.is-alarmed::after {
+  animation: terminal-flash 650ms ease-out;
+}
+
+/* The shake moves the separate `translate` property, so it never clashes with the
+   `transform` that the scroll reveal uses on the same card. */
+.terminal-card.is-alarmed {
+  animation: terminal-shake 420ms ease-in-out;
+}
+
+@keyframes terminal-flash {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes terminal-shake {
+  0%, 100% { translate: 0; }
+  15% { translate: -6px 0; }
+  30% { translate: 5px 0; }
+  45% { translate: -4px 0; }
+  60% { translate: 3px 0; }
+  75% { translate: -2px 0; }
+}
+
 .terminal-output {
   /* 300px on most screens. On short screens it takes what is left of the window after the
      terminal's header, command chips, input line and the nav (about 16rem), but never less
@@ -2828,11 +2887,17 @@ a {
   }
 }
 
-/* Reduced motion: no hover lift on skills and terminal commands. */
+/* Reduced motion: no hover lift on skills and terminal commands, and no sudo flash or shake
+   (main.js also skips the alarm; this is a second guard). */
 @media (prefers-reduced-motion: reduce) {
   .skill-list li,
   .terminal-command {
     transition: none;
+  }
+
+  .terminal-card.is-alarmed,
+  .terminal-card.is-alarmed::after {
+    animation: none;
   }
 }
 

@@ -1153,9 +1153,75 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
+    // ----- The "sudo" easter egg -----
+    // True while the sudo sequence is still printing. runCommand ignores new commands until it
+    // ends, so the sequence's lines never mix with another command's reply.
+    let sudoRunning = false;
+    // A promise that resolves after `ms` milliseconds, so the sequence can pause with await.
+    const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+    // Pretend to ask for a password, sound the alarm, then refuse. Every line goes into the
+    // output, which is a role="log" live region, so screen readers announce each new line.
+    const runSudo = async () => {
+      // A new random four-digit incident number (1000-9999) every time.
+      const incidentNumber = 1000 + Math.floor(Math.random() * 9000);
+      const replies = [
+        "Permission denied.",
+        "This attempt has been logged by the SOC.",
+        `Incident #${incidentNumber} created · assigned to: Maryam`,
+        "Nice try. 🙂",
+      ];
+
+      // The password prompt. The asterisks go in an aria-hidden span, so screen readers read
+      // the prompt once instead of announcing every single asterisk as it is typed.
+      writeLine("[sudo] password for visitor: ");
+      const asterisks = document.createElement("span");
+      asterisks.setAttribute("aria-hidden", "true");
+      output.lastElementChild.append(asterisks);
+
+      // Reduced motion: no typing, flash or shake. Print everything straight away.
+      if (reducedMotion.matches) {
+        asterisks.textContent = "********";
+        replies.forEach((reply) => writeLine(reply));
+        return;
+      }
+
+      sudoRunning = true;
+      try {
+        // Type eight asterisks one by one, as if a password is being entered.
+        for (let count = 0; count < 8; count += 1) {
+          await wait(110);
+          asterisks.textContent += "*";
+          output.scrollTop = output.scrollHeight;
+        }
+        await wait(350);
+
+        // The alarm: is-alarmed plays the red flash and the short shake (see style.css) on the
+        // terminal only. Removing the class and reading offsetWidth first restarts the
+        // animation, even if the class was somehow still there.
+        terminal.classList.remove("is-alarmed");
+        void terminal.offsetWidth;
+        terminal.classList.add("is-alarmed");
+        await wait(450);
+
+        // The verdict, one line at a time with a short pause between lines.
+        for (const [index, reply] of replies.entries()) {
+          if (index > 0) await wait(450);
+          writeLine(reply);
+        }
+      } finally {
+        // Always unlock the terminal and drop the alarm class, so the next sudo can play again.
+        terminal.classList.remove("is-alarmed");
+        sudoRunning = false;
+      }
+    };
+
     // Handle one command typed (or sent by a chip button): echo it with a prompt, remember it
     // for the Up/Down keys, then print the matching reply. Unknown commands get a hint.
     const runCommand = (rawCommand) => {
+      // While the sudo sequence is printing, ignore new commands (typed text stays in the
+      // input, so the visitor can press Enter again once it is done).
+      if (sudoRunning) return;
       const commandText = rawCommand.trim();
       // Ignore empty input, like a real shell.
       if (!commandText) return;
@@ -1218,8 +1284,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (command === "date") {
         writeLine(new Date().toLocaleString());
       } else if (command === "sudo" || command.startsWith("sudo ")) {
-        // A small joke for visitors who try to get admin rights.
-        writeLine("Permission denied. This attempt has been logged by the SOC. Nice try.");
+        // A joke for visitors who try to get admin rights: "sudo", "sudo su", "sudo rm -rf /"...
+        // all run the same dramatic sequence (runSudo above).
+        runSudo();
       } else {
         writeLine(`command not found: ${commandText} · type help`);
       }
