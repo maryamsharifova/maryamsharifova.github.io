@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   contact.html: the Contact page of my portfolio.
-  Order: head, intro with quick links, four contact cards, the closing laptop, footer.
+  Order: head, intro heading, four contact cards, the closing laptop, footer.
   It shares css/style.css and js/main.js with every page; main.js adds the floating
   navigation and closes the laptop's lid as the visitor reaches the end of the page.
 -->
@@ -28,16 +28,12 @@
     <!-- Main content. Contact is through plain links (no form), so the site needs no server
          and stores no messages. -->
     <main class="page-content contact-page">
-      <!-- The heading links to LinkedIn. The gradient shifts when the pointer is over it. -->
+      <!-- Intro heading with the gradient "Let's talk." text. -->
       <section class="page-intro contact-intro" aria-labelledby="contact-title">
         <p class="eyebrow" data-reveal>05 · CONTACT</p>
         <h1 class="page-title" id="contact-title" data-reveal>
-          <a class="talk-link gradient-text" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener">Let's talk.</a>
+          <span class="talk-link gradient-text">Let's talk.</span>
         </h1>
-        <div class="contact-links" data-reveal>
-          <a class="contact-link contact-link-primary" href="https://www.linkedin.com/in/maryam-sharifova/" target="_blank" rel="noopener">LinkedIn <span aria-hidden="true">↗</span></a>
-          <a class="contact-link" href="https://github.com/maryamsharifova" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
-        </div>
       </section>
 
       <!-- Four contact cards: public profiles, location and the CV. On each spotlight-card,
