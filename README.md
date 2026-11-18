@@ -50,6 +50,10 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 └── images/
     ├── balcony-empty.jpg  # Home intro background: a balcony at night in Baku
     ├── profile.jpg        # My photo in the hero
+    ├── favicon.ico        # Favicon (16 and 32 px): my own MS monogram logo
+    ├── favicon-32.png     # 32 px PNG favicon
+    ├── favicon-512.png    # 512 px PNG favicon for large displays
+    ├── apple-touch-icon.png  # 180 px icon for iPhone and iPad home screens
     └── projects/          # Optional project photos (see below)
 ```
 
