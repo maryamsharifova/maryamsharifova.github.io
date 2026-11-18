@@ -3542,18 +3542,21 @@ a {
 .player-avatar {
   width: 5.6rem;
   height: 5.6rem;
-  display: grid;
-  place-items: center;
   border-radius: 50%;
+  /* Clips the monogram image to the circle; the teal ring and glow are drawn outside it. */
+  overflow: hidden;
   background: linear-gradient(160deg, #2a7f99, #0f2430);
   box-shadow:
     0 0 0 3px rgb(56 196 222 / 55%),
     0 0 1.35rem rgb(28 159 208 / 65%);
-  color: #ffffff;
-  font-family: var(--font-heading);
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+}
+
+/* My MS monogram fills the whole avatar circle. */
+.player-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .player-identity h2,
