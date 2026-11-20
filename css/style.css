@@ -4403,10 +4403,11 @@ a.contact-value:hover,
   background: #000000;
 }
 
+/* The chatbot image is three rounded screenshots on a transparent background: shown whole,
+   with nothing behind it, so the card's own background shows through in both themes. */
 .project-photo[data-photo="chatbot"] {
   object-fit: contain;
-  /* The Telegram screenshot shades from #0b0f1a at the top to #141c2f at the bottom. */
-  background: linear-gradient(180deg, #0b0f1a, #141c2f);
+  background: none;
 }
 
 /* The tall API response: the card shows its top; the window shows all of it (below). */
@@ -4462,6 +4463,65 @@ a.contact-value:hover,
 /* Inside the scroll area the focus ring is drawn inward, where nothing can clip it. */
 .project-window-visual[data-project="plant-health-agrohub"] .project-visual:focus-visible {
   outline-offset: -3px;
+}
+
+/* ----- Agrohub code windows: "request.py" (the Python code) above "response.json" ----- */
+/* A small dark code editor. It stays dark in both themes, like a real editor, with soft
+   syntax colours that keep a contrast of at least 4.5:1 on its background. */
+.agrohub-code {
+  margin: 0 0 0.9rem;
+}
+
+.code-window {
+  overflow: hidden;
+  border: 1px solid rgb(111 208 234 / 22%);
+  border-radius: 0.75rem;
+  background: #0d1020;
+}
+
+/* The file name on top, like an editor tab. */
+.code-window-tab {
+  padding: 0.45rem 0.85rem;
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  background: #151a2e;
+  color: #9fb3c8;
+  font: 600 0.68rem var(--font-label);
+  letter-spacing: 0.04em;
+}
+
+/* The code keeps its line breaks and scrolls sideways when a line is too long. */
+.code-window-body {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  color: #e3e8ef;
+  font: 0.72rem/1.6 var(--font-label);
+  tab-size: 4;
+  white-space: pre;
+}
+
+.code-window-body:focus-visible {
+  outline-offset: -3px;
+}
+
+.code-keyword { color: #7fd4ef; }
+.code-string { color: #a8dba0; }
+.code-builtin { color: #f0c38e; }
+.code-number { color: #f3a6c8; }
+.code-comment { color: #8b97a6; font-style: italic; }
+
+.agrohub-code figcaption {
+  margin-top: 0.45rem;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+/* The screenshot inside the "response.json" window: the window draws the frame, so the
+   screenshot's own border and rounded corners are dropped. */
+.code-window-response .project-visual {
+  border: 0;
+  border-radius: 0;
 }
 
 /* Logic gates: the photo at its own shape, with the NOT gate demo underneath. Plain block
