@@ -4388,6 +4388,201 @@ a.contact-value:hover,
   display: block;
 }
 
+/* main.js adds .has-photo once the photo is in. The drawn demo underneath is hidden, so its
+   animations stop and its controls (such as the logic-gate switches) cannot be reached with
+   Tab while they are out of sight. */
+.project-visual.has-photo > :not(.project-photo) {
+  display: none;
+}
+
+/* ----- How each project photo is framed (data-photo is the file name, set by main.js) ----- */
+/* Screenshots are shown whole (contain), never cut off. The space around them gets the
+   screenshot's own background, so the image and the frame look like one dark panel. */
+.project-photo[data-photo="speech-api"] {
+  object-fit: contain;
+  background: #000000;
+}
+
+.project-photo[data-photo="chatbot"] {
+  object-fit: contain;
+  /* The Telegram screenshot shades from #0b0f1a at the top to #141c2f at the bottom. */
+  background: linear-gradient(180deg, #0b0f1a, #141c2f);
+}
+
+/* The tall API response: the card shows its top; the window shows all of it (below). */
+.project-photo[data-photo="agrohub-leaf"] {
+  object-position: top;
+  background: #0c0c0c;
+}
+
+/* Photos fill the frame (cover), aimed at the part that matters. */
+/* The breadboard: aimed left of centre, so the green output LED and its wiring stay in view
+   even on the narrow desktop card. */
+.project-photo[data-photo="logic-gates"] {
+  object-position: 22% 50%;
+}
+
+/* Our team standing at the back and the children holding up their certificates. */
+.project-photo[data-photo="hour-of-ai"] {
+  object-position: 50% 62%;
+}
+
+/* The robot's wheel and its colour sensor on the right, shining onto the table. */
+.project-photo[data-photo="ev3-robot"] {
+  object-position: 68% 60%;
+}
+
+/* ----- Photos in the project window ----- */
+/* main.js sets data-project on the window's visual to the project's slug. */
+
+/* Agrohub: the whole screenshot at full width, in its own scrollable area. */
+.project-window-visual[data-project="plant-health-agrohub"] {
+  height: auto;
+  /* "auto", not 0: in the one-column window on phones the column must never be squeezed
+     shorter than its content, or the text below would overlap it. */
+  min-height: auto;
+}
+
+/* As tall as the screenshot, up to a cap; past the cap it scrolls. */
+.project-window-visual[data-project="plant-health-agrohub"] .project-visual {
+  height: auto;
+  max-height: clamp(16rem, 55vh, 32rem);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.project-window-visual[data-project="plant-health-agrohub"] .project-photo {
+  position: static;
+  height: auto;
+  border-radius: 0;
+  object-fit: fill;
+}
+
+/* Inside the scroll area the focus ring is drawn inward, where nothing can clip it. */
+.project-window-visual[data-project="plant-health-agrohub"] .project-visual:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Logic gates: the photo at its own shape, with the NOT gate demo underneath. Plain block
+   layout (not grid), so the photo's aspect ratio sets its height reliably. */
+.project-window-visual[data-project="logic-gates"] {
+  height: auto;
+  /* "auto", not 0: in the one-column window on phones the column must never be squeezed
+     shorter than its content, or the text below would overlap it. */
+  min-height: auto;
+}
+
+.project-window-visual[data-project="logic-gates"] .not-gate-demo {
+  margin-top: 0.9rem;
+}
+
+.project-window-visual[data-project="logic-gates"] .project-visual {
+  height: auto;
+}
+
+.project-window-visual[data-project="logic-gates"] .project-visual.has-photo {
+  min-height: 0;
+  aspect-ratio: 980 / 500;
+}
+
+/* In the one-column window (phones, short screens, reduced motion) these two taller visuals
+   sit above the text. The text then keeps its full height and the whole window content
+   scrolls as one, instead of the text being squeezed into a small scroll box of its own. */
+@media (max-width: 860px), (max-height: 599px), (prefers-reduced-motion: reduce) {
+  .project-window-visual[data-project="plant-health-agrohub"] + .project-window-details,
+  .project-window-visual[data-project="logic-gates"] + .project-window-details {
+    overflow: visible;
+  }
+}
+
+/* ----- NOT gate demo (built by main.js in the logic gates window) ----- */
+.not-gate-demo {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: var(--color-surface);
+}
+
+/* Both Tinkercad pictures share one grid cell, so they sit exactly on top of each other. */
+.not-gate-stage {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  /* The light grey of the Tinkercad workspace behind the pictures. */
+  background: #f1f1f1;
+}
+
+.not-gate-stage img {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.not-gate-stage img.is-shown {
+  opacity: 1;
+}
+
+.not-gate-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+}
+
+/* Styled like the logic-gate switches on the card; it glows while it is pressed. */
+.not-gate-button {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font: 600 0.82rem var(--font-label);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.not-gate-button[aria-pressed="true"] {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 1rem rgb(28 159 208 / 25%), inset 0 2px 4px rgb(0 0 0 / 15%);
+  transform: translateY(1px);
+}
+
+.not-gate-status {
+  flex: 1 1 14rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.not-gate-demo figcaption {
+  color: var(--color-text-muted);
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+/* Reduced motion: the pictures switch instantly and the button does not move. */
+@media (prefers-reduced-motion: reduce) {
+  .not-gate-stage img,
+  .not-gate-button {
+    transition: none;
+  }
+
+  .not-gate-button[aria-pressed="true"] {
+    transform: none;
+  }
+}
+
 /* Without the track (before main.js runs, or when it is turned off) the panel is only as
    tall as its content. */
 .projects-page:not(.has-horizontal-scroll) .projects-pin {

@@ -15,7 +15,13 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 
 - **Home** (`index.html`): one long page that opens on a "living photo" of a balcony at night in Baku, with a closed laptop on the table. The words "Hi, I'm Maryam" appear above a line that types out a few short phrases. The photo has twinkling stars, city lights, glints on the bay, glowing lamps and candles, the Flame Towers' LED flames and steam from a coffee cup. As you scroll, the laptop lid opens, the keys type "MARYAM", the camera moves in, and the view dives into the screen until the portfolio hero (my name, a short intro and my photo) fills the window. Below the hero come the same sections as the separate pages: About, Projects, Resume, Security lab and Contact.
 - **About** (`about.html`): a short biography, my skills, and a small terminal that runs only in the browser and answers a fixed set of commands (`help`, `whoami`, `skills`, `projects`, `open`, `contact`, `lab` and more).
-- **Projects** (`projects.html`): six projects, each on its own card with a small live visual. On a wide screen the cards pin in place and slide sideways as you scroll. Clicking a card opens a macOS-style window with more details. You can link to a single project with `#p1` to `#p6`.
+- **Projects** (`projects.html`): six projects, each on its own card with a photo or screenshot (or a small live visual when there is no photo). On a wide screen the cards pin in place and slide sideways as you scroll. Clicking a card opens a macOS-style window with more details. The logic gates window also has a small demo: a "Press the button" control switches between two Tinkercad pictures of our NOT gate. You can link to a single project with `#p1` to `#p6`. The projects are in this order:
+  1. Plant-health vision for Agrohub (`#p1`)
+  2. Speech-to-text API for Azerbaijani (`#p2`)
+  3. Local LLM chatbot, running a local model (Qwen 2.5 3B) in LM Studio (`#p3`)
+  4. Logic gates (`#p4`)
+  5. Hour of AI (`#p5`)
+  6. Line-following robot with LEGO EV3 (`#p6`)
 - **Resume** (`resume.html`): a game-style player card with my toolkits and skill levels, a **Timeline** of my studies, internship and projects, my certifications (IELTS and SAT), my languages and a button that opens my PDF resume. The **Security lab** is at the end of this page (`resume.html#lab`). It is a "Phishing or legit?" game with six made-up emails where you check where each link really goes, and you get a score at the end. The Security lab has no page of its own. It appears on Home and on the Resume page.
 - **Contact** (`contact.html`): a "Let's talk." heading and four contact cards for LinkedIn, GitHub, my location and my resume. At the bottom, a small laptop closes its lid as you reach the end of the page.
 
@@ -50,26 +56,36 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 └── images/
     ├── balcony-empty.jpg  # Home intro background: a balcony at night in Baku
     ├── profile.jpg        # My photo in the hero
-    ├── avatar-ms.png      # My MS monogram in the Resume player card avatar
+    ├── avatar-ms.png      # Resume player card avatar: my own MS monogram logo
     ├── favicon.ico        # Favicon (16 and 32 px): my own MS monogram logo
-    ├── favicon-32.png     # 32 px PNG favicon
-    ├── favicon-512.png    # 512 px PNG favicon for large displays
-    ├── apple-touch-icon.png  # 180 px icon for iPhone and iPad home screens
-    └── projects/          # Optional project photos (see below)
+    ├── favicon-32.png     # 32 px PNG favicon (MS monogram)
+    ├── favicon-512.png    # 512 px PNG favicon for large displays (MS monogram)
+    ├── apple-touch-icon.png  # 180 px icon for iPhone and iPad home screens (MS monogram)
+    └── projects/          # Project photos and screenshots (see below)
+        ├── agrohub-leaf.jpg   # 01 Vision: the plant-health API's JSON response
+        ├── speech-api.jpg     # 02 Speech: terminal screenshot of my speech-to-text API (redacted)
+        ├── chatbot.png        # 03 Local AI: my Telegram bot's commands and status
+        ├── logic-gates.jpg    # 04 Logic gates: our team's real breadboard
+        ├── not-gate-off.png   # 04 Logic gates demo: Tinkercad NOT gate, button pressed, LED off
+        ├── not-gate-on.png    # 04 Logic gates demo: Tinkercad NOT gate, button released, LED on
+        ├── hour-of-ai.jpg     # 05 Hour of AI: our team with the children and their certificates
+        └── ev3-robot.jpg      # 06 EV3 robot: the robot with its colour sensor on the line
 ```
 
 ## Project photos
 
-`main.js` checks `images/projects/` for these file names. If a file exists, its photo appears on that project's card automatically. If it does not, the card keeps its drawn visual.
+`main.js` checks `images/projects/` for these file names. If a file exists, its photo appears on that project's card and in its window automatically. If it does not, the card keeps its drawn visual. The file names and alt texts are listed in `main.js` in the same order as the cards, and `style.css` frames each one.
 
-| Project | File name |
-| --- | --- |
-| 1. Speech-to-text API for Azerbaijani | `speech-api.jpg` |
-| 2. Local LLM chatbot | `chatbot.png` |
-| 3. Plant-health vision for Agrohub | `agrohub-leaf.jpg` |
-| 4. Logic gates | `logic-gates.jpg` |
-| 5. Hour of AI | `hour-of-ai.jpg` |
-| 6. Line-following robot with LEGO EV3 | `ev3-robot.jpg` |
+| Project | File name | How it is shown |
+| --- | --- | --- |
+| 1. Plant-health vision for Agrohub | `agrohub-leaf.jpg` | The card shows the top of the screenshot; the window shows all of it at full width in a scrollable area |
+| 2. Speech-to-text API for Azerbaijani | `speech-api.jpg` | The whole screenshot on a black background |
+| 3. Local LLM chatbot | `chatbot.png` | The whole screenshot on a dark navy background |
+| 4. Logic gates | `logic-gates.jpg` | Photo filling the frame, aimed at the circuit and its LED |
+| 5. Hour of AI | `hour-of-ai.jpg` | Photo filling the frame, aimed at our team and the children |
+| 6. Line-following robot with LEGO EV3 | `ev3-robot.jpg` | Photo filling the frame, aimed at the robot and its colour sensor |
+
+The logic gates window also uses `not-gate-on.png` and `not-gate-off.png` for its NOT gate demo.
 
 ## Run it locally
 

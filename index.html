@@ -378,76 +378,11 @@
             <!-- The six project cards. main.js moves this row sideways while the section is pinned.
                  Clicking a card or its "Open window" button opens the project window with more details. -->
             <div class="project-list">
-          <!-- Project 1: speech to text. Each card has its text on one side and a small visual on the
+          <!-- Project 1: plant-health vision. Each card has its text on one side and a small visual on the
                other; main.js also adds a real photo to the visual if one exists in images/projects. -->
-          <article class="project-card" id="p1" tabindex="0" aria-label="Open details for Speech-to-text API for Azerbaijani">
+          <article class="project-card" id="p1" tabindex="0" aria-label="Open details for Plant-health vision for Agrohub">
             <div class="project-copy">
-              <p class="project-label">01 / SPEECH TO TEXT</p>
-              <h2>Speech-to-text API for Azerbaijani</h2>
-              <p>I benchmarked five Hugging Face models (SeamlessM4T v2, Whisper variants and Meta MMS) on a real Azerbaijani phone call in WAV and MP4 formats. SeamlessM4T v2 was the most accurate. I wrapped it in a Python REST endpoint that converts audio with FFmpeg and returns JSON transcripts, and traced API-versus-script differences to missing decoding parameters.</p>
-              <ul class="project-tags" aria-label="Project technologies">
-                <li>Python</li><li>Hugging Face</li><li>REST API</li><li>FFmpeg</li><li>Azerbaijani</li>
-              </ul>
-              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
-            </div>
-            <figure class="project-visual visual-waveform">
-              <div class="visual-topline"><span>CALL TRANSCRIPT</span><code>{"lang":"az","status":"ok"}</code></div>
-              <!-- Empty on purpose: main.js fills it with randomly sized, animated bars. -->
-              <div class="waveform-bars" aria-hidden="true"></div>
-              <div class="waveform-time"><span>00:18.4</span><span>00:42.0</span></div>
-            </figure>
-          </article>
-
-          <!-- Project 2: local LLM chatbot. -->
-          <article class="project-card" id="p2" tabindex="0" aria-label="Open details for Local LLM chatbot">
-            <div class="project-copy">
-              <p class="project-label">02 / LOCAL AI</p>
-              <h2>Local LLM chatbot</h2>
-              <p>I run a Llama model on my own machine with LM Studio, connected to Telegram, WhatsApp and MCP, and embedded it as a chatbot on a website I built.</p>
-              <ul class="project-tags" aria-label="Project technologies">
-                <li>Llama</li><li>LM Studio</li><li>MCP</li><li>Telegram</li><li>WhatsApp</li>
-              </ul>
-              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
-            </div>
-            <!-- Connections map: the local Llama model in the middle, linked to the four places it
-                 answers from. Dashes flow from the centre outward like messages being sent. -->
-            <figure class="project-visual visual-network">
-              <svg class="network-map" viewBox="0 0 520 300" role="img" aria-label="Local LM Studio model connected to Telegram, WhatsApp, MCP tools and a website">
-                <title>Local LM Studio model connected to Telegram, WhatsApp, MCP tools and a website</title>
-                <!-- Lines first, so the boxes sit on top of their ends. Each path runs from the centre out. -->
-                <path class="network-link" d="M260 150 L92 54"/>
-                <path class="network-link" d="M260 150 L428 54"/>
-                <path class="network-link" d="M260 150 L92 246"/>
-                <path class="network-link" d="M260 150 L428 246"/>
-                <g class="network-node">
-                  <rect x="36" y="34" width="112" height="40" rx="10"/>
-                  <text x="92" y="54">Telegram</text>
-                </g>
-                <g class="network-node">
-                  <rect x="372" y="34" width="112" height="40" rx="10"/>
-                  <text x="428" y="54">WhatsApp</text>
-                </g>
-                <g class="network-node">
-                  <rect x="36" y="226" width="112" height="40" rx="10"/>
-                  <text x="92" y="246">MCP tools</text>
-                </g>
-                <g class="network-node">
-                  <rect x="372" y="226" width="112" height="40" rx="10"/>
-                  <text x="428" y="246">Website</text>
-                </g>
-                <g class="network-hub">
-                  <rect x="186" y="116" width="148" height="68" rx="14"/>
-                  <text class="network-hub-title" x="260" y="143">Llama</text>
-                  <text class="network-hub-note" x="260" y="166">LM Studio · local</text>
-                </g>
-              </svg>
-            </figure>
-          </article>
-
-          <!-- Project 3: plant-health vision. -->
-          <article class="project-card" id="p3" tabindex="0" aria-label="Open details for Plant-health vision for Agrohub">
-            <div class="project-copy">
-              <p class="project-label">03 / COMPUTER VISION</p>
+              <p class="project-label">01 / VISION</p>
               <h2>Plant-health vision for Agrohub</h2>
               <p>For Agrohub, an agritech app for farmers, I compared more than ten plant-health APIs including Kindwise, Plantix and Agrio, and recommended Kindwise. Tested on crops grown in Azerbaijan, it identified the crop and its diseases from a single photo, with confidence scores and treatment advice in JSON.</p>
               <ul class="project-tags" aria-label="Project technologies">
@@ -477,6 +412,71 @@
               </svg>
               <span class="detection-tag">leaf spot · 0.91</span>
               <span class="plant-scan-line" aria-hidden="true"></span>
+            </figure>
+          </article>
+
+          <!-- Project 2: speech to text. -->
+          <article class="project-card" id="p2" tabindex="0" aria-label="Open details for Speech-to-text API for Azerbaijani">
+            <div class="project-copy">
+              <p class="project-label">02 / SPEECH</p>
+              <h2>Speech-to-text API for Azerbaijani</h2>
+              <p>I benchmarked five Hugging Face models (SeamlessM4T v2, Whisper variants and Meta MMS) on a real Azerbaijani phone call in WAV and MP4 formats. SeamlessM4T v2 was the most accurate. I wrapped it in a Python REST endpoint that converts audio with FFmpeg and returns JSON transcripts, and traced API-versus-script differences to missing decoding parameters.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Python</li><li>Hugging Face</li><li>REST API</li><li>FFmpeg</li><li>Azerbaijani</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <figure class="project-visual visual-waveform">
+              <div class="visual-topline"><span>CALL TRANSCRIPT</span><code>{"lang":"az","status":"ok"}</code></div>
+              <!-- Empty on purpose: main.js fills it with randomly sized, animated bars. -->
+              <div class="waveform-bars" aria-hidden="true"></div>
+              <div class="waveform-time"><span>00:18.4</span><span>00:42.0</span></div>
+            </figure>
+          </article>
+
+          <!-- Project 3: local LLM chatbot. -->
+          <article class="project-card" id="p3" tabindex="0" aria-label="Open details for Local LLM chatbot">
+            <div class="project-copy">
+              <p class="project-label">03 / LOCAL AI</p>
+              <h2>Local LLM chatbot</h2>
+              <p>I run a local model (Qwen 2.5 3B) in LM Studio on my own machine, connected to Telegram, WhatsApp and MCP, and embedded it as a chatbot on a website I built.</p>
+              <ul class="project-tags" aria-label="Project technologies">
+                <li>Qwen 2.5 3B</li><li>LM Studio</li><li>MCP</li><li>Telegram</li><li>WhatsApp</li>
+              </ul>
+              <button class="project-open-button" type="button" data-open-project>Open window <span aria-hidden="true">↗</span></button>
+            </div>
+            <!-- Connections map: the local Qwen 2.5 3B model in the middle, linked to the four places it
+                 answers from. Dashes flow from the centre outward like messages being sent. -->
+            <figure class="project-visual visual-network">
+              <svg class="network-map" viewBox="0 0 520 300" role="img" aria-label="Local Qwen 2.5 3B model in LM Studio connected to Telegram, WhatsApp, MCP tools and a website">
+                <title>Local Qwen 2.5 3B model in LM Studio connected to Telegram, WhatsApp, MCP tools and a website</title>
+                <!-- Lines first, so the boxes sit on top of their ends. Each path runs from the centre out. -->
+                <path class="network-link" d="M260 150 L92 54"/>
+                <path class="network-link" d="M260 150 L428 54"/>
+                <path class="network-link" d="M260 150 L92 246"/>
+                <path class="network-link" d="M260 150 L428 246"/>
+                <g class="network-node">
+                  <rect x="36" y="34" width="112" height="40" rx="10"/>
+                  <text x="92" y="54">Telegram</text>
+                </g>
+                <g class="network-node">
+                  <rect x="372" y="34" width="112" height="40" rx="10"/>
+                  <text x="428" y="54">WhatsApp</text>
+                </g>
+                <g class="network-node">
+                  <rect x="36" y="226" width="112" height="40" rx="10"/>
+                  <text x="92" y="246">MCP tools</text>
+                </g>
+                <g class="network-node">
+                  <rect x="372" y="226" width="112" height="40" rx="10"/>
+                  <text x="428" y="246">Website</text>
+                </g>
+                <g class="network-hub">
+                  <rect x="186" y="116" width="148" height="68" rx="14"/>
+                  <text class="network-hub-title" x="260" y="143">Qwen 2.5 3B</text>
+                  <text class="network-hub-note" x="260" y="166">LM Studio · local</text>
+                </g>
+              </svg>
             </figure>
           </article>
 
@@ -618,7 +618,7 @@
             <p class="toolkit-label">AI toolkit</p>
             <ul class="toolkit toolkit-ai">
               <li>LM Studio</li>
-              <li>Llama</li>
+              <li>Qwen 2.5 3B</li>
               <li>Hugging Face</li>
               <li>MCP</li>
               <li>Whisper</li>
@@ -703,7 +703,7 @@
                 <h3>Independent AI projects</h3>
                 <p class="quest-meta">2026</p>
                 <ul class="quest-notes">
-                  <li>Local LLM chatbot with Telegram, WhatsApp and MCP integrations.</li>
+                  <li>Local LLM chatbot running Qwen 2.5 3B in LM Studio, with Telegram, WhatsApp and MCP integrations.</li>
                   <li>Speech-to-text REST API and model benchmark for Azerbaijani.</li>
                   <li>Plant-health computer-vision research for Agrohub.</li>
                 </ul>

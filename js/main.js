@@ -548,20 +548,57 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Add a real project photo only when its file exists; the custom visual remains otherwise.
-    const photoFiles = ["speech-api.jpg", "chatbot.png", "agrohub-leaf.jpg", "logic-gates.jpg", "hour-of-ai.jpg", "ev3-robot.jpg"];
-    cards.forEach((card, index) => {
+    // One entry per card, in the same order as the cards (01 Vision … 06 EV3 robot): the file
+    // in images/projects/ and its alt text. style.css frames each photo by its file name
+    // (data-photo), for example showing whole screenshots on a dark background.
+    const projectPhotos = [
+      {
+        file: "agrohub-leaf.jpg",
+        alt: "Screenshot of the plant-health API's JSON response for a wheat disease, Septoria nodorum blotch (Parastagonospora nodorum): its common names, a description, eight symptoms, severity, and prevention, chemical and biological treatment advice, ending with the status COMPLETED.",
+      },
+      {
+        file: "speech-api.jpg",
+        alt: "Terminal screenshot of my speech-to-text API: two curl requests send a WAV and an MP4 call recording to the azerbaijani-whisper model and get JSON back with success true, the file type, the confidential transcript removed, and processing times of 19.07 and 11.73 seconds. The file names are hidden.",
+      },
+      {
+        file: "chatbot.png",
+        alt: "Screenshots of my Telegram bot, my local llm: its /help reply lists the commands in Azerbaijani (status, ping, myip, hostname, uptime, disk, defender, firewall, nmap and open cmd); the messages open cmd and open cmd and ping google.com open a terminal; and /status replies that the bot is running the model qwen2.5-3b-instruct through LM Studio on localhost.",
+      },
+      {
+        file: "logic-gates.jpg",
+        alt: "Our team's breadboard circuit: yellow jumper wires, transistors, resistors and push buttons, a lit green LED showing the gate's output, and a power module with a red power light.",
+      },
+      {
+        file: "hour-of-ai.jpg",
+        alt: "Our team of four standing at the back of a classroom while the children in front hold up their Hour of AI certificates of completion from CS Education Week 2026.",
+      },
+      {
+        file: "ev3-robot.jpg",
+        alt: "Our LEGO Mindstorms EV3 robot on a table, seen from the side, with its colour sensor mounted at the front and shining red light onto the surface beside a yellow tape line.",
+      },
+    ];
+    // One promise per card that settles once its photo check is done (photo added or not), so
+    // a #p1-#p6 link can wait for it and open a window that already shows the photo.
+    const photoChecks = cards.map((card, index) => {
       // Project cards are always visible (they slide in the track rather than fading in).
       card.classList.add("is-revealed");
-      const photoPath = `images/projects/${photoFiles[index]}`;
+      const { file, alt } = projectPhotos[index];
+      const photoPath = `images/projects/${file}`;
       // A HEAD request only asks whether the file exists, without downloading it, so a missing
       // photo never shows a broken image icon.
-      fetch(photoPath, { method: "HEAD" }).then((response) => {
+      return fetch(photoPath, { method: "HEAD" }).then((response) => {
         if (!response.ok) return;
         const image = document.createElement("img");
         image.className = "project-photo";
+        // "agrohub-leaf.jpg" → data-photo="agrohub-leaf", the hook style.css uses to frame it.
+        image.dataset.photo = file.replace(/\.\w+$/, "");
         image.src = photoPath;
-        image.alt = `${card.querySelector("h2").textContent} project photo`;
-        card.querySelector(".project-visual").append(image);
+        image.alt = alt;
+        const visual = card.querySelector(".project-visual");
+        visual.append(image);
+        // The photo covers the drawn demo, so style.css hides the demo underneath (.has-photo).
+        // That also keeps its controls (such as the logic-gate switches) out of the Tab order.
+        visual.classList.add("has-photo");
       }).catch((error) => {
         console.warn(`Could not check for project photo ${photoPath}.`, error);
       });
@@ -652,15 +689,79 @@ document.addEventListener("DOMContentLoaded", () => {
       const dialogHighlights = dialog.querySelector(".project-dialog-highlights");
       // Folder names for the titlebar path and the bullet points for each window, in the same
       // order as the cards on the page.
-      const projectSlugs = ["speech-to-text", "local-llm-chatbot", "plant-health-agrohub", "logic-gates", "hour-of-ai", "lego-ev3-robot"];
+      const projectSlugs = ["plant-health-agrohub", "speech-to-text", "local-llm-chatbot", "logic-gates", "hour-of-ai", "lego-ev3-robot"];
       const highlights = [
-        ["Benchmarked five Hugging Face models on a real Azerbaijani phone call.", "Compared WAV and MP4 audio inputs.", "SeamlessM4T v2 produced the most accurate transcript.", "Built a Python REST endpoint with FFmpeg conversion.", "Traced output differences to missing decoding parameters."],
-        ["Ran a Llama model locally with LM Studio.", "Connected the assistant to Telegram and WhatsApp.", "Added MCP tools for connected workflows.", "Embedded the chatbot into a website I built."],
         ["Compared more than ten plant-health APIs.", "Reviewed Kindwise, Plantix, and Agrio.", "Tested crops grown in Azerbaijan.", "Recommended Kindwise for crop and disease identification.", "Returned confidence scores and treatment advice as JSON."],
+        ["Benchmarked five Hugging Face models on a real Azerbaijani phone call.", "Compared WAV and MP4 audio inputs.", "SeamlessM4T v2 produced the most accurate transcript.", "Built a Python REST endpoint with FFmpeg conversion.", "Traced output differences to missing decoding parameters."],
+        ["Runs a local model (Qwen 2.5 3B) in LM Studio on my own machine.", "Connected the assistant to Telegram and WhatsApp.", "Added MCP tools for connected workflows.", "Embedded the chatbot into a website I built."],
         ["Built AND, OR, and NOT gates with a team.", "Used transistors and resistors on a breadboard.", "Read inputs with push buttons.", "Displayed each gate output with an LED."],
         ["Taught a one-hour AI and coding lesson as a team.", "Used Microsoft MakeCode block programming.", "Helped children build and run their own program.", "Each participant earned a certificate."],
         ["Built a LEGO Mindstorms EV3 robot in ADA's MakerSpace.", "Programmed the robot with MakeCode blocks and JavaScript.", "Followed a predefined track autonomously.", "Used the gyro sensor for accurate turns."],
       ];
+
+      // ----- NOT gate demo (logic gates window) -----
+      // Two Tinkercad pictures of our NOT gate: in not-gate-on.png the red LED is lit, in
+      // not-gate-off.png it is dark. A NOT gate turns its input around, so with the push button
+      // released (input 0) the LED is on, and pressing it (input 1) turns the LED off.
+      // "Press the button" is a toggle button (aria-pressed); Enter and Space work as usual.
+      // Both pictures sit on top of each other and style.css fades between them (no fade when
+      // the visitor asks for reduced motion). A fresh demo is built each time the window opens.
+      const createNotGateDemo = () => {
+        const demo = document.createElement("figure");
+        demo.className = "not-gate-demo";
+
+        const stage = document.createElement("div");
+        stage.className = "not-gate-stage";
+        const pictures = {
+          released: { file: "not-gate-on.png", alt: "Tinkercad simulation of our NOT gate with the push button released: the red LED is lit." },
+          pressed: { file: "not-gate-off.png", alt: "Tinkercad simulation of our NOT gate with the push button pressed: the red LED is off." },
+        };
+        const images = {};
+        Object.entries(pictures).forEach(([state, { file, alt }]) => {
+          const image = document.createElement("img");
+          image.src = `images/projects/${file}`;
+          image.alt = alt;
+          image.width = 820;
+          image.height = 478;
+          image.dataset.state = state;
+          images[state] = image;
+          stage.append(image);
+        });
+
+        const controls = document.createElement("div");
+        controls.className = "not-gate-controls";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "not-gate-button";
+        button.textContent = "Press the button";
+        // Read out after every press, so screen reader users hear what the LED did.
+        const status = document.createElement("p");
+        status.className = "not-gate-status";
+        status.setAttribute("aria-live", "polite");
+        controls.append(button, status);
+
+        const caption = document.createElement("figcaption");
+        caption.textContent = "Tinkercad simulation of our NOT gate";
+        demo.append(stage, controls, caption);
+
+        // Show one picture: the hidden one is faded out and removed from the accessibility
+        // tree, so only the picture on screen is described.
+        const showState = (pressed) => {
+          button.setAttribute("aria-pressed", String(pressed));
+          images.pressed.classList.toggle("is-shown", pressed);
+          images.released.classList.toggle("is-shown", !pressed);
+          images.pressed.setAttribute("aria-hidden", String(!pressed));
+          images.released.setAttribute("aria-hidden", String(pressed));
+          status.textContent = pressed
+            ? "Button pressed: input 1, so the LED is off (output 0)."
+            : "Button released: input 0, so the LED is on (output 1).";
+        };
+        button.addEventListener("click", () => {
+          showState(button.getAttribute("aria-pressed") !== "true");
+        });
+        showState(false);
+        return demo;
+      };
 
       // Fill the window from `card` and open it. pointerX/pointerY (optional) are where the
       // click happened; the window grows out of that point, or out of the card's centre when
@@ -705,6 +806,20 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         });
         dialogVisual.replaceChildren(visualCopy);
+        // style.css sizes some windows differently by project (the scrollable Agrohub
+        // screenshot, the logic gates photo with its NOT gate demo below it).
+        dialogVisual.dataset.project = projectSlugs[projectIndex];
+
+        // The tall Agrohub screenshot is shown whole, at full width, in a scrollable area. It can
+        // be focused, so keyboard users can scroll it with the arrow keys too.
+        if (visualCopy.querySelector('.project-photo[data-photo="agrohub-leaf"]')) {
+          visualCopy.tabIndex = 0;
+          visualCopy.setAttribute("role", "region");
+          visualCopy.setAttribute("aria-label", "Full API response screenshot, scrollable");
+        }
+
+        // The logic gates window gets the Tinkercad NOT gate demo under the real photo.
+        if (projectSlugs[projectIndex] === "logic-gates") dialogVisual.append(createNotGateDemo());
         dialog.showModal();
         // Hide the custom cursor while the window is open; the system pointer takes over.
         document.body.classList.add("project-dialog-open");
@@ -764,8 +879,13 @@ document.addEventListener("DOMContentLoaded", () => {
         document.documentElement.classList.remove("project-window-open");
         updateHorizontalTrack();
       });
-      // A click on the dimmed page, outside the window, closes it.
+      // A click on the dimmed page, outside the window, closes it. Such a click lands on the
+      // <dialog> itself (its backdrop); clicks on anything inside the window target that
+      // element instead. Checking the target matters for keyboard users: a button pressed with
+      // Enter or Space (such as the NOT gate demo's) fires a click at position 0,0, which the
+      // position check alone would mistake for a click outside.
       dialog.addEventListener("click", (event) => {
+        if (event.target !== dialog) return;
         const bounds = dialog.getBoundingClientRect();
         const insideWindow = event.clientX >= bounds.left && event.clientX <= bounds.right
           && event.clientY >= bounds.top && event.clientY <= bounds.bottom;
@@ -810,7 +930,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Wait for the fonts, since they change the cards' widths and so the track's distance.
         const showOnce = () => {
           const fontsReady = document.fonts?.ready ?? Promise.resolve();
-          fontsReady.then(() => showRequestedProject(requestedProject));
+          // Also wait for the photo checks, so the window copies the card with its photo.
+          Promise.all([fontsReady, ...photoChecks]).then(() => showRequestedProject(requestedProject));
         };
         if (document.readyState === "complete") showOnce();
         else window.addEventListener("load", showOnce, { once: true });
@@ -1090,10 +1211,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // (This local `history` hides window.history, which this function does not need.)
     const history = [];
     let historyIndex = 0;
+    // In the same order as the project cards, so "open N" opens card N (#pN).
     const projectNames = [
+      "Plant-health vision for Agrohub",
       "Speech-to-text API for Azerbaijani",
       "Local LLM chatbot",
-      "Plant-health vision for Agrohub",
       "Logic gates",
       "Hour of AI",
       "Line-following robot with LEGO EV3",
@@ -1242,7 +1364,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (command === "whoami" || command === "cat about.txt") {
         writeLine(whoAmI);
       } else if (command === "skills") {
-        writeLine("SECURITY\n  SIEM log analysis, DLP monitoring, insider-risk awareness, network monitoring\nAI\n  Local LLM deployment, RAG, MCP, speech-to-text, computer vision\nCODE\n  Python, REST APIs, HTML & CSS, Flutter, SQL\nTOOLS\n  Hugging Face, FFmpeg, FortiAnalyzer, Palo Alto, LibreNMS, Git, Linux");
+        writeLine("SECURITY\n  SIEM log analysis, DLP monitoring, insider-risk awareness, network monitoring\nAI\n  Local LLM deployment (Qwen 2.5 3B in LM Studio), RAG, MCP, speech-to-text, computer vision\nCODE\n  Python, REST APIs, HTML & CSS, Flutter, SQL\nTOOLS\n  Hugging Face, FFmpeg, FortiAnalyzer, Palo Alto, LibreNMS, Git, Linux");
       } else if (command === "projects") {
         projectNames.forEach((name, index) => {
           writeProjectLink(`${index + 1}. ${name} · open ${index + 1}`, index + 1);
