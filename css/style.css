@@ -4398,16 +4398,13 @@ a.contact-value:hover,
 /* ----- How each project photo is framed (data-photo is the file name, set by main.js) ----- */
 /* Screenshots are shown whole (contain), never cut off. The space around them gets the
    screenshot's own background, so the image and the frame look like one dark panel. */
-.project-photo[data-photo="speech-api"] {
-  object-fit: contain;
-  background: #000000;
-}
-
-/* The chatbot image is three rounded screenshots on a transparent background: shown whole,
-   with nothing behind it, so the card's own background shows through in both themes. */
+/* The speech-to-text terminal and the chatbot screenshots are both on black: each fills
+   the whole visual box, centred and shown whole, with black around it in both themes. */
+.project-photo[data-photo="speech-api"],
 .project-photo[data-photo="chatbot"] {
   object-fit: contain;
-  background: none;
+  object-position: center;
+  background: #000000;
 }
 
 /* The tall API response: the card shows its top; the window shows all of it (below). */
