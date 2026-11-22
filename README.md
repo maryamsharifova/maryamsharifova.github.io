@@ -9,7 +9,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 - I wrote the code with AI coding agents. I started with GitHub Copilot in VS Code, then moved to Cursor, and then to Claude Code after I ran out of requests on the first two. The chat exports from all three are submitted with the project.
 - I planned the design ideas and prompts with Claude.
 - The balcony photo on the Home page was generated with Gemini.
-- The fonts come from Google Fonts: **Space Grotesk** for headings, **Inter** for body text and **JetBrains Mono** for small labels and code.
+- The fonts come from Google Fonts: **Fraunces** for headings, **Source Serif 4** for body text, **Inter** for small interface text (navigation, buttons, tags and counters) and **JetBrains Mono** for labels, code and the terminals.
 
 ## Pages
 

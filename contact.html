@@ -22,7 +22,10 @@
     <!-- Connect to the font host early so text appears in the right typeface sooner. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+    <!-- One request for all four fonts: Fraunces (headings) and Source Serif 4 (body text),
+         both with their optical-size axis (opsz), plus Inter (interface text) and JetBrains Mono
+         (labels and code). display=swap shows text in a fallback font until each one loads. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
     <link rel="stylesheet" href="css/style.css">
     <!-- main.js loads here in the head (not at the end of body) so a saved dark theme is applied
          before the first paint; the rest of the script waits for DOMContentLoaded. -->
