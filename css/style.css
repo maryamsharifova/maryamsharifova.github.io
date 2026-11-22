@@ -4527,9 +4527,9 @@ a.contact-value:hover,
   outline-offset: -3px;
 }
 
-/* ----- Agrohub code windows: "request.py" (the Python code) above "response.json" ----- */
-/* A small dark code editor. It stays dark in both themes, like a real editor, with soft
-   syntax colours that keep a contrast of at least 4.5:1 on its background. */
+/* ----- Agrohub screenshot windows: "request.py" (the code) above "response.json" ----- */
+/* Each screenshot sits in a dark frame with rounded corners and a file-name tab on top. The
+   frame stays dark in both themes, like a code editor. */
 .agrohub-code {
   margin: 0 0 0.9rem;
 }
@@ -4551,26 +4551,15 @@ a.contact-value:hover,
   letter-spacing: 0.04em;
 }
 
-/* The code keeps its line breaks and scrolls sideways when a line is too long. */
-.code-window-body {
-  margin: 0;
-  padding: 0.85rem 1rem;
-  overflow-x: auto;
-  color: #e3e8ef;
-  font: 0.72rem/1.6 var(--font-label);
-  tab-size: 4;
-  white-space: pre;
+/* The code screenshot: the full width of the column, scaled down to fit (never wider, so it
+   never scrolls sideways), with its height following its own shape. The frame above rounds
+   its corners. */
+.agrohub-code-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
 }
-
-.code-window-body:focus-visible {
-  outline-offset: -3px;
-}
-
-.code-keyword { color: #7fd4ef; }
-.code-string { color: #a8dba0; }
-.code-builtin { color: #f0c38e; }
-.code-number { color: #f3a6c8; }
-.code-comment { color: #8b97a6; font-style: italic; }
 
 .agrohub-code figcaption {
   margin-top: 0.45rem;

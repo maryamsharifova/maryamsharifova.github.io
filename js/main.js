@@ -700,29 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ];
 
       // ----- Agrohub request code (plant-health window) -----
-      // The Python script I used to call the Kindwise crop-health API, shown as real text in a
-      // small dark code editor. It is kept here exactly as written; the API key is a placeholder.
-      const agrohubCode = `from kindwise import CropHealthApi
-import json
-import dataclasses
-
-api = CropHealthApi(api_key='myapikey:)')
-image_path = 'wheat.jpg'
-
-try:
-    identification = api.identify(
-        image_path,
-        details=['common_names', 'description', 'treatment', 'symptoms', 'severity']
-    )
-    result = dataclasses.asdict(identification)
-    print("UĞURLU CAVAB:")
-    print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
-except Exception as e:
-    print("XƏTA ALINDI:")
-    print(f"Tip: {type(e).__name__}")
-    print(f"Mesaj: {e}")`;
-
-      // A small file-name tab for the top of a code window ("request.py", "response.json").
+      // A small file-name tab for the top of a framed screenshot ("request.py", "response.json").
       const createCodeTab = (fileName) => {
         const tab = document.createElement("div");
         tab.className = "code-window-tab";
@@ -730,46 +708,22 @@ except Exception as e:
         return tab;
       };
 
-      // Colour a few kinds of Python token. One pass over the text: each match becomes a <span>
-      // with a class (style.css gives the colours) and everything between stays plain text.
-      // Everything is added as text, never as HTML.
-      // Groups: 1 comment, 2 string (with an optional f prefix), 3 keyword, 4 built-in function,
-      // 5 number.
-      const pythonTokens = /(#.*$)|((?:\bf)?(?:'[^'\n]*'|"[^"\n]*"))|\b(from|import|as|try|except|def|return|if|else|for|in|True|False|None)\b|\b(print|type)\b(?=\()|\b(\d+)\b/gm;
-      const tokenClasses = ["code-comment", "code-string", "code-keyword", "code-builtin", "code-number"];
-      const highlightPython = (source) => {
-        const fragment = document.createDocumentFragment();
-        let lastIndex = 0;
-        for (const match of source.matchAll(pythonTokens)) {
-          fragment.append(source.slice(lastIndex, match.index));
-          const span = document.createElement("span");
-          span.className = tokenClasses[match.slice(1).findIndex((group) => group !== undefined)];
-          span.textContent = match[0];
-          fragment.append(span);
-          lastIndex = match.index + match[0].length;
-        }
-        fragment.append(source.slice(lastIndex));
-        return fragment;
-      };
-
-      // The "request.py" code window and its one-line caption. The <pre> keeps the code's own
-      // line breaks and scrolls sideways when a line is wider than the window (on phones),
-      // instead of wrapping or widening the page. It can be focused, so keyboard users can
-      // scroll it with the arrow keys.
+      // The "request.py" window: a screenshot of the Python code I used to call the Kindwise
+      // API (images/projects/agrohub-code.png), under its file-name tab, with a one-line
+      // caption. style.css scales the image to the column's width, so it never scrolls sideways.
       const createAgrohubCode = () => {
         const block = document.createElement("figure");
         block.className = "agrohub-code";
         const codeWindow = document.createElement("div");
         codeWindow.className = "code-window";
-        const pre = document.createElement("pre");
-        pre.className = "code-window-body";
-        pre.tabIndex = 0;
-        pre.setAttribute("role", "region");
-        pre.setAttribute("aria-label", "request.py, Python code that calls the Kindwise API");
-        const code = document.createElement("code");
-        code.append(highlightPython(agrohubCode));
-        pre.append(code);
-        codeWindow.append(createCodeTab("request.py"), pre);
+        const image = document.createElement("img");
+        image.className = "agrohub-code-image";
+        image.src = "images/projects/agrohub-code.png";
+        image.alt = "Python code that sends a wheat leaf photo to the Kindwise Crop Health API and prints the JSON result";
+        // The file's own size, so the browser keeps its space before it loads (no jump).
+        image.width = 1081;
+        image.height = 511;
+        codeWindow.append(createCodeTab("request.py"), image);
         const caption = document.createElement("figcaption");
         caption.textContent = "The API key is a placeholder; the real one is never stored in code.";
         block.append(codeWindow, caption);
@@ -900,8 +854,8 @@ except Exception as e:
           dialogVisual.replaceChildren(responseWindow);
         }
 
-        // The Agrohub window starts with the Python code that called the Kindwise API, above
-        // the response screenshot.
+        // The Agrohub window starts with the screenshot of the Python code that called the
+        // Kindwise API, above the response screenshot.
         if (projectSlugs[projectIndex] === "plant-health-agrohub") dialogVisual.prepend(createAgrohubCode());
 
         // The logic gates window gets the Tinkercad NOT gate demo under the real photo.

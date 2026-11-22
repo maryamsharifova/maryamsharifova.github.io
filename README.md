@@ -62,6 +62,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
     ├── favicon-512.png    # 512 px PNG favicon for large displays (MS monogram)
     ├── apple-touch-icon.png  # 180 px icon for iPhone and iPad home screens (MS monogram)
     └── projects/          # Project photos and screenshots (see below)
+        ├── agrohub-code.png   # 01 Vision: the Python code that called the Kindwise API (in the window)
         ├── agrohub-leaf.jpg   # 01 Vision: the plant-health API's JSON response
         ├── speech-api.jpg     # 02 Speech: terminal screenshot of my speech-to-text API (redacted)
         ├── chatbot.png        # 03 Local AI: my Telegram bot's commands and status
@@ -85,7 +86,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 | 5. Hour of AI | `hour-of-ai.jpg` | Photo filling the frame, aimed at our team and the children |
 | 6. Line-following robot with LEGO EV3 | `ev3-robot.jpg` | Photo filling the frame, aimed at the robot and its colour sensor |
 
-The logic gates window also uses `not-gate-on.png` and `not-gate-off.png` for its NOT gate demo.
+The Agrohub window also shows `agrohub-code.png`, a screenshot of the Python code that called the Kindwise API, above the response screenshot. The logic gates window also uses `not-gate-on.png` and `not-gate-off.png` for its NOT gate demo.
 
 ## Run it locally
 
