@@ -310,6 +310,12 @@ b {
   background: linear-gradient(110deg, var(--color-navy), var(--color-ocean), var(--color-teal), var(--color-blue));
   background-clip: text;
   color: transparent;
+  /* The gradient is only painted inside the element's box, and the letters themselves are
+     transparent, so any part of a letter below the box would vanish. Fraunces has long
+     descenders (g, y, p), so the box reaches 0.12em lower. On a block heading this adds
+     height, so those headings take it back with a matching negative margin (see .page-title
+     and .cert-score); on an inline word it changes nothing in the layout. */
+  padding-bottom: 0.12em;
 }
 
 :root[data-theme="dark"] .gradient-text {
@@ -1585,7 +1591,6 @@ b {
 }
 
 .hero-title {
-  margin: 0;
   color: var(--hero-foreground);
   font-family: var(--font-heading);
   /* Grows with the width (7.4vw), limited by the height (15svh) so the two lines and the text
@@ -1594,8 +1599,11 @@ b {
   font-size: clamp(2.6rem, min(7.4vw, 15svh), 12rem);
   font-weight: 600;
   letter-spacing: -0.02em;
-  /* Fraunces is taller than the old font: 1.02 keeps the two lines from touching. */
-  line-height: 1.02;
+  /* 1.1, so Fraunces' tall letters and long descenders never touch between the two lines.
+     The two lines are 0.16em taller in total than at 1.02; the negative margins take 0.08em
+     back above and below, so the eyebrow and the text below stay where they were. */
+  margin: -0.08em 0;
+  line-height: 1.1;
 }
 
 .hero-title .gradient-text {
@@ -2140,12 +2148,17 @@ b {
 
 /* The big section heading: 10% of the width, from 3rem to 6.5rem. */
 .page-title {
-  margin: 0;
+  /* line-height went from 1.05 to 1.1, adding 0.025em above and below the text; with the
+     0.12em padding-bottom that is taken back here (0.025em above, 0.145em below), so a
+     one-line title and the element after it stay exactly where they were. */
+  margin: -0.025em 0 -0.145em;
+  /* Room under the letters for Fraunces' descenders, also when the title is gradient text. */
+  padding-bottom: 0.12em;
   font-family: var(--font-heading);
   font-size: clamp(3rem, 10vw, 6.5rem);
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.05;
+  line-height: 1.1;
 }
 
 /* ===== Shared footer ===== */
@@ -2969,7 +2982,10 @@ b {
   align-items: center;
   border: 1px solid var(--color-border);
   border-radius: 1.2rem;
-  background: var(--color-surface);
+  /* The page's own colour, not the lighter surface colour: the area under the Projects
+     heading and the cards then read as one continuous background, with no band or seam
+     where they meet, in both themes. The border still outlines each card. */
+  background: var(--color-page);
   scroll-margin-top: 2rem;
 }
 
@@ -3891,7 +3907,8 @@ b {
 }
 
 .cert-score {
-  margin: 0;
+  /* Cancels the gradient text's 0.12em padding-bottom, so the line below stays in place. */
+  margin: 0 0 -0.12em;
   font-family: var(--font-heading);
   font-size: clamp(2.6rem, 5vw, 3.6rem);
   font-weight: 600;
@@ -4014,7 +4031,11 @@ a.contact-value:hover,
 /* The big Contact heading: 13% of the width, from 4.2rem to 8.5rem. */
 .contact-intro .page-title {
   font-size: clamp(4.2rem, 13vw, 8.5rem);
-  line-height: 0.92;
+  /* 1.1 instead of 0.92, like every heading, so no letter is cut. The extra 0.18em of line
+     height is taken back with negative margins (0.09em above, and 0.09em plus the 0.12em
+     padding below), so "Let's talk." keeps its place and the cards keep their distance. */
+  margin: -0.09em 0 -0.21em;
+  line-height: 1.1;
 }
 
 .talk-link {
@@ -4328,9 +4349,12 @@ a.contact-value:hover,
 }
 
 .projects-track-heading .page-title {
-  margin: 0;
+  /* 1.1 instead of 1, so the "g" in "Things" keeps its tail. The extra 0.1em of line height
+     and the 0.12em padding are taken back with negative margins, so the heading row keeps
+     its height and the cards stay where they were. */
+  margin: -0.05em 0 -0.17em;
   font-size: clamp(2.4rem, 5vw, 4.5rem);
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .project-progress {
