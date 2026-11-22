@@ -57,6 +57,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
     ├── balcony-empty.jpg  # Home intro background: a balcony at night in Baku
     ├── profile.jpg        # My photo in the hero
     ├── avatar-ms.png      # Resume player card avatar: my own MS monogram logo
+    ├── monogram-navy.png  # Closing laptop's screen at the end of Contact: my own MS monogram logo (navy)
     ├── favicon.ico        # Favicon (16 and 32 px): my own MS monogram logo
     ├── favicon-32.png     # 32 px PNG favicon (MS monogram)
     ├── favicon-512.png    # 512 px PNG favicon for large displays (MS monogram)

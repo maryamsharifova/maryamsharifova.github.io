@@ -179,7 +179,7 @@
      - heading: Fraunces, a serif with an optical-size axis, for every heading
      - body: Source Serif 4, for paragraphs and longer text
      - ui: Inter, for small interface text where serifs would look cramped (navigation,
-       buttons, chips and tags, counters, small captions) and for the "MS" logo marks
+       buttons, chips and tags, counters, small captions) and for the "MS" lid logo
      - label: JetBrains Mono, for labels, eyebrows, section numbers, code and the terminals
      Georgia and system-ui are fallbacks while the web fonts load. */
   --font-heading: "Fraunces", Georgia, serif;
@@ -1281,8 +1281,8 @@ b {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  /* Inter, like the "MS" on the closing laptop's screen (.closing-mark), so the logo marks
-     match. It keeps its own weight and tight spacing as part of the logo design. */
+  /* Inter, a clean sans for the logo mark. It keeps its own weight and tight spacing as part
+     of the logo design. */
   font-family: var(--font-ui);
   font-size: clamp(2rem, 7vw, 4rem);
   font-weight: 600;
@@ -4183,8 +4183,8 @@ a.contact-value:hover,
   isolation: isolate;
 }
 
-/* The aurora glow: one wide, soft oval centred behind "MS" and "THANKS FOR VISITING", about the
-   size of that text block (the caption is about 50cqi wide, the pair about 22cqi tall). Inside
+/* The aurora glow: one wide, soft oval centred behind the monogram and "THANKS FOR VISITING"
+   (62cqi wide and 32cqi tall, a little wider than the 50cqi caption). Inside
    it, light teal on the left blends into soft periwinkle on the right with a hint of mint at the
    top. Each colour fades to transparent before the oval's edge, and the blur softens it further,
    so it melts into the plain background with no edge anywhere. */
@@ -4215,16 +4215,14 @@ a.contact-value:hover,
   }
 }
 
-/* A light, refined logo mark: Inter (var(--font-ui)) at medium weight, letters set close together,
-   dark navy with no shadow or glow, about 16% of the screen width. */
-.closing-mark {
-  margin: 0;
-  color: #0d1f2a;
-  font-family: var(--font-ui);
-  font-size: 16cqi;
-  font-weight: 500;
-  letter-spacing: -0.06em;
-  line-height: 1;
+/* My MS monogram image (images/monogram-navy.png), centred above the caption. Its height is
+   about 45% of the screen's height: the glass is 0.6186 times as tall as it is wide, so that
+   is 27.8cqi; the width follows from the image's own proportions. The file (253px tall) has
+   more pixels than this size needs even on a 3x phone screen, so it stays sharp. */
+.closing-monogram {
+  display: block;
+  width: auto;
+  height: 27.8cqi;
 }
 
 /* Small, widely spaced JetBrains Mono capitals in a muted slate blue. */
