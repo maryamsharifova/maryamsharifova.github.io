@@ -13,7 +13,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 
 ## Pages
 
-- **Home** (`index.html`): one long page that opens on a "living photo" of a balcony at night in Baku, with a closed laptop on the table. The words "Hi, I'm Maryam" appear above a line that types out a few short phrases. The photo has twinkling stars, city lights, glints on the bay, glowing lamps and candles, the Flame Towers' LED flames and steam from a coffee cup. As you scroll, the laptop lid opens, the keys type "MARYAM", the camera moves in, and the view dives into the screen until the portfolio hero (my name, a short intro and my photo) fills the window. Below the hero come the same sections as the separate pages: About, Projects, Resume, Security lab and Contact.
+- **Home** (`index.html`): one long page that opens on a "living photo" of a balcony at night in Baku, with a closed laptop on the table. The words "Hi, I'm Maryam" appear above a line that types out a few short phrases. The photo has twinkling stars, city lights, glints on the bay, glowing lamps and candles, the Flame Towers' LED flames and steam from a coffee cup. As you scroll, the laptop lid opens, the keys type "MARYAM", the camera moves in, and the view dives into the screen until the portfolio hero fills the window: my name, a short intro and a photo of me at the Bir ecosystem office in Baku, shown as a large card with rounded corners (on phones it is smaller and sits above the text). Below the hero come the same sections as the separate pages: About, Projects, Resume, Security lab and Contact.
 - **About** (`about.html`): a short biography, my skills, and a small terminal that runs only in the browser and answers a fixed set of commands (`help`, `whoami`, `skills`, `projects`, `open`, `contact`, `lab` and more).
 - **Projects** (`projects.html`): six projects, each on its own card with a photo or screenshot (or a small live visual when there is no photo). On a wide screen the cards pin in place and slide sideways as you scroll. Clicking a card opens a macOS-style window with more details. The logic gates window also has a small demo: a "Press the button" control switches between two Tinkercad pictures of our NOT gate. You can link to a single project with `#p1` to `#p6`. The projects are in this order:
   1. Plant-health vision for Agrohub (`#p1`)
@@ -22,7 +22,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
   4. Logic gates (`#p4`)
   5. Hour of AI (`#p5`)
   6. Line-following robot with LEGO EV3 (`#p6`)
-- **Resume** (`resume.html`): a game-style player card with my toolkits and skill levels, a **Timeline** of my studies, internship and projects, my certifications (IELTS and SAT), my languages and a button that opens my PDF resume. The **Security lab** is at the end of this page (`resume.html#lab`). It is a "Phishing or legit?" game with six made-up emails where you check where each link really goes, and you get a score at the end. The Security lab has no page of its own. It appears on Home and on the Resume page.
+- **Resume** (`resume.html`): a game-style player card with my toolkits and skill levels, a **Timeline** of my current job at Bir ecosystem, my studies, my earlier internship at RAM Holding and my projects, my certifications (IELTS and SAT), my languages and a button that opens my PDF resume. The **Security lab** is at the end of this page (`resume.html#lab`). It is a "Phishing or legit?" game with six made-up emails where you check where each link really goes, and you get a score at the end. The Security lab has no page of its own. It appears on Home and on the Resume page.
 - **Contact** (`contact.html`): a "Let's talk." heading and four contact cards for LinkedIn, GitHub, my location and my resume. At the bottom, a small laptop closes its lid as you reach the end of the page.
 
 ## Features
@@ -55,7 +55,7 @@ Live site: [https://maryamsharifova.github.io](https://maryamsharifova.github.io
 │   └── Maryam_Sharifova_CV.pdf  # My PDF resume
 └── images/
     ├── balcony-empty.jpg  # Home intro background: a balcony at night in Baku
-    ├── profile.jpg        # My photo in the hero
+    ├── hero-photo.jpg     # Hero photo: me at the Bir ecosystem office in Baku
     ├── avatar-ms.png      # Resume player card avatar: my own MS monogram logo
     ├── monogram-navy.png  # Closing laptop's screen at the end of Contact: my own MS monogram logo (navy)
     ├── favicon.ico        # Favicon (16 and 32 px): my own MS monogram logo

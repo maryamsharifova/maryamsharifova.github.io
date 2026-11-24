@@ -16,7 +16,7 @@
 //   7. Projects page: the pinned sideways track, waveform, photos and the logic-gate demo.
 //   8. Project windows: the macOS-style dialog with each project's details and #p1-#p6 links.
 //   9. Custom cursor and magnetic buttons (desktop only).
-//  10. Hero particles and the portrait's orbit tilt.
+//  10. Hero particles.
 //  11. About terminal: a small fake shell with a fixed set of commands.
 //  12. Resume quest timeline: a line that grows as the visitor scrolls.
 //  13. Closing laptop at the end of Contact: the lid shuts as the page ends.
@@ -1065,8 +1065,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== Hero particles =====
-  // Add the home-only particle canvas and orbit response: drifting dots joined by faint lines,
-  // pulled gently toward the pointer, and the portrait's orbit tilting to face it.
+  // Add the home-only particle canvas: drifting dots joined by faint lines, pulled gently
+  // toward the pointer. (The hero photo beside them is a still card with no pointer effect.)
   const particleHero = document.querySelector(".portfolio-hero");
   if (particleHero) {
     const particles = document.createElement("canvas");
@@ -1074,7 +1074,6 @@ document.addEventListener("DOMContentLoaded", () => {
     particles.setAttribute("aria-hidden", "true");
     particleHero.prepend(particles);
     const context = particles.getContext("2d");
-    const portrait = particleHero.querySelector(".hero-portrait");
     let particleList = [];
     let canvasWidth = 0;
     let canvasHeight = 0;
@@ -1210,8 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         reducedMotion.addListener(updateParticleMotion);
       }
-      // Track the pointer in canvas pixels for the particles, and tilt the portrait's orbit
-      // toward it (up to 15 degrees each way). The glow is strongest at the portrait's centre.
+      // Track the pointer in canvas pixels, so the dots near it are drawn toward it.
       particleHero.addEventListener("pointermove", (event) => {
         if (reducedMotion.matches) return;
         const bounds = particles.getBoundingClientRect();
@@ -1219,20 +1217,10 @@ document.addEventListener("DOMContentLoaded", () => {
           x: ((event.clientX - bounds.left) / bounds.width) * canvasWidth,
           y: ((event.clientY - bounds.top) / bounds.height) * canvasHeight,
         };
-        const orbit = portrait.getBoundingClientRect();
-        const relativeX = (event.clientX - orbit.left) / orbit.width - 0.5;
-        const relativeY = (event.clientY - orbit.top) / orbit.height - 0.5;
-        const distance = Math.min(1, Math.hypot(relativeX, relativeY) * 2);
-        portrait.style.setProperty("--orbit-tilt-x", `${-relativeY * 30}deg`);
-        portrait.style.setProperty("--orbit-tilt-y", `${relativeX * 30}deg`);
-        portrait.style.setProperty("--portrait-glow-opacity", `${(1 - distance) * 0.4}`);
       });
-      // When the pointer leaves, move it far away (so no dot is attracted) and level the orbit.
+      // When the pointer leaves, move it far away, so no dot is attracted.
       particleHero.addEventListener("pointerleave", () => {
         pointer = { x: -1000, y: -1000 };
-        portrait.style.setProperty("--orbit-tilt-x", "0deg");
-        portrait.style.setProperty("--orbit-tilt-y", "0deg");
-        portrait.style.setProperty("--portrait-glow-opacity", "0");
       });
     }
   }
@@ -1260,7 +1248,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "Hour of AI",
       "Line-following robot with LEGO EV3",
     ];
-    const whoAmI = "Maryam Sharifova | Computer Engineering student at ADA University and AI & Cybersecurity intern at RAM Holding, Baku.";
+    const whoAmI = "Maryam Sharifova | Computer Engineering student at ADA University and Product Security Intern in the Information Security Department at Bir ecosystem, Baku.";
 
     // Add one line of text to the output (className picks the style: reply or echoed
     // command) and scroll the output box to show it.
@@ -1426,7 +1414,8 @@ document.addEventListener("DOMContentLoaded", () => {
           writeLine("Usage: open 1 through open 6");
         }
       } else if (command === "experience") {
-        writeLine("AI and Cybersecurity Intern · RAM Holding · Baku · July 2026–Present\nTriage DLP alerts, investigate insider-risk cases, pivot SIEM events into FortiAnalyzer and Palo Alto logs, and monitor network health in LibreNMS.");
+        // Newest first: the current job at Bir ecosystem, then the finished RAM Holding internship.
+        writeLine("Product Security Intern · Bir ecosystem · Information Security Department · Baku · November 2026–Present\nJoined the Product Security team in the Information Security Department.\n\nAI and Cybersecurity Intern · RAM Holding · Baku · July 2026–November 2026\nTriaged DLP alerts, investigated insider-risk cases, pivoted SIEM events into FortiAnalyzer and Palo Alto logs, and monitored network health in LibreNMS.");
       } else if (command === "education") {
         writeLine("BSc Computer Engineering · ADA University · Baku, Azerbaijan · Expected 2030");
       } else if (command === "languages") {
@@ -3502,7 +3491,7 @@ document.addEventListener("DOMContentLoaded", () => {
     requestLaptopUpdate();
   });
   // The hero's natural height can also change without a resize, when the web fonts or the
-  // portrait finish loading. Re-measure it then, so the dive and the page below stay in step.
+  // hero photo finish loading. Re-measure it then, so the dive and the page below stay in step.
   if ("ResizeObserver" in window) {
     let observedHeight = realHero.offsetHeight;
     new ResizeObserver(() => {

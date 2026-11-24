@@ -25,7 +25,7 @@
     9. The 3D laptop shared by both laptops: camera, hinged lid, screen, back, deck,
        keyboard, trackpad, deck walls, logo and camera notch
    10. Homepage hero: the copy on the laptop screen, the full-width hero (top bar, text,
-       buttons, portrait, corner labels) and the floating nav, then its phone and
+       buttons, photo card, corner labels) and the floating nav, then its phone and
        short-screen rules
    11. Page headings, shared footer and keyboard focus ring
    12. Intro: responsive rules and reduced motion
@@ -132,7 +132,8 @@
   --hero-line: rgb(13 16 32 / 13%);
   --hero-nav-muted: rgb(23 25 28 / 70%);
   --hero-grid-line: rgb(13 16 32 / 5%);
-  --portrait-label: rgb(8 80 110 / 86%);
+  /* The soft shadow under the hero photo card: light and wide on the light page. */
+  --hero-photo-shadow: 0 1.4rem 3.2rem rgb(13 16 32 / 16%), 0 0.3rem 0.8rem rgb(13 16 32 / 8%);
   --hero-primary-button: #0d1020;
   --hero-primary-text: #ffffff;
   /* main.js reads this to colour the hero's network dots on its canvas. */
@@ -205,7 +206,8 @@
   --hero-line: rgb(255 255 255 / 9%);
   --hero-nav-muted: rgb(244 244 245 / 72%);
   --hero-grid-line: rgb(255 255 255 / 3%);
-  --portrait-label: rgb(185 226 240 / 82%);
+  /* On the dark page the shadow is darker, so the card still lifts off the background. */
+  --hero-photo-shadow: 0 1.4rem 3.2rem rgb(0 0 0 / 55%), 0 0.3rem 0.8rem rgb(0 0 0 / 35%);
   --hero-primary-button: #f4f4f5;
   --hero-primary-text: #101113;
   --particle-color: rgb(190 214 224 / 45%);
@@ -1695,120 +1697,32 @@ b {
   transform: translate(3px, -3px);
 }
 
-/* Orbiting rings and small labels frame the round portrait. */
-.hero-portrait {
-  position: relative;
-  /* Fills its column, up to 68% of the screen height, so the rings never crowd the top bar.
-     It sits at the end of its column, so the outer ring reaches the right margin. */
-  width: min(100%, 68svh);
-  aspect-ratio: 1;
+/* My photo at the Bir ecosystem office, on the right: a still card with rounded corners and a
+   soft shadow. The card has the photo's own shape (1160x1280), so object-fit: cover shows the
+   whole photo here; the phone rules below crop it shorter, and object-position keeps both me
+   and the logo in view there. */
+.hero-photo-card {
+  /* Fills its column, but stays at most 70% of the screen tall, so it never crowds the top
+     bar. It sits at the end of its column, so its right edge meets the right margin. */
+  width: min(100%, calc(70svh * 1160 / 1280));
+  aspect-ratio: 1160 / 1280;
   justify-self: end;
-}
-
-.portrait-rings {
-  position: absolute;
-  inset: 4%;
-}
-
-.portrait-ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgb(111 208 234 / 24%);
-  border-radius: 50%;
-}
-
-/* The three rings and their glowing dots do not move on their own; the whole portrait tilts
-   toward the cursor instead (see .hero-portrait in Part 2). */
-.portrait-ring-outer {
-  inset: 0;
-  border-style: dashed;
-  border-color: rgb(111 208 234 / 30%);
-}
-
-.portrait-ring-outer > span {
-  position: absolute;
-  top: 14%;
-  left: 20%;
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 50%;
-  background: #6fd0ea;
-  box-shadow: 0 0 1.2rem rgb(111 208 234 / 85%);
-}
-
-.portrait-ring-middle {
-  inset: 10%;
-  border-color: rgb(28 159 208 / 35%);
-}
-
-.portrait-ring-middle > span {
-  position: absolute;
-  right: 12%;
-  bottom: 21%;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: #1c9fd0;
-  box-shadow: 0 0 1rem rgb(28 159 208 / 85%);
-}
-
-.portrait-ring-inner {
-  inset: 20%;
-  border-color: rgb(111 208 234 / 18%);
-}
-
-.portrait-photo-wrap {
-  position: absolute;
-  /* Keep the portrait just inside the smallest orbit ring. */
-  inset: 22%;
-  display: grid;
-  place-items: center;
+  margin: 0;
   overflow: hidden;
-  border: 1px solid rgb(111 208 234 / 42%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 30%, rgb(28 159 208 / 20%), transparent 60%),
-    #12161a;
-  box-shadow: 0 0 3rem rgb(8 137 176 / 16%), 0 0 5rem rgb(8 137 176 / var(--portrait-glow-opacity, 0));
+  border-radius: 28px;
+  /* A placeholder colour until the photo loads. */
+  background: var(--hero-line);
+  box-shadow: var(--hero-photo-shadow);
 }
 
-.profile-photo {
-  position: absolute;
-  inset: 0;
+.hero-photo {
+  display: block;
   width: 100%;
   height: 100%;
-  border-radius: inherit;
-  /* Above the dark fallback background, and cropped to fill the circle. */
-  z-index: 1;
   object-fit: cover;
-}
-
-.portrait-label {
-  position: absolute;
-  color: var(--portrait-label);
-  font-family: var(--font-label);
-  font-size: clamp(0.55rem, min(0.62vw, 1.15svh), 1rem);
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-/* Three small labels on the outer ring, centred on its top, left and bottom edges. */
-.portrait-label-top {
-  top: -1%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.portrait-label-left {
-  top: 50%;
-  left: -4%;
-  transform: translate(-50%, -50%);
-}
-
-.portrait-label-bottom {
-  bottom: -1%;
-  left: 50%;
-  transform: translateX(-50%);
+  /* The logo is on the left and I stand on the right, a little below the middle, so a crop
+     keeps the lower middle of the photo. */
+  object-position: 50% 72%;
 }
 
 /* How far the corner labels sit above the hero's bottom edge. About's top spacing on Home is
@@ -1942,10 +1856,14 @@ b {
     padding-block: clamp(0.5rem, 2svh, 0.9rem) 2.5rem;
   }
 
-  .hero-portrait {
+  /* On a phone the photo sits above the text, smaller and cropped to 4:3, so the text still
+     fits in one screen. The crop keeps the lower middle of the photo (object-position on
+     .hero-photo), where both the logo and I are. The corners stay at 28px. */
+  .hero-photo-card {
     grid-row: 1;
     /* By the width and the height, so the photo leaves room for the text on short phones. */
-    width: min(52vw, 30svh, 260px);
+    width: min(84vw, 36svh, 340px);
+    aspect-ratio: 4 / 3;
     /* Stacked on a phone, the photo stays centred above the text. */
     justify-self: center;
   }
@@ -2061,14 +1979,16 @@ b {
   }
 
   .hero-copy,
-  .hero-portrait {
+  .hero-photo-card {
     grid-row: auto;
   }
 
-  /* Text on the left, photo on the right again, as on desktop. */
-  .hero-portrait {
-    /* At most half the height, and never more than 30% of the width, at the right margin. */
-    width: min(50svh, 30vw);
+  /* Text on the left, the whole photo on the right again, as on desktop. */
+  .hero-photo-card {
+    /* At most about 60% of the height, and never more than 30% of the width, at the right
+       margin. */
+    width: min(calc(60svh * 1160 / 1280), 30vw);
+    aspect-ratio: 1160 / 1280;
     justify-self: end;
   }
 
@@ -2105,10 +2025,6 @@ b {
 
   .hero-footer {
     font-size: 0.55rem;
-  }
-
-  .portrait-label {
-    font-size: 0.5rem;
   }
 }
 
@@ -2528,7 +2444,7 @@ b {
   }
 }
 
-/* ===== Hero effects: network dots, layer order, portrait tilt ===== */
+/* ===== Hero effects: network dots and layer order ===== */
 /* The canvas of moving network dots behind the hero text (main.js draws them in
    --particle-color, so they follow the theme). */
 .hero-particles {
@@ -2554,42 +2470,6 @@ b {
   z-index: 1;
 }
 
-/* The portrait tilts toward the cursor: main.js sets --orbit-tilt-x and --orbit-tilt-y,
-   perspective(900px) gives the tilt depth, and preserve-3d keeps the rings in that 3D space. */
-.hero-portrait {
-  transform: perspective(900px) rotateX(var(--orbit-tilt-x, 0deg)) rotateY(var(--orbit-tilt-y, 0deg));
-  transition: transform 220ms ease-out;
-  transform-style: preserve-3d;
-}
-
-.portrait-label {
-  padding: 0.3rem 0.45rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
-}
-
-/* On hover each label grows a little. Each keeps its own centring translate, so that is
-   repeated before scale(). */
-.portrait-label-top:hover {
-  transform: translateX(-50%) scale(1.22);
-}
-
-.portrait-label-left:hover {
-  transform: translate(-50%, -50%) scale(1.22);
-}
-
-.portrait-label-bottom:hover {
-  transform: translateX(-50%) scale(1.22);
-}
-
-.portrait-label:hover {
-  border-color: rgb(111 208 234 / 75%);
-  background: rgb(8 137 176 / 18%);
-  box-shadow: 0 0 1.3rem rgb(8 137 176 / 35%);
-  color: #b9f1ff;
-}
-
 /* Hidden on narrow screens, and on short ones, where the dots would sit on top of the content. */
 @media (max-width: 860px), (max-height: 540px) {
   .page-rail {
@@ -2608,9 +2488,7 @@ b {
   .spotlight-card,
   .spotlight-card::before,
   .page-rail,
-  .site-toast,
-  .hero-portrait,
-  .portrait-label {
+  .site-toast {
     transition: none;
   }
 

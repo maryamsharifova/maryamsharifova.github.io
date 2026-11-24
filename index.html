@@ -238,13 +238,13 @@
               </nav>
             </header>
 
-            <!-- The introduction and portrait form the main landing-page hero. -->
+            <!-- The introduction and photo form the main landing-page hero. -->
             <div class="hero-main">
               <div class="hero-copy">
-                <p class="hero-eyebrow">AI &amp; CYBERSECURITY · BAKU</p>
+                <p class="hero-eyebrow">PRODUCT SECURITY · BAKU</p>
                 <h1 class="hero-title">Maryam<br><span class="gradient-text">Sharifova</span></h1>
                 <p class="hero-description">
-                  I study Computer Engineering at ADA University and work as an AI &amp; Cybersecurity intern at RAM Holding, where I look into data-loss alerts and security logs. Outside work, I build small AI tools, especially for Azerbaijani speech recognition.
+                  I study Computer Engineering at ADA University and work as a Product Security Intern in the Information Security Department at Bir ecosystem. Outside work, I build small AI tools, mostly around speech recognition for Azerbaijani.
                 </p>
                 <div class="hero-actions">
                   <a class="hero-button hero-button-primary" href="#projects">See projects <span aria-hidden="true">→</span></a>
@@ -252,21 +252,13 @@
                 </div>
               </div>
 
-              <!-- My photo inside three animated rings with small labels. The rings are aria-hidden
-                   because they are only decoration. -->
-              <div class="hero-portrait">
-                <div class="portrait-rings" aria-hidden="true">
-                  <span class="portrait-ring portrait-ring-outer"><span></span></span>
-                  <span class="portrait-ring portrait-ring-middle"><span></span></span>
-                  <span class="portrait-ring portrait-ring-inner"></span>
-                  <span class="portrait-label portrait-label-top">DLP · SIEM</span>
-                  <span class="portrait-label portrait-label-left">LOCAL LLMS</span>
-                  <span class="portrait-label portrait-label-bottom">SPEECH TO TEXT</span>
-                </div>
-                <div class="portrait-photo-wrap">
-                  <img class="profile-photo" src="images/profile.jpg" alt="Maryam Sharifova">
-                </div>
-              </div>
+              <!-- My photo at the Bir ecosystem office: a still card with rounded corners (no
+                   animation). width and height give the photo's real 1160x1280 shape, so the
+                   browser reserves its space before it loads and the hero's height does not jump.
+                   The copy on the laptop screen is cloned from this, so it shows the same card. -->
+              <figure class="hero-photo-card">
+                <img class="hero-photo" src="images/hero-photo.jpg" width="1160" height="1280" alt="Maryam Sharifova at the Bir ecosystem office in Baku">
+              </figure>
             </div>
 
             <!-- Faint location and scroll labels sit in the bottom corners. -->
@@ -293,7 +285,7 @@
         <section class="about-overview" aria-label="About Maryam">
           <div class="about-copy" data-reveal>
             <p>I study Computer Engineering at ADA University, and I'm not there just to pass courses. I use every class, team project and lab session to build skills I can actually use, from wiring circuits to programming robots.</p>
-            <p>Most of my days are spent in the company's security operation at RAM Holding: data-loss alerts, insider-risk cases and log investigations.</p>
+            <p>Since November 2026, I've been a Product Security Intern in the Information Security Department at Bir ecosystem. Before that, I spent five months in RAM Holding's security operations, working on data-loss alerts, insider-risk cases and log investigations.</p>
             <h2 class="about-section-title">Skills &amp; tools I use</h2>
             <ul class="skill-list" aria-label="Skills">
               <li>Python</li>
@@ -608,7 +600,7 @@
           <div class="player-avatar" aria-hidden="true"><img src="images/avatar-ms.png" alt="" width="512" height="512"></div>
           <div class="player-identity">
             <h2>Maryam Sharifova</h2>
-           <p class="player-class">STUDENT · AI &amp; SECURITY INTERN · BAKU</p>
+           <p class="player-class">COMPUTER ENGINEERING STUDENT · PRODUCT SECURITY INTERN</p>
             <p class="toolkit-label">Security toolkit</p>
             <ul class="toolkit toolkit-security">
               <li>DLP</li>
@@ -676,6 +668,16 @@
           <section class="missions" aria-labelledby="missions-title">
             <h2 id="missions-title">Timeline</h2>
             <ol class="quest-timeline">
+              <!-- Current job, newest first. -->
+              <li class="quest">
+                <span class="quest-node" aria-hidden="true"></span>
+                <p class="quest-status">IN PROGRESS</p>
+                <h3>Product Security Intern</h3>
+                <p class="quest-meta">BIR ECOSYSTEM · INFORMATION SECURITY DEPARTMENT · BAKU · NOVEMBER 2026 – PRESENT</p>
+                <ul class="quest-notes">
+                  <li>Joined the Product Security team in the Information Security Department.</li>
+                </ul>
+              </li>
               <li class="quest">
                 <span class="quest-node" aria-hidden="true"></span>
                 <p class="quest-status">IN PROGRESS</p>
@@ -689,15 +691,15 @@
               </li>
               <li class="quest">
                 <span class="quest-node" aria-hidden="true"></span>
-                <p class="quest-status">IN PROGRESS</p>
+                <p class="quest-status quest-status-done">COMPLETED</p>
                 <h3>AI &amp; Cybersecurity Intern</h3>
-                <p class="quest-meta">RAM HOLDING · BAKU · JULY 2026 – PRESENT</p>
+                <p class="quest-meta">RAM HOLDING · BAKU · JULY 2026 – NOVEMBER 2026</p>
                 <ul class="quest-notes">
-                  <li>Investigate company DLP alerts and analyse where, how, and by whom sensitive data is used.</li>
-                  <li>Investigate SIEM events by pivoting into FortiAnalyzer and Palo Alto logs and tracing activity through source and destination IDs.</li>
-                  <li>Review insider-risk scenarios, including wrong recipients, open links, and excessive permissions, and propose alert-configuration improvements.</li>
-                  <li>Monitor server and network-device resources in LibreNMS and escalate alerts through Telegram and email.</li>
-                  <li>Create IT and business training content, including an infographic on the path from rule-based systems to autonomous AI agents.</li>
+                  <li>Investigated company DLP alerts and analysed where, how, and by whom sensitive data was used.</li>
+                  <li>Analysed SIEM events by pivoting into FortiAnalyzer and Palo Alto logs and tracing activity through source and destination IDs.</li>
+                  <li>Reviewed insider-risk scenarios, including wrong recipients, open links, and excessive permissions, and proposed alert-configuration improvements.</li>
+                  <li>Monitored server and network-device resources in LibreNMS and escalated alerts through Telegram and email.</li>
+                  <li>Created IT and business training content, including an infographic on the path from rule-based systems to autonomous AI agents.</li>
                 </ul>
               </li>
               <li class="quest">
