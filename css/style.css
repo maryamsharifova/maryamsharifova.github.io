@@ -1567,19 +1567,19 @@ b {
   height: 45%;
 }
 
-/* Text on the left, photo on the right, in one two-column grid inside a centred container:
-   at most 1440px wide with 36px side margins (so 1368px of content), and the same 36px
-   margins on smaller screens, so nothing touches the edge of the screen. On wide screens the
-   container stops growing, so the space between the columns never becomes a large gap.
-   Measured at 1920px: text 688px, gap 60px, photo 560px, then 60px to the right margin. */
+/* Text on the left, photo on the right, in one two-column grid inside a centred container
+   with 36px side margins, so nothing touches the edge of the screen. The container's maximum
+   is exactly a 690px text column + the 64px gap + the 740px photo + 60px to the right margin
+   + the two 36px margins (1626px), so on wide screens it stops growing and the space between
+   the columns never becomes a large gap. */
 .hero-main {
   /* The container's width including its side margins, and the side margin itself. */
-  --hero-container-max: 1440px;
   --hero-side-margin: 36px;
-  /* The photo card's width: 560px at most; 38% of the window width on smaller laptops; and at
-     most 70% of the screen height tall (the card is 14:15, so width = height * 14 / 15), so it
-     scales down proportionally and never pushes the text into a narrow column. */
-  --hero-photo-width: min(560px, 38vw, calc(70svh * 14 / 15));
+  --hero-container-max: calc(690px + 64px + 740px + 60px + 2 * 36px);
+  /* The photo card's width: 740px at most (reached at about 1900px); 39% of the window width
+     on smaller laptops; and never more than 82% of the screen height tall (the card is 14:15,
+     so width = height * 14 / 15). It scales with the screen and always fits a short laptop. */
+  --hero-photo-width: min(740px, 39vw, calc(82svh * 14 / 15));
   /* Space between the photo and the right margin: 60px, a little less on smaller laptops. */
   --hero-photo-right: clamp(24px, 4vw, 60px);
   /* Where the bottom of the floating nav pill sits on screen (1rem from the top, about 3.3rem
@@ -1597,14 +1597,14 @@ b {
      right-hand space. minmax(0, ...) lets the text column give way first on narrow screens. */
   grid-template-columns: minmax(0, 690px) calc(var(--hero-photo-width) + var(--hero-photo-right));
   /* Any width left over goes between the two columns, so the text stays at the left margin and
-     the photo at its place on the right. With the container capped at 1440px, this space
-     (plus the 60px column gap) stays between about 60px and 100px. */
+     the photo at its place on the right. The container's maximum leaves none over, so the
+     space between text and photo is the 64px column gap. */
   justify-content: space-between;
   /* The row is as tall as its content and sits in the middle of the min-height; the text and
      the photo are centred with each other in it. */
   align-content: center;
   align-items: center;
-  column-gap: 60px;
+  column-gap: 64px;
   row-gap: 1.2rem;
   margin-inline: auto;
   /* Top padding: main.js shows the floating nav once the page has scrolled 8% of the screen
@@ -1733,12 +1733,15 @@ b {
 }
 
 /* My photo at the Bir ecosystem office, on the right: a still card with rounded corners and a
-   soft, large shadow, 560x600px on desktop (14:15) and smaller on smaller laptops (see
+   soft, large shadow, 740x793px on a 1920px screen (14:15) and smaller on smaller laptops (see
    --hero-photo-width). It sits at the right of the container, --hero-photo-right in from the
    right margin, and is centred vertically with the text (align-items on .hero-main). */
 .hero-photo-card {
   width: var(--hero-photo-width);
   aspect-ratio: 14 / 15;
+  /* The width above already keeps the card within 82% of the screen height; this is a
+     safety net for the same limit. */
+  max-height: 82svh;
   justify-self: start;
   margin: 0 var(--hero-photo-right) 0 0;
   overflow: hidden;
