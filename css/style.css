@@ -133,7 +133,7 @@
   --hero-nav-muted: rgb(23 25 28 / 70%);
   --hero-grid-line: rgb(13 16 32 / 5%);
   /* The soft shadow under the hero photo card: light and wide on the light page. */
-  --hero-photo-shadow: 0 1.4rem 3.2rem rgb(13 16 32 / 16%), 0 0.3rem 0.8rem rgb(13 16 32 / 8%);
+  --hero-photo-shadow: 0 2rem 4.5rem rgb(13 16 32 / 18%), 0 0.5rem 1.2rem rgb(13 16 32 / 8%);
   --hero-primary-button: #0d1020;
   --hero-primary-text: #ffffff;
   /* main.js reads this to colour the hero's network dots on its canvas. */
@@ -207,7 +207,7 @@
   --hero-nav-muted: rgb(244 244 245 / 72%);
   --hero-grid-line: rgb(255 255 255 / 3%);
   /* On the dark page the shadow is darker, so the card still lifts off the background. */
-  --hero-photo-shadow: 0 1.4rem 3.2rem rgb(0 0 0 / 55%), 0 0.3rem 0.8rem rgb(0 0 0 / 35%);
+  --hero-photo-shadow: 0 2rem 4.5rem rgb(0 0 0 / 60%), 0 0.5rem 1.2rem rgb(0 0 0 / 35%);
   --hero-primary-button: #f4f4f5;
   --hero-primary-text: #101113;
   --particle-color: rgb(190 214 224 / 45%);
@@ -1567,32 +1567,45 @@ b {
   height: 45%;
 }
 
-/* Text on the left, photo on the right, in one two-column grid. The grid is at most 1280px
-   wide and centred; below that it keeps the site's side margins (--site-content-width), so
-   nothing touches the edge of the screen. On wide screens the two columns stay together in
-   the middle instead of drifting apart. */
+/* Text on the left, photo on the right, in one two-column grid inside a centred container:
+   at most 1440px wide with 36px side margins (so 1368px of content), and the same 36px
+   margins on smaller screens, so nothing touches the edge of the screen. On wide screens the
+   container stops growing, so the space between the columns never becomes a large gap.
+   Measured at 1920px: text 688px, gap 60px, photo 560px, then 60px to the right margin. */
 .hero-main {
-  --hero-main-max-width: 1280px;
-  /* The photo's largest height (see .hero-photo-card): about the height of the text block. */
-  --hero-photo-max-height: 68svh;
+  /* The container's width including its side margins, and the side margin itself. */
+  --hero-container-max: 1440px;
+  --hero-side-margin: 36px;
+  /* The photo card's width: 560px at most; 38% of the window width on smaller laptops; and at
+     most 70% of the screen height tall (the card is 14:15, so width = height * 14 / 15), so it
+     scales down proportionally and never pushes the text into a narrow column. */
+  --hero-photo-width: min(560px, 38vw, calc(70svh * 14 / 15));
+  /* Space between the photo and the right margin: 60px, a little less on smaller laptops. */
+  --hero-photo-right: clamp(24px, 4vw, 60px);
   /* Where the bottom of the floating nav pill sits on screen (1rem from the top, about 3.3rem
      tall), plus 1.2rem of air below it. */
   --floating-nav-clearance: 5.5rem;
-  width: min(var(--hero-main-max-width), var(--site-content-width));
+  width: min(
+    calc(var(--hero-container-max) - 2 * var(--hero-side-margin)),
+    calc(100% - 2 * var(--hero-side-margin))
+  );
   /* The screen's height minus the bar and the labels' space, so the content is centred in one
      screen. (svh rather than %, because the hero's own height follows its content.) */
   min-height: calc(100svh - var(--hero-bar-height) - var(--hero-foot-space));
   display: grid;
-  /* The text column wider than the photo column; minmax(0, ...) lets both shrink below their
-     content's width. */
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  /* The text column is up to about 690px; the photo column is exactly the photo plus its
+     right-hand space. minmax(0, ...) lets the text column give way first on narrow screens. */
+  grid-template-columns: minmax(0, 690px) calc(var(--hero-photo-width) + var(--hero-photo-right));
+  /* Any width left over goes between the two columns, so the text stays at the left margin and
+     the photo at its place on the right. With the container capped at 1440px, this space
+     (plus the 60px column gap) stays between about 60px and 100px. */
+  justify-content: space-between;
   /* The row is as tall as its content and sits in the middle of the min-height; the text and
      the photo are centred with each other in it. */
   align-content: center;
   align-items: center;
-  /* A small, fixed-range gap (32px to 64px), so the space between text and photo stays small
-     on any screen width. */
-  gap: clamp(32px, 4vw, 64px);
+  column-gap: 60px;
+  row-gap: 1.2rem;
   margin-inline: auto;
   /* Top padding: main.js shows the floating nav once the page has scrolled 8% of the screen
      height into the hero. At that point the content must still start below the pill, so the
@@ -1638,17 +1651,14 @@ b {
 }
 
 .hero-description {
-  /* Up to 37em wide, so on desktop the intro fits in three lines instead of five short ones
-     (measured: at 34em it still takes four, with "Azerbaijani." alone on the last line). At
-     1280px this is the full width of the text column, so the text reaches the gap and the
-     space between text and photo is just the grid gap. Narrower columns wrap it. */
-  max-width: 37em;
+  /* Up to 600px wide, so on desktop the intro wraps into about four lines. Narrower columns
+     wrap it more. */
+  max-width: 600px;
   margin: 1.6em 0 0;
   color: var(--hero-copy-muted);
-  /* 1.25% of the width, between 1rem and 1.15rem (about 18px, reached near 1475px). The hero
-     grid stops growing at 1280px, so the text does not need to grow further either. */
-  font-size: clamp(1rem, 1.25vw, 1.15rem);
-  line-height: 1.75;
+  /* About 1.2rem (19px) on desktop; 1.4% of the width on smaller laptops, never below 1rem. */
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  line-height: 1.7;
 }
 
 .hero-actions {
@@ -1723,17 +1733,14 @@ b {
 }
 
 /* My photo at the Bir ecosystem office, on the right: a still card with rounded corners and a
-   soft shadow, showing the whole photo with nothing cut off (both me and the full Bir logo).
-   The card is as wide as its column, but never wider than the width at which the photo would
-   be --hero-photo-max-height tall, so it stays roughly as tall as the text block. When that
-   limit leaves spare width in the column (short screens such as 1366x768), the card sits at
-   the start of the column, so the space between text and photo is still just the grid gap.
-   It is centred vertically with the text (align-items on .hero-main). */
+   soft, large shadow, 560x600px on desktop (14:15) and smaller on smaller laptops (see
+   --hero-photo-width). It sits at the right of the container, --hero-photo-right in from the
+   right margin, and is centred vertically with the text (align-items on .hero-main). */
 .hero-photo-card {
-  width: 100%;
-  max-width: calc(var(--hero-photo-max-height) * 1160 / 1280);
+  width: var(--hero-photo-width);
+  aspect-ratio: 14 / 15;
   justify-self: start;
-  margin: 0;
+  margin: 0 var(--hero-photo-right) 0 0;
   overflow: hidden;
   border-radius: 28px;
   /* A placeholder colour until the photo loads. */
@@ -1741,12 +1748,15 @@ b {
   box-shadow: var(--hero-photo-shadow);
 }
 
-/* The photo keeps its own 1160x1280 shape: full width, automatic height, no cropping. The
-   width and height attributes in the HTML give the browser that shape before it loads. */
+/* The photo is 1160x1280, a little taller than the 14:15 card, so cover trims only a thin
+   strip at the top and bottom (about 3% in all); the full Bir logo and I always stay in view.
+   60% across keeps the crop centred a little towards me; the sides are never cropped. */
 .hero-photo {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 50%;
 }
 
 /* How far the corner labels sit above the hero's bottom edge. About's top spacing on Home is
@@ -1871,6 +1881,8 @@ b {
   }
 
   .hero-main {
+    /* The site's phone margin (1rem) instead of 36px, so the content keeps its width. */
+    --hero-side-margin: var(--site-gutter);
     /* One screen minus the two-row top bar and the corner labels. */
     min-height: calc(100svh - 7rem);
     grid-template-columns: minmax(0, 1fr);
@@ -1884,13 +1896,13 @@ b {
     padding-block: max(clamp(0.5rem, 2svh, 0.9rem), calc(8svh + 3.75rem + 1.5rem - 5.5rem)) 2.5rem;
   }
 
-  /* On a phone the whole photo sits above the text, across the full content width, still
-     uncropped (the same 1160x1280 shape and 28px corners). The hero grows taller than one
-     screen to fit it, which the intro's dive already allows for. */
+  /* On a phone the photo sits above the text, across the full content width, in the same
+     14:15 card with 28px corners (only a thin strip at the top and bottom is trimmed). The
+     hero grows taller than one screen to fit it, which the intro's dive already allows for. */
   .hero-photo-card {
     grid-row: 1;
     width: 100%;
-    max-width: none;
+    margin: 0;
     justify-self: stretch;
   }
 
@@ -1996,12 +2008,17 @@ b {
   }
 
   .hero-main {
+    /* The site's small side margin, a photo at most 62% of this short screen tall (or 30% of
+       its width), and no extra space to its right. */
+    --hero-side-margin: var(--site-gutter);
+    --hero-photo-width: min(calc(62svh * 14 / 15), 30vw);
+    --hero-photo-right: 0px;
     /* One screen minus the top bar above and the corner labels below. */
     min-height: calc(100svh - 5.4rem);
-    /* The same two columns and gap as on desktop (this undoes the phone rules above). */
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    /* The same two columns as on desktop (this undoes the phone rules above). */
+    grid-template-columns: minmax(0, 1fr) calc(var(--hero-photo-width) + var(--hero-photo-right));
     justify-items: stretch;
-    gap: clamp(32px, 4vw, 64px);
+    column-gap: clamp(32px, 4vw, 60px);
     /* Top: the slim pill here (its bottom edge about 2.75rem from the top) appears after an
        8svh scroll. The top bar is about as tall, so the padding covers that scroll plus 1rem
        of air: 8svh + 1rem. */
@@ -2013,11 +2030,11 @@ b {
     grid-row: auto;
   }
 
-  /* Text on the left, the whole photo on the right again, as on desktop: at most 62% of the
-     screen height tall, so it fits this short screen. */
+  /* Text on the left, the photo on the right again, as on desktop (its width comes from
+     --hero-photo-width above). */
   .hero-photo-card {
-    width: 100%;
-    max-width: calc(62svh * 1160 / 1280);
+    width: var(--hero-photo-width);
+    margin: 0;
     justify-self: start;
   }
 
