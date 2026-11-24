@@ -1567,18 +1567,27 @@ b {
   height: 45%;
 }
 
-/* Text on the left, photo on the right, across the full width between the side margins. */
+/* Text on the left, photo on the right, in one two-column grid. The grid is at most 1280px
+   wide and centred; below that it keeps the site's side margins (--site-content-width), so
+   the photo never touches the edge of the screen. On wide screens the two columns stay
+   together in the middle instead of drifting apart. */
 .hero-main {
-  width: var(--site-content-width);
+  --hero-main-max-width: 1280px;
+  width: min(var(--hero-main-max-width), var(--site-content-width));
   /* The screen's height minus the bar and the labels' space, so the content is centred in one
      screen. (svh rather than %, because the hero's own height follows its content.) */
   min-height: calc(100svh - var(--hero-bar-height) - var(--hero-foot-space));
   display: grid;
   /* The text column a little wider than the photo column; minmax(0, ...) lets both shrink
-     below their content's width. The gap is 5% of the width, from 2rem to 9rem. */
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+     below their content's width. */
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  /* The row is only as tall as the text block and sits in the middle of the min-height, so
+     the photo (which stretches to the row) is as tall as the text and centred with it. */
+  align-content: center;
   align-items: center;
-  gap: clamp(2rem, 5vw, 9rem);
+  /* A small, fixed-range gap (32px to 72px), so the space between text and photo stays small
+     on any screen width. */
+  gap: clamp(32px, 4vw, 72px);
   margin-inline: auto;
   padding-block: clamp(1rem, 3svh, 3rem);
 }
@@ -1596,9 +1605,11 @@ b {
   color: var(--hero-foreground);
   font-family: var(--font-heading);
   /* Grows with the width (7.4vw), limited by the height (15svh) so the two lines and the text
-     below still fit a short screen: about 100px at 1366x768, 142px at 1920x1080 and 189px at
-     2560x1440. The lower floor (2.6rem) lets it shrink further on small, short windows. */
-  font-size: clamp(2.6rem, min(7.4vw, 15svh), 12rem);
+     below still fit a short screen: about 100px at 1366x768 and 136px (the ceiling) at
+     1920x1080 and wider. The lower floor (2.6rem) lets it shrink further on small, short windows.
+     The ceiling (8.5rem, about 136px) keeps "Sharifova" inside the text column, which stops
+     growing once the hero grid reaches its 1280px maximum width. */
+  font-size: clamp(2.6rem, min(7.4vw, 15svh), 8.5rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   /* 1.1, so Fraunces' tall letters and long descenders never touch between the two lines.
@@ -1622,8 +1633,10 @@ b {
   max-width: 46ch;
   margin: 1.6em 0 0;
   color: var(--hero-copy-muted);
-  /* By the width and the height, whichever is smaller, never below about 13px. */
-  font-size: clamp(0.82rem, min(1.1vw, 2.1svh), 1.6rem);
+  /* By the width and the height, whichever is smaller, never below about 13px. It stops at
+     1.3rem (about 21px, reached near 1920px), because the hero grid stops growing at 1280px;
+     larger text would only make the text block, and the photo beside it, taller. */
+  font-size: clamp(0.82rem, min(1.1vw, 2.1svh), 1.3rem);
   line-height: 1.75;
 }
 
@@ -1632,8 +1645,9 @@ b {
   flex-wrap: wrap;
   gap: 0.85em;
   margin-top: clamp(1.2rem, 4svh, 3.2rem);
-  /* The buttons' size follows this, so they grow with the screen too. */
-  font-size: clamp(0.85rem, min(0.95vw, 1.8svh), 1.45rem);
+  /* The buttons' size follows this, so they grow with the screen too, up to 1.15rem (about
+     18px, near 1920px), where the hero grid has stopped growing. */
+  font-size: clamp(0.85rem, min(0.95vw, 1.8svh), 1.15rem);
 }
 
 /* Buttons with data-magnetic lean toward the cursor: main.js sets --magnetic-x and
@@ -1698,15 +1712,15 @@ b {
 }
 
 /* My photo at the Bir ecosystem office, on the right: a still card with rounded corners and a
-   soft shadow. The card has the photo's own shape (1160x1280), so object-fit: cover shows the
-   whole photo here; the phone rules below crop it shorter, and object-position keeps both me
-   and the logo in view there. */
+   soft shadow. It fills the width of its column and stretches to the height of the row, which
+   the text block sets, so the photo is about as tall as the text and centred with it. The
+   photo itself is positioned absolutely (see .hero-photo), so it adds no height of its own and
+   never makes the row taller than the text. */
 .hero-photo-card {
-  /* Fills its column, but stays at most 70% of the screen tall, so it never crowds the top
-     bar. It sits at the end of its column, so its right edge meets the right margin. */
-  width: min(100%, calc(70svh * 1160 / 1280));
-  aspect-ratio: 1160 / 1280;
-  justify-self: end;
+  position: relative;
+  align-self: stretch;
+  /* Never a thin strip, even next to a very short text block. */
+  min-height: 16rem;
   margin: 0;
   overflow: hidden;
   border-radius: 28px;
@@ -1715,14 +1729,19 @@ b {
   box-shadow: var(--hero-photo-shadow);
 }
 
+/* object-fit: cover fills the card. Usually the card is wider than the photo, so only the top
+   and bottom are trimmed: 72% keeps the lower middle, where the logo and I are. On very wide
+   screens (2560px) the text block is tall and the card a little narrower than the photo, so
+   the sides are trimmed too: 30% trims less on the left, where the logo almost touches the
+   photo's edge, and more on the right, where there is space beside me. */
 .hero-photo {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* The logo is on the left and I stand on the right, a little below the middle, so a crop
-     keeps the lower middle of the photo. */
-  object-position: 50% 72%;
+  object-position: 30% 72%;
 }
 
 /* How far the corner labels sit above the hero's bottom edge. About's top spacing on Home is
@@ -1861,9 +1880,12 @@ b {
      .hero-photo), where both the logo and I are. The corners stay at 28px. */
   .hero-photo-card {
     grid-row: 1;
-    /* By the width and the height, so the photo leaves room for the text on short phones. */
+    /* By the width and the height, so the photo leaves room for the text on short phones.
+       Here the 4:3 shape (not the text) sets the card's height, so it does not stretch. */
     width: min(84vw, 36svh, 340px);
+    min-height: 0;
     aspect-ratio: 4 / 3;
+    align-self: center;
     /* Stacked on a phone, the photo stays centred above the text. */
     justify-self: center;
   }
@@ -1972,9 +1994,10 @@ b {
   .hero-main {
     /* One screen minus the top bar above and the corner labels below. */
     min-height: calc(100svh - 5.4rem);
-    grid-template-columns: minmax(0, 1fr) auto;
+    /* The same two columns and gap as on desktop (this undoes the phone rules above). */
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     justify-items: stretch;
-    gap: clamp(1.25rem, 4vw, 3rem);
+    gap: clamp(32px, 4vw, 72px);
     padding-block: 0.4rem 1.6rem;
   }
 
@@ -1983,13 +2006,13 @@ b {
     grid-row: auto;
   }
 
-  /* Text on the left, the whole photo on the right again, as on desktop. */
+  /* Text on the left, the photo on the right again, as tall as the text, as on desktop. */
   .hero-photo-card {
-    /* At most about 60% of the height, and never more than 30% of the width, at the right
-       margin. */
-    width: min(calc(60svh * 1160 / 1280), 30vw);
-    aspect-ratio: 1160 / 1280;
-    justify-self: end;
+    width: auto;
+    min-height: 10rem;
+    aspect-ratio: auto;
+    align-self: stretch;
+    justify-self: stretch;
   }
 
   .hero-eyebrow {
@@ -3649,6 +3672,14 @@ b {
   align-items: start;
 }
 
+/* Both columns may shrink to their grid track (a grid item is otherwise at least as wide as
+   its longest line), and their text wraps inside them instead of running past the edge. */
+.missions,
+.cert-column {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
 .missions h2,
 .cert-column h2 {
   margin-bottom: 1.2rem;
@@ -3684,13 +3715,17 @@ b {
   background: linear-gradient(#0889b0, #1c9fd0);
 }
 
-/* Missions start faded and slightly to the right; main.js adds is-lit when the line reaches
-   them. */
+/* Missions start faded and slightly lower; main.js adds is-lit when the line reaches them.
+   The slide is vertical (it used to be 18px to the right), so an unlit mission can never push
+   its text past the right edge of its column. min-width: 0 and overflow-wrap keep every line
+   wrapping inside the column, even a long word or the letter-spaced meta line. */
 .quest {
   position: relative;
+  min-width: 0;
   padding-bottom: 1.8rem;
+  overflow-wrap: break-word;
   opacity: 0.38;
-  transform: translateX(18px);
+  transform: translateY(14px);
   transition:
     opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
@@ -4143,10 +4178,9 @@ a.contact-value:hover,
     height: 4.6rem;
   }
 
-  /* The side margin here is 1rem, so unlit missions start a shorter slide (12px instead of
-     18px) that stays inside the screen. */
+  /* A shorter slide on a phone (10px instead of 14px). */
   .quest {
-    transform: translateX(12px);
+    transform: translateY(10px);
   }
 
   .contact-intro .page-title {
